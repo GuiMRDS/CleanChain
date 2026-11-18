@@ -1,0 +1,52 @@
+:root {
+  --bg: #f6fafe;
+  --ink: #0b0d14;
+  --ink-2: #3b4152;
+  --muted: #6b7180;
+  --faint: #9aa0ad;
+  --line: rgba(15, 20, 40, 0.14);
+  --line-soft: rgba(15, 20, 40, 0.08);
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --blue: #0070f3;
+  --cyan: #00aaff;
+  --pink: #ff0099;
+  --green: #18c27a;
+
+  --display: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --radius: 6px;
+  --gutter: 72px;
+  --col-w: min(600px, 44vw);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overflow: clip; /* nothing may scroll the page itself (only inner panels scroll) */
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--display);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1280px) {
+  :root { --gutter: 48px; }
+}
