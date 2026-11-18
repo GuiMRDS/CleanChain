@@ -1,0 +1,82 @@
+.scan-card {
+  padding: 20px 22px;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.scan-card__body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 26px;
+  align-items: end;
+  margin-top: 8px;
+}
+
+.scan-card__value {
+  margin: 0;
+  font-weight: 300;
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.scan-card__value small {
+  font-size: 26px;
+  margin-left: 4px;
+}
+
+.react-log {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 6px;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  animation: fade-in 0.45s ease both;
+}
+
+.react-log li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.react-log b { color: var(--blue); font-weight: 500; }
+.react-log__dim { color: var(--faint); }
+
+.scan-card__bars {
+  display: flex;
+  gap: 3px;
+  align-items: end;
+  height: 34px;
+  margin-top: 14px;
+}
+
+.scan-card__bars i {
+  flex: 1;
+  height: var(--h);
+  background: rgba(0, 112, 243, 0.18);
+  border-radius: 1px;
+  transform-origin: bottom;
+  animation: bar-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) both;
+}
+
+.scan-card__bars i.is-blue { background: var(--blue); }
+
+.scan-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan-card, .react-log, .scan-card__bars i { animation: none; }
+}

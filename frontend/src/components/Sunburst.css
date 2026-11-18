@@ -1,0 +1,219 @@
+.sunburst {
+  width: 284px;
+  padding: 16px 18px 14px;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+}
+
+.sunburst__chart {
+  position: relative;
+  width: 204px;
+  height: 204px;
+  margin: 12px auto 12px;
+}
+
+.sunburst__chart svg { display: block; overflow: visible; }
+
+.sunburst__arcs {
+  transform-origin: center;
+  animation: sunburst-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.sunburst__arc {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1;
+  cursor: pointer;
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+.sunburst__arc.is-dim { opacity: 0.22; }
+.sunburst__arc.is-active { filter: brightness(0.92) saturate(1.2); }
+
+.sunburst__arc.is-selected { stroke: var(--ink); stroke-width: 1.5; }
+
+/* Opened by the agent: the arc flashes with a blue glow, a chip says who did it. */
+.sunburst__arc.is-agent {
+  stroke: var(--blue);
+  stroke-width: 2;
+  animation: agent-pulse 1.1s ease-out 2;
+}
+
+.sunburst__center.is-agent { animation: agent-pulse-center 1.1s ease-out 2; }
+
+.sunburst__agent {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -6px rgba(0, 112, 243, 0.7);
+  animation: agent-chip 3.8s ease both;
+  pointer-events: none;
+}
+
+@keyframes agent-pulse {
+  0% { filter: drop-shadow(0 0 0 rgba(0, 112, 243, 0)); }
+  35% { filter: drop-shadow(0 0 8px rgba(0, 112, 243, 0.85)) brightness(1.08); }
+  100% { filter: drop-shadow(0 0 0 rgba(0, 112, 243, 0)); }
+}
+
+@keyframes agent-pulse-center {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 112, 243, 0); }
+  35% { box-shadow: 0 0 0 8px rgba(0, 112, 243, 0.18); }
+}
+
+@keyframes agent-chip {
+  0% { opacity: 0; transform: translate(-50%, 6px); }
+  10%, 85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -4px); }
+}
+
+/* Centre doubles as a "back" button when a folder is open. */
+.sunburst__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 78px;
+  height: 78px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sunburst__center:disabled { cursor: default; }
+.sunburst__center:not(:disabled):hover { background: rgba(0, 112, 243, 0.06); }
+
+.sunburst__center strong {
+  font-weight: 300;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.sunburst__center span {
+  max-width: 74px;
+  margin-top: 1px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.25;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sunburst #sunburst-title { flex: none; white-space: nowrap; }
+
+.sunburst__crumbs {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+
+.sunburst__crumbs button { color: var(--muted); }
+.sunburst__crumbs button:hover { color: var(--blue); text-decoration: underline; }
+.sunburst__crumbs > :last-child button,
+.sunburst__crumbs > button:last-child { color: var(--ink); }
+.sunburst__here { color: var(--ink); }
+
+/* ---------- folder contents table ---------- */
+.ftable {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 6px;
+}
+
+.ftable__head,
+.ftable__row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.ftable__head {
+  padding: 2px 0 4px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
+.ftable__head > :first-child { grid-column: 1 / 3; text-align: left; }
+.ftable__head > :last-child { text-align: right; }
+
+.ftable__rows {
+  list-style: none;
+  margin: 0 -6px;
+  padding: 0;
+  max-height: 118px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.ftable__row {
+  width: 100%;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.ftable__row.is-dir:not(:disabled):hover { background: rgba(255, 255, 255, 0.85); }
+.ftable__row.is-dir:not(:disabled) .ftable__name { color: var(--ink); }
+.ftable__row.is-dir:not(:disabled):hover .ftable__name { color: var(--blue); }
+.ftable__row:disabled { cursor: default; }
+.ftable__row.is-file .ftable__name,
+.ftable__row.is-group .ftable__name { color: var(--ink-2); }
+
+.ftable__swatch {
+  width: 8px;
+  height: 8px;
+  margin-left: 2px;
+  border-radius: 2px;
+}
+
+.ftable__icon { color: var(--faint); }
+
+.ftable__name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ftable__size {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.ftable__row b {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.ftable__note {
+  padding: 4px 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.ftable__note.is-error { color: #a3005f; }
+
+@keyframes sunburst-in {
+  from { opacity: 0; transform: rotate(-40deg) scale(0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sunburst, .sunburst__arcs, .sunburst__arc.is-agent, .sunburst__center.is-agent { animation: none; }
+}
