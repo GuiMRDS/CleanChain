@@ -1,0 +1,16 @@
+[project]
+name = "cleanchain-backend"
+version = "0.1.0"
+description = "Agente ReAct (LangChain) do CleanChain"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.165.0",
+    "langchain>=1.5.1",
+    "langchain-groq>=1.2.1",
+    "langchain-openai>=1.8.2",
+    "langgraph>=1.2.22",
+    "python-dotenv>=1.2.4",
+    "python-multipart>=0.0.34",
+    "send2trash>=2.2.0",
+    "uvicorn[standard]>=0.54.0",
+]
