@@ -1,0 +1,53 @@
+.hero-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.hero-title {
+  margin: 0;
+  font-family: 'Manrope', var(--display);
+  font-weight: 200;
+  font-size: clamp(52px, min(5.25vw, 7.5vh), 84px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  transition: font-size 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-title em {
+  font-style: normal;
+  font-weight: 500;
+  background: linear-gradient(90deg, #0091ff, var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* keep descenders/period inside the clipped gradient box */
+  padding-bottom: 0.08em;
+}
+
+.hero-intro.is-compact { gap: 14px; }
+.hero-intro.is-compact .hero-title { font-size: 40px; }
+
+.agent-line {
+  margin: 0;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 15px;
+  color: #2a2f3c;
+}
+
+.agent-line__prompt { color: var(--blue); }
+
+.agent-line__caret {
+  width: 9px;
+  height: 18px;
+  background: var(--ink);
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}

@@ -1,0 +1,45 @@
+import { useEffect, useState } from 'react';
+import './HeroIntro.css';
+
+function useTyped(text, speed = 32, delay = 500) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    setCount(0); // restart when the text changes
+    let id;
+    const start = setTimeout(() => {
+      id = setInterval(() => {
+        setCount((c) => {
+          if (c >= text.length) {
+            clearInterval(id);
+            return c;
+          }
+          return c + 1;
+        });
+      }, speed);
+    }, delay);
+    return () => {
+      clearTimeout(start);
+      clearInterval(id);
+    };
+  }, [text, speed, delay]);
+  return text.slice(0, count);
+}
+
+export default function HeroIntro({ compact, greeting }) {
+  const typed = useTyped(greeting);
+
+  return (
+    <div className={`hero-intro${compact ? ' is-compact' : ''}`}>
+      <h1 className="hero-title">
+        Seu Windows,
+        <br />
+        <em>mais leve.</em>
+      </h1>
+      <p className="agent-line" aria-label={greeting}>
+        <span className="agent-line__prompt">›</span>
+        <span aria-hidden="true">{typed}</span>
+        <span className="agent-line__caret" aria-hidden="true" />
+      </p>
+    </div>
+  );
+}
