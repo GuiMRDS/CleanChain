@@ -1,0 +1,10 @@
+/plan-screen-with-ascii @clarix
+
+Gostaria de criar uma tela de HERO para um projeto. Ele será uma espécie de CleanMyMac só que para o Windows, com frontend muito bonito, mas com a diferença de que terá um agente de ia interno ajudando o usuário a encontrar problemas no seu computador, otimizar espaço e organizar pastas.
+
+A estética do front deve ser futurista (pensei em ter um 3d de um agente no canto bem como o do clarix, um chat onde é possível interagir com o agente e gráficos/tabelas/UIs indicando o que está sendo feito no momento e relatórios gerais do computador, não sei). Usarei langchain no backend para ter um fluxo agentico ReAct de analisar os arquivos do computador, espaço, otimizações, organizações de pastas, etc...
+
+ignore as pastas de mocks  já existentes (nem leia elas).
+Me ajude a conceber uma tela de abertura para esse APP.
+ela deve ser minimalista e no tema claro. Use o 
+@_ref-mold.png como ponto de partida.

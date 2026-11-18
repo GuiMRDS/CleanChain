@@ -1,0 +1,19 @@
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Dependências e builds
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+
+# Dados locais do app (scans com caminhos de arquivos do usuário)
+backend/data/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+*.log
