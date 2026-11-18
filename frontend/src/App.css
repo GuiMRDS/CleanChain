@@ -1,0 +1,82 @@
+.brand {
+  position: fixed;
+  z-index: 10;
+  top: 14px;
+  left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+
+.brand__mark {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: conic-gradient(from 200deg, #0091ff, var(--cyan), var(--pink), #8000ff, #0091ff);
+}
+
+.brand__mark::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 3px;
+  background: var(--bg);
+}
+
+/* Left column sits above the 3D canvas; the robot owns the right side. */
+.left {
+  position: fixed;
+  z-index: 5;
+  left: var(--gutter);
+  top: 92px;
+  bottom: 96px;
+  width: var(--col-w);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(16px, 2.6vh, 26px);
+}
+
+.left.is-chatting {
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+/* Row: left card (scan or chat) + chart panels, centred on the same line. */
+.insights-row {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: max-content;
+}
+
+.insights-row > :first-child {
+  flex: none;
+  width: var(--col-w);
+}
+
+.insights-side {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.left.is-chatting .insights-row {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.left.is-chatting .insights-side { align-self: center; }
+
+/* Not enough room next to the robot on narrower screens. */
+@media (max-width: 1599px) {
+  .insights-side .filetypes { display: none; }
+}
+
+@media (max-width: 1365px) {
+  .insights-side { display: none; }
+}
