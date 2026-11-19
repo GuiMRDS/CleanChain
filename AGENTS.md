@@ -116,8 +116,9 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   ferramenta (ver `ui_actions.py`); `stream.py` emite o evento `ui` e o front trata em
   `App.jsx` (`handleUi`).
 - **Novo painel:** use `.hud-frame` + `.panel-head`, cores dos tokens e, para
-  gráficos categóricos, a paleta validada (`#2a78d6`, `#e5489a`, `#6250d6`, `#1baf7a`,
-  cinza `#b4b9c4` para "outros").
+  gráficos categóricos, a paleta validada **nesta ordem** (`#2a78d6`, `#e5489a`,
+  `#6250d6`, `#1baf7a`, `#eb6834`; cinza `#b4b9c4` para "outros"). Azul↔violeta e
+  rosa↔verde-água não podem ficar lado a lado (indistinguíveis para daltônicos).
 
 ## Armadilhas conhecidas
 

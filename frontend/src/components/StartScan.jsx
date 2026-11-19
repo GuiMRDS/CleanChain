@@ -3,7 +3,7 @@ import './StartScan.css';
 
 // Entry point of the app: pick a disk (or the home folder) and hit the "Start scan" orb.
 // While scanning, the same panel turns into live progress (with % for whole disks) + cancel.
-export default function StartScan({ phase, progress, error, targets, target, onTarget, onStart, onCancel }) {
+export default function StartScan({ phase, progress, error, targets, targetsStatus, target, onTarget, onStart, onCancel }) {
   const scanning = phase === 'scanning';
   const current = targets.find((t) => t.path === target) ?? targets[0];
   const pct = progress?.pct;
@@ -60,6 +60,13 @@ export default function StartScan({ phase, progress, error, targets, target, onT
               <span>O que analisar</span>
               <span className="mono">scan profundo</span>
             </p>
+            {targets.length === 0 && (
+              <p className={`targets__empty${targetsStatus === 'error' ? ' is-error' : ''}`} role="status">
+                {targetsStatus === 'error'
+                  ? 'Não consegui falar com o backend. Ele está rodando? (cd backend · uv run uvicorn app.server:app --port 8000) — tentando de novo…'
+                  : 'Procurando os discos…'}
+              </p>
+            )}
             <div className="targets" role="radiogroup" aria-label="Disco para analisar">
               {targets.map((t) => (
                 <button

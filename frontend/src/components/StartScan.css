@@ -323,3 +323,21 @@
   animation: none;
   transition: transform 0.3s linear;
 }
+
+.targets__empty {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px dashed var(--line);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.targets__empty.is-error {
+  border-style: solid;
+  border-color: rgba(255, 0, 153, 0.35);
+  background: rgba(255, 0, 153, 0.05);
+  color: #a3005f;
+}

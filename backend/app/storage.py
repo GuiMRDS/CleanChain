@@ -3,11 +3,26 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
 SCANS_DIR = Path(__file__).resolve().parents[1] / "data" / "scans"
 LATEST = SCANS_DIR / "latest.json"
+KEEP_SCANS = 20  # histórico mantido em disco (os mais antigos são removidos)
+
+
+def _write_atomic(path: Path, body: str) -> None:
+    """Grava num temporário e troca de uma vez: quem lê nunca vê um JSON pela metade."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(body, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _prune_old_scans() -> None:
+    old = sorted(SCANS_DIR.glob("scan-*.json"))[:-KEEP_SCANS]
+    for f in old:
+        f.unlink(missing_ok=True)
 
 
 def save_scan(result: dict) -> str:
@@ -16,9 +31,11 @@ def save_scan(result: dict) -> str:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     result["scanned_at"] = datetime.now().isoformat(timespec="seconds")
     body = json.dumps(result, ensure_ascii=False, indent=2)
-    (SCANS_DIR / f"scan-{stamp}.json").write_text(body, encoding="utf-8")
-    LATEST.write_text(body, encoding="utf-8")
-    return f"scan-{stamp}.json"
+    name = f"scan-{stamp}.json"
+    _write_atomic(SCANS_DIR / name, body)
+    _write_atomic(LATEST, body)
+    _prune_old_scans()
+    return name
 
 
 def load_latest() -> dict | None:

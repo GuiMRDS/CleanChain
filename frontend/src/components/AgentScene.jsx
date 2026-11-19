@@ -54,7 +54,9 @@ export default function AgentScene({ clearOfRef }) {
 
     const hologram = createHologramMaterial(uniforms);
     const draco = new DRACOLoader();
-    draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+    // Decoder served locally (public/draco, copied from three/examples/jsm/libs/draco/gltf):
+    // the robot loads offline and the app makes no external call.
+    draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader();
     loader.setDRACOLoader(draco);
 

@@ -92,7 +92,7 @@ export default function App() {
   const scanned = scan.phase === 'done' && scan.result;
 
   // Disk picker: defaults to the system disk.
-  const { drives, home } = useDrives();
+  const { drives, home, status: drivesStatus } = useDrives();
   const targets = useMemo(() => buildTargets(drives, home), [drives, home]);
   const [target, setTarget] = useState(null);
   const chosen = targets.find((t) => t.path === target) ?? targets.find((t) => t.tag === 'sistema') ?? targets[0];
@@ -117,6 +117,7 @@ export default function App() {
       progress={scan.progress}
       error={scan.error}
       targets={targets}
+      targetsStatus={drivesStatus}
       target={chosen?.path}
       onTarget={setTarget}
       onStart={scan.start}

@@ -8,12 +8,16 @@ const R = (SIZE - STROKE) / 2;
 const C = 2 * Math.PI * R;
 const GAP = 2; // surface gap between slices (px along the circumference)
 
-// Fixed colour per file type (validated palette); every other type folds into "Outros".
+// Fixed colour per file type; every other type folds into "Outros". The ORDER matters:
+// it is the slice order, and this sequence passes the CVD/normal-vision checks for
+// adjacent slices (validated with the dataviz validator). Re-validate before reordering.
 const TYPES = [
   { id: 'videos', label: 'Vídeos', color: '#2a78d6' },
   { id: 'instaladores', label: 'Instaladores', color: '#e5489a' },
   { id: 'imagens', label: 'Imagens', color: '#6250d6' },
   { id: 'documentos', label: 'Documentos', color: '#1baf7a' },
+  // Discos de máquinas virtuais (.vhdx, .vdi, .vmdk…): costumam ser os maiores arquivos.
+  { id: 'maquinas_virtuais', label: 'Máquinas virtuais', color: '#eb6834' },
 ];
 const OTHER = { id: 'outros', label: 'Outros', color: '#b4b9c4' };
 
