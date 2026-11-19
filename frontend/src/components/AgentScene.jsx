@@ -54,9 +54,8 @@ export default function AgentScene({ clearOfRef }) {
 
     const hologram = createHologramMaterial(uniforms);
     const draco = new DRACOLoader();
-    // Decoder served locally (public/draco, copied from three/examples/jsm/libs/draco/gltf):
-    // the robot loads offline and the app makes no external call.
-    draco.setDecoderPath('/draco/');
+    // No setDecoderPath: three r187+ resolves its bundled decoder (Vite emits it as a local
+    // asset), so the robot loads offline and the app makes no external call.
     const loader = new GLTFLoader();
     loader.setDRACOLoader(draco);
 

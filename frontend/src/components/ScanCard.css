@@ -80,3 +80,40 @@
 @media (prefers-reduced-motion: reduce) {
   .scan-card, .react-log, .scan-card__bars i { animation: none; }
 }
+
+/* ---------- cleanup opportunities ---------- */
+.scan-card__savings {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.scan-card__savings > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.scan-card__savings > p b { color: var(--ink); font-weight: 500; }
+.scan-card__savings .scan-card__chips { margin: 0; }
+
+.chip--action {
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.chip--action span { color: var(--faint); }
+.chip--action:hover { border-color: var(--blue); color: var(--blue); background: #fff; }
+.chip--action:hover span { color: var(--blue); }
+
+.scan-card__meta {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.scan-card__meta .is-ok { color: var(--green); }
+.scan-card__meta .is-warn { color: #a3005f; }

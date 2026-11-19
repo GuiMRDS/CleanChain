@@ -6,7 +6,8 @@ import './StartScan.css';
 export default function StartScan({ phase, progress, error, targets, targetsStatus, target, onTarget, onStart, onCancel }) {
   const scanning = phase === 'scanning';
   const current = targets.find((t) => t.path === target) ?? targets[0];
-  const pct = progress?.pct;
+  const dupPhase = progress?.phase === 'duplicados';
+  const pct = dupPhase ? null : progress?.pct;
 
   return (
     <section className={`start-scan hud-frame${scanning ? ' is-scanning' : ''}`} aria-live="polite">
@@ -37,7 +38,7 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
         {scanning ? (
           <>
             <p className="panel-head">
-              <span>Mapeando {current?.short ?? 'arquivos'}</span>
+              <span>{dupPhase ? 'Procurando duplicados' : `Mapeando ${current?.short ?? 'arquivos'}`}</span>
               <button type="button" className="link-btn" onClick={onCancel}>
                 ✕ cancelar
               </button>
@@ -46,9 +47,13 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
               {formatCount(progress?.files ?? 0)}
               <small>arquivos · {bytesLabel(progress?.bytes ?? 0)}</small>
             </p>
-            <p className="start-scan__path" title={progress?.current ?? ''}>
+            <p className="start-scan__path" title={dupPhase ? '' : progress?.current ?? ''}>
               <b>▸</b>
-              <span>{progress?.current ?? 'iniciando…'}</span>
+              <span>
+                {dupPhase
+                  ? `${progress.stage === 'triagem' ? 'comparando tamanhos e trechos' : 'confirmando conteúdo'} · ${formatCount(progress.done ?? 0)}/${formatCount(progress.total ?? 0)} grupos`
+                  : progress?.current ?? 'iniciando…'}
+              </span>
             </p>
             <div className={`start-scan__track${pct != null ? ' is-determinate' : ''}`} aria-hidden="true">
               <div style={pct != null ? { transform: `scaleX(${pct / 100})` } : undefined} />

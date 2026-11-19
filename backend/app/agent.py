@@ -18,6 +18,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
 from app.tools.last_scan import read_last_scan
+from app.tools.scan_insights_tool import read_scan_insights
 from app.tools.cleanup import delete_files, list_folder
 from app.tools.ui_actions import focus_folder
 
@@ -48,6 +49,11 @@ Regras:
 - Responda em português do Brasil, de forma curta e direta.
 - Você não move arquivos; para apagar, siga as regras de limpeza acima.
 - Ao citar tamanhos, use os valores legíveis do campo "size" (ex.: 1.2 GB, 350 MB).
+
+Oportunidades de limpeza:
+- A análise já traz descobertas prontas: use read_scan_insights ("resumo" primeiro; depois "caches", "duplicados", "esquecidos", "extensoes" ou "idades") para sugerir o que limpar, com tamanhos e caminhos reais.
+- Duplicados: só os "confirmed": true são idênticos byte a byte. Proponha apagar as cópias extras desses (mantendo uma) e nunca os "prováveis" sem avisar.
+- Caches com deletable=false estão em pastas do sistema: sugira a Limpeza de Disco do Windows.
 
 Limpeza (apagar arquivos):
 - Você pode listar arquivos de uma pasta com list_folder e apagar com delete_files, que manda os \
@@ -116,7 +122,7 @@ def build_agent():
     llm, label = build_llm()
     agent = create_agent(
         model=llm,
-        tools=[read_last_scan, list_folder, focus_folder, delete_files],
+        tools=[read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files],
         # Apagar exige aprovação humana: o loop pausa antes de delete_files rodar.
         middleware=[HumanInTheLoopMiddleware(interrupt_on={"delete_files": {"allowed_decisions": ["approve", "reject"]}})],
         system_prompt=SYSTEM_PROMPT + _machine_context(),

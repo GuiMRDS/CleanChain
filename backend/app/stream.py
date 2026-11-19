@@ -40,6 +40,12 @@ def summarize_observation(content: str) -> tuple[str, dict | None]:
         return str(data["error"]), data
     if "deleted" in data:  # delete_files
         return f"{len(data['deleted'])} itens na Lixeira · {data['freed']} liberados" + (f" · {len(data['skipped'])} ignorados" if data.get("skipped") else ""), data
+    if data.get("kind"):  # read_scan_insights
+        kind = data["kind"]
+        if kind == "resumo":
+            return f"economia estimada {data.get('estimated_savings')} · caches {data.get('caches_deletable')} · duplicados {data.get('duplicates_confirmed')}", data
+        counts = {"caches": "caches", "duplicados": "groups", "esquecidos": "files", "extensoes": "extensions", "idades": "ages"}
+        return f"{kind}: {len(data.get(counts.get(kind, ''), []) or [])} itens", data
     if "listing" in data:  # read_last_scan caiu no list_folder
         data_l = data["listing"]
         return f"{data_l.get('total_files', 0)} arquivos ({data_l.get('total', '?')}) em {data_l.get('path', '?')}", data

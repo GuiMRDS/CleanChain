@@ -61,10 +61,18 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   `/api/scan/cancel`, `/api/drives`, `/api/system`, `/api/folder/files`, `/api/transcribe`…).
   Um scan por vez (`_scan_stop`). Middlewares aceitam só *Host* e *Origin* locais.
 - `tools/disk_scan.py` — `scan_disk`: usado **só pelo endpoint de scan**, não pelo
-  agente. Opções internas (progresso, cancelamento, limites) entram por
-  `config["configurable"]`, invisíveis ao modelo.
-- `tools/last_scan.py` (`read_last_scan`), `tools/cleanup.py` (`list_folder`,
-  `delete_files`), `tools/ui_actions.py` (`focus_folder`) — ferramentas do agente.
+  agente. Opções internas (progresso, cancelamento, limites, `workers`, `dup_budget_s`)
+  entram por `config["configurable"]`, invisíveis ao modelo. Varredura em threads
+  (`WORKERS = 4`, medido: mais threads pioram — o gargalo é o NTFS/antivírus, e
+  processos também não ganharam); cada thread tem seu `Acc` e `_resolve` soma tudo.
+  Desempates usam `(tamanho, caminho)` para o resultado não depender da ordem das threads.
+- `scan_insights.py` — `classify_dir` (caches conhecidos) e `find_duplicates`
+  (triagem por hash parcial → confirmação por hash completo; só `confirmed: true` é
+  seguro sugerir apagar; hardlinks não contam). Caches e pastas protegidas ficam fora
+  de "duplicados" e "esquecidos".
+- `tools/last_scan.py` (`read_last_scan`), `tools/scan_insights_tool.py`
+  (`read_scan_insights`), `tools/cleanup.py` (`list_folder`, `delete_files`),
+  `tools/ui_actions.py` (`focus_folder`) — ferramentas do agente.
 - `files.py` — **regras de segurança para apagar** (`check_deletable`) e listagem.
 - `storage.py` — `data/scans/scan-*.json` + `latest.json` (fora do git).
 

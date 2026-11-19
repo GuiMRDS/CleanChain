@@ -12,8 +12,13 @@ o que dá para limpar e, **só com a sua confirmação**, manda os arquivos para
 ## Funcionalidades
 
 - **Scan profundo por disco** — escolha `C:`, `D:`… (ou só a sua pasta de usuário). O
-  scan percorre o disco inteiro com progresso em %, pode ser cancelado e salva o
-  resultado em JSON.
+  scan percorre o disco inteiro em paralelo, com progresso em %, pode ser cancelado e
+  salva o resultado em JSON.
+- **Oportunidades de limpeza** — o scan encontra caches e temporários conhecidos
+  (navegadores, npm/pip/Gradle/uv, Temp, Lixeira, node_modules…), **duplicados
+  confirmados byte a byte**, arquivos grandes esquecidos há mais de um ano, a idade dos
+  dados e as extensões que mais ocupam. O card mostra "Pode liberar ~X GB" e cada
+  oportunidade abre uma conversa com o agente sobre ela.
 - **Mapa de pastas (sunburst)** — 4 anéis de pastas, navegável por clique, com uma
   tabela que mostra subpastas **e arquivos** da pasta aberta; desce além dos anéis.
 - **Tipos de arquivo** — rosca com vídeos, instaladores, imagens, documentos e outros.
@@ -77,6 +82,7 @@ flowchart LR
 | Ferramenta | O que faz |
 |---|---|
 | `read_last_scan(folder?)` | Resumo da última análise ou detalhes de uma pasta dela |
+| `read_scan_insights(kind)` | Oportunidades de limpeza: resumo, caches, duplicados, esquecidos, extensões, idades |
 | `list_folder(path)` | Arquivos de uma pasta (para achar caminhos exatos antes de limpar) |
 | `focus_folder(path?)` | Abre a pasta no sunburst da tela (vira um evento `ui`) |
 | `delete_files(paths, reason)` | Move itens para a Lixeira — **só depois da aprovação** |
@@ -182,7 +188,8 @@ backend/
     files.py          listagem de pastas e regras de segurança para apagar
     drives.py         discos do Windows
     speech.py         transcrição (Whisper)
-    tools/            scan_disk, read_last_scan, list_folder, focus_folder, delete_files
+    scan_insights.py  caches conhecidos e duplicados (hash parcial → hash completo)
+    tools/            scan_disk, read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files
   chat.py             conversa com o agente pelo terminal
 frontend/
   src/

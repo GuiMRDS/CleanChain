@@ -23,7 +23,7 @@ export function useScan() {
 
     setPhase('scanning');
     setRoot(path ?? null);
-    setProgress({ files: 0, bytes: 0, seconds: 0, current: null, pct: null });
+    setProgress({ files: 0, bytes: 0, seconds: 0, current: null, pct: null, phase: null });
     setError(null);
 
     try {
@@ -33,7 +33,7 @@ export function useScan() {
         path ? { path } : {},
         (event) => {
           if (event.type === 'start') setRoot(event.path);
-          else if (event.type === 'progress') setProgress(event);
+          else if (event.type === 'progress') setProgress((prev) => ({ ...prev, ...event }));
           else if (event.type === 'result') {
             finished = true;
             setResult(event.scan);

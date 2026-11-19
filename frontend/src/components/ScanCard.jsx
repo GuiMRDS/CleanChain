@@ -1,8 +1,22 @@
 import { bytesLabel, formatBytes, formatCount, fileName } from '../agent/format.js';
 import './ScanCard.css';
 
-// Result of the real disk scan: total analysed, largest files, size per top folder.
-export default function ScanCard({ scan, onRescan }) {
+// Cleanup opportunities found by the scan → shortcuts that ask the agent about them.
+function opportunities(insights) {
+  if (!insights) return [];
+  const list = [
+    { id: 'caches', label: 'Caches', bytes: insights.reclaimable_total, ask: 'Quais caches e temporários eu posso limpar com segurança?' },
+    { id: 'dups', label: 'Duplicados', bytes: insights.duplicates?.wasted_total ?? 0, ask: 'Me mostre os arquivos duplicados que posso apagar.' },
+    { id: 'old', label: 'Esquecidos', bytes: insights.old_files?.total_bytes ?? 0, ask: 'Quais arquivos grandes estão esquecidos há mais de um ano?' },
+  ];
+  return list.filter((o) => o.bytes > 0);
+}
+
+// Result of the real disk scan: total analysed, largest files, size per top folder,
+// and what could be freed (each opportunity opens a chat with the agent about it).
+export default function ScanCard({ scan, onRescan, onAsk }) {
+  const ops = opportunities(scan.insights);
+  const savings = scan.insights?.estimated_savings ?? 0;
   const { value, unit } = formatBytes(scan.total_bytes ?? 0);
   const folders = (scan.tree.children ?? []).filter((c) => c.bytes > 0);
   const maxFolder = Math.max(1, ...folders.map((c) => c.bytes));
@@ -38,24 +52,27 @@ export default function ScanCard({ scan, onRescan }) {
         ))}
       </div>
 
-      <ul className="scan-card__chips">
-        <li className="chip">
-          <strong>{formatCount(scan.files_scanned)}</strong> arquivos
-        </li>
-        <li className="chip">
-          <strong>{scan.seconds}s</strong> de scan
-        </li>
-        {scan.partial ? (
-          <li className="chip is-warn" title="O scan atingiu o tempo limite; os números são parciais.">
-            parcial
-          </li>
-        ) : (
-          <li className="chip">
-            <i style={{ background: 'var(--green)' }} />
-            completo
-          </li>
-        )}
-      </ul>
+      {ops.length > 0 && (
+        <div className="scan-card__savings">
+          <p>
+            Pode liberar <b>~{bytesLabel(savings + (scan.insights.old_files?.total_bytes ?? 0))}</b>
+          </p>
+          <ul className="scan-card__chips">
+            {ops.map((o) => (
+              <li key={o.id}>
+                <button type="button" className="chip chip--action" onClick={() => onAsk?.(o.ask)} title={`Perguntar ao agente: ${o.ask}`}>
+                  {o.label} <strong>{bytesLabel(o.bytes)}</strong> <span aria-hidden="true">→</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="scan-card__meta">
+        {formatCount(scan.files_scanned)} arquivos · {scan.seconds}s ·{' '}
+        {scan.partial ? <span className="is-warn">parcial</span> : <span className="is-ok">completo</span>}
+      </p>
     </section>
   );
 }

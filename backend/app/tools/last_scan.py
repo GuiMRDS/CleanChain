@@ -103,6 +103,11 @@ def read_last_scan(folder: str | None = None) -> str:
         "scan_seconds": scan.get("seconds"),
         "by_type": [{"type": t["type"], "size": t["size"], "pct": t["pct"]} for t in scan.get("by_type", [])],
         "largest_files": [{"path": f["path"], "size": f["size"]} for f in scan.get("largest_files", [])[:6]],
+        "insights": (
+            {"estimated_savings": round(scan["insights"]["estimated_savings"] / 1024**3, 1), "unit": "GB",
+             "hint": "use read_scan_insights para ver caches, duplicados e arquivos esquecidos"}
+            if scan.get("insights") else None
+        ),
         # Só o 1º nível no resumo (economiza tokens); detalhe de cada pasta com folder=...
         "folders": _slim(scan["tree"], whole, depth=1).get("children", []),
     }, ensure_ascii=False)

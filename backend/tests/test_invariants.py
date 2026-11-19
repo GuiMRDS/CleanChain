@@ -46,7 +46,7 @@ def test_unica_ferramenta_que_altera_o_disco_e_a_aprovada(agent_kwargs):
     from langchain.agents.middleware import HumanInTheLoopMiddleware
 
     hitl = next(m for m in agent_kwargs["middleware"] if isinstance(m, HumanInTheLoopMiddleware))
-    read_only = {"read_last_scan", "list_folder", "focus_folder"}
+    read_only = {"read_last_scan", "read_scan_insights", "list_folder", "focus_folder"}
     for tool in agent_kwargs["tools"]:
         assert tool.name in read_only or tool.name in hitl.interrupt_on, f"{tool.name} sem aprovação"
 

@@ -57,6 +57,7 @@ agent, model_label = build_agent()  # um agente para o processo; a memória sepa
 SCAN_DEPTH = 6  # níveis de pastas guardados no JSON (o sunburst desenha os 4 primeiros)
 SCAN_TOP_N = 10  # maiores subpastas por pasta; o resto vira "outros"
 SCAN_TIME_BUDGET_S = 30 * 60.0  # scan profundo: teto de segurança (o usuário pode cancelar antes)
+DUP_BUDGET_S = 30.0  # tempo para confirmar duplicados por conteúdo depois da varredura
 FOLDER_DIRS_BUDGET_S = 8.0  # medição de subpastas ao abrir pastas fundas
 NDJSON_HEADERS = {"Cache-Control": "no-cache"}
 
@@ -165,6 +166,7 @@ def run_scan(req: ScanRequest):
                     "top_n": SCAN_TOP_N,
                     "stop": stop,
                     "expected_bytes": expected,
+                    "dup_budget_s": DUP_BUDGET_S,
                 }},
             )
             result = json.loads(raw)

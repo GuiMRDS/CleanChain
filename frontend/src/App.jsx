@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AgentScene from './components/AgentScene.jsx';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import HeroIntro from './components/HeroIntro.jsx';
 import StartScan from './components/StartScan.jsx';
 import ScanCard from './components/ScanCard.jsx';
@@ -14,6 +13,9 @@ import { useScan } from './agent/useScan.js';
 import { useDrives } from './agent/useDrives.js';
 import { bytesLabel, formatCount } from './agent/format.js';
 import './App.css';
+
+// Three.js (~600 KB) loads in its own chunk: the UI paints first, the 3D scene fades in.
+const AgentScene = lazy(() => import('./components/AgentScene.jsx'));
 
 const GREETINGS = {
   idle: 'Oi! Escolha um disco e eu faço um raio-x completo dele.',
@@ -110,7 +112,7 @@ export default function App() {
   const mainCard = chatting ? (
     <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} />
   ) : scanned ? (
-    <ScanCard scan={scan.result} onRescan={scan.choose} />
+    <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
   ) : (
     <StartScan
       phase={scan.phase}
@@ -127,7 +129,9 @@ export default function App() {
 
   return (
     <main className="app">
-      <AgentScene clearOfRef={cardsRowRef} />
+      <Suspense fallback={null}>
+        <AgentScene clearOfRef={cardsRowRef} />
+      </Suspense>
 
       <header className="brand">
         <span className="brand__mark" aria-hidden="true" />
