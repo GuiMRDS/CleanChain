@@ -32,13 +32,14 @@ cd backend
 uv sync
 uv run uvicorn app.server:app --reload --port 8000   # API
 uv run python chat.py                                # agente no terminal
+uv run pytest                                        # testes de segurança (rode antes de commitar)
 uv run python -m app.tools.disk_scan "C:\\pasta"     # scan sem LLM
 
 # frontend
 cd frontend
 npm install
 npm run dev      # Vite (proxy /api → 127.0.0.1:8000)
-npm run build    # checagem de build (não há suíte de testes ainda)
+npm run build    # checagem de build
 ```
 
 Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
@@ -93,6 +94,8 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    Também bloqueia pastas que **contêm** uma protegida (ex.: `D:\Projetos`) e junctions.
    Use `inside()` para "está dentro de" — não `startswith` em caminhos crus nem
    `commonpath` com separador final (já causou falso negativo).
+   Toda regra nova ganha teste em `backend/tests/test_delete_rules.py`; os testes usam
+   uma réplica em pasta temporária (fixture `sandbox`) e nunca tocam no disco real.
 4. **Exclusões vão para a Lixeira**, nunca exclusão permanente.
 5. **O contrato NDJSON é compartilhado** entre `stream.py`, `chat.py` e
    `frontend/src/agent/*`. Ao criar um tipo de evento, trate-o nos três.

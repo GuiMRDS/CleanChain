@@ -131,6 +131,12 @@ uv run uvicorn app.server:app --reload --port 8000
 
 Para conversar com o agente direto no terminal: `uv run python chat.py`.
 
+Testes das regras de segurança (exclusão, aprovação humana, proteções da API):
+
+```sh
+uv run pytest
+```
+
 ### 3. Frontend
 
 ```sh
