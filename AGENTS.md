@@ -57,8 +57,8 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   mensagem do usuário a partir de `ui_state`, retoma interrupções (`Command(resume=…)`)
   e aplica `recursion_limit`.
 - `server.py` — rotas (`/api/chat`, `/api/chat/approval`, `/api/scan`,
-  `/api/scan/cancel`, `/api/drives`, `/api/folder/files`, `/api/transcribe`…). Um scan
-  por vez (`_scan_stop`).
+  `/api/scan/cancel`, `/api/drives`, `/api/system`, `/api/folder/files`, `/api/transcribe`…).
+  Um scan por vez (`_scan_stop`). Middlewares aceitam só *Host* e *Origin* locais.
 - `tools/disk_scan.py` — `scan_disk`: usado **só pelo endpoint de scan**, não pelo
   agente. Opções internas (progresso, cancelamento, limites) entram por
   `config["configurable"]`, invisíveis ao modelo.
@@ -90,6 +90,7 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    mexer nas regras, rode os casos: `C:\`, `C:\Windows\System32\…`,
    `C:\Program Files\…`, `C:\ProgramData`, `C:\pagefile.sys`, a pasta do usuário,
    `…\Downloads` (bloqueados) vs. um arquivo dentro de `…\Downloads` (permitido).
+   Também bloqueia pastas que **contêm** uma protegida (ex.: `D:\Projetos`) e junctions.
    Use `inside()` para "está dentro de" — não `startswith` em caminhos crus nem
    `commonpath` com separador final (já causou falso negativo).
 4. **Exclusões vão para a Lixeira**, nunca exclusão permanente.

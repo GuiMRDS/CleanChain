@@ -89,7 +89,7 @@ def check_deletable(path: str, root: str | None) -> str | None:
         return "caminho precisa ser completo"
     if not os.path.lexists(path):
         return "não existe mais"
-    if os.path.islink(path):
+    if os.path.islink(path) or (hasattr(os.path, "isjunction") and os.path.isjunction(path)):
         return "é um atalho/link"
     real = _norm(path)
     if Path(real).anchor and real == _norm(Path(real).anchor):
@@ -98,11 +98,17 @@ def check_deletable(path: str, root: str | None) -> str | None:
         return "fora da área analisada"
     if os.path.basename(real).lower() in _SYSTEM_FILES:
         return "arquivo do sistema"
-    for protected in _protected_roots():
+    protected_roots = _protected_roots()
+    for protected in protected_roots:
         if inside(real, protected):
-            return "pasta do sistema ou de programas"
-    if real in _exact_protected():
+            return "pasta protegida (sistema, programas ou o próprio CleanChain)"
+    exact = _exact_protected()
+    if real in exact:
         return "pasta principal do usuário (apague o conteúdo, não a pasta)"
+    # Apagar uma pasta "pai" levaria junto uma pasta protegida que está dentro dela.
+    for protected in (*protected_roots, *exact):
+        if inside(protected, real):
+            return "contém uma pasta protegida"
     return None
 
 
@@ -115,9 +121,15 @@ def size_of(path: str, budget_s: float = 3.0) -> int:
     return scan(path, max_depth=1, time_budget_s=budget_s).get("total_bytes", 0)
 
 
+PREVIEW_BUDGET_S = 8.0  # tempo total para medir pastas no cartão de confirmação
+
+
 def preview_deletion(paths: list[str]) -> dict:
     """O que será apagado (para o cartão de confirmação): itens válidos e bloqueados."""
+    import time
+
     root = scan_root()
+    deadline = time.monotonic() + PREVIEW_BUDGET_S
     items, blocked = [], []
     for p in list(dict.fromkeys(paths))[:MAX_DELETE_ITEMS]:
         reason = check_deletable(p, root)
@@ -125,7 +137,9 @@ def preview_deletion(paths: list[str]) -> dict:
             blocked.append({"path": p, "reason": reason})
             continue
         is_dir = os.path.isdir(p)
-        items.append({"path": os.path.realpath(p), "name": os.path.basename(p.rstrip("\\/")), "is_dir": is_dir, "bytes": size_of(p)})
+        # Pastas dividem um orçamento total de tempo (100 pastas não travam o chat).
+        budget = min(3.0, max(0.2, deadline - time.monotonic()))
+        items.append({"path": os.path.realpath(p), "name": os.path.basename(p.rstrip("\\/")), "is_dir": is_dir, "bytes": size_of(p, budget)})
     if len(paths) > MAX_DELETE_ITEMS:
         blocked.append({"path": f"+{len(paths) - MAX_DELETE_ITEMS} itens", "reason": f"máximo de {MAX_DELETE_ITEMS} por vez"})
     return {"items": items, "blocked": blocked, "total_bytes": sum(i["bytes"] for i in items)}

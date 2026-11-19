@@ -132,7 +132,7 @@ export default function Sunburst({ scan, command, onFolderChange }) {
     setSelected(arc ? arc.id : null);
     setDeeper(beyond);
     setHovered(null);
-    setAgentMark({ id: arc && !beyond.length ? arc.id : arc ? arc.id : 'root', name: chain.at(-1).name });
+    setAgentMark({ id: arc ? arc.id : 'root', name: chain.at(-1).name });
     const t = setTimeout(() => setAgentMark(null), 3800);
     return () => clearTimeout(t);
   }, [command, arcByNode, tree]);

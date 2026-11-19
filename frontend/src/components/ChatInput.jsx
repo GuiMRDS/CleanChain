@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { suggestions } from '../agent/mockData.js';
+import { suggestions } from '../agent/suggestions.js';
 import { useVoiceInput } from '../agent/useVoiceInput.js';
 import './ChatInput.css';
 
@@ -18,18 +18,19 @@ export default function ChatInput({ onSend, busy, locked = false, showSuggestion
   const recording = voice.status === 'recording';
   const transcribing = voice.status === 'transcribing';
 
+  const { cancel: cancelVoice, stop: stopVoice } = voice;
   useEffect(() => {
     if (!recording) return;
     const onKey = (e) => {
-      if (e.key === 'Escape') voice.cancel();
+      if (e.key === 'Escape') cancelVoice();
       if (e.key === 'Enter') {
         e.preventDefault();
-        voice.stop();
+        stopVoice();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [recording, voice]);
+  }, [recording, cancelVoice, stopVoice]);
 
   const submit = (value) => {
     if (busy || locked || !value.trim()) return;

@@ -60,3 +60,47 @@ def used_bytes_for(path: str) -> int | None:
         except OSError:
             return None
     return None
+
+
+class _MemoryStatus(ctypes.Structure):
+    _fields_ = [
+        ("dwLength", ctypes.c_ulong),
+        ("dwMemoryLoad", ctypes.c_ulong),
+        ("ullTotalPhys", ctypes.c_ulonglong),
+        ("ullAvailPhys", ctypes.c_ulonglong),
+        ("ullTotalPageFile", ctypes.c_ulonglong),
+        ("ullAvailPageFile", ctypes.c_ulonglong),
+        ("ullTotalVirtual", ctypes.c_ulonglong),
+        ("ullAvailVirtual", ctypes.c_ulonglong),
+        ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+    ]
+
+
+def memory() -> dict | None:
+    """RAM total e em uso (Windows)."""
+    if sys.platform != "win32":
+        return None
+    status = _MemoryStatus()
+    status.dwLength = ctypes.sizeof(_MemoryStatus)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        return None
+    return {"total": status.ullTotalPhys, "used": status.ullTotalPhys - status.ullAvailPhys}
+
+
+def temp_usage(budget_s: float = 2.0) -> dict:
+    """Tamanho da pasta de temporários do usuário (medido com limite de tempo)."""
+    import tempfile
+
+    from app.tools.disk_scan import scan
+
+    path = tempfile.gettempdir()
+    result = scan(path, max_depth=1, time_budget_s=budget_s)
+    return {"path": path, "bytes": result.get("total_bytes", 0), "partial": result.get("partial", False)}
+
+
+def system_drive() -> dict | None:
+    """Uso do disco do sistema (C:)."""
+    for d in list_drives():
+        if d.get("system"):
+            return d
+    return None

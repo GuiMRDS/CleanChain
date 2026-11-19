@@ -150,7 +150,7 @@ export default function App() {
         <ChatInput onSend={send} busy={busy} locked={awaitingApproval} showSuggestions={!chatting} />
       </section>
 
-      <SystemFooter />
+      <SystemFooter refreshKey={`${scan.result?.file ?? ''}:${busy}`} />
     </main>
   );
 }

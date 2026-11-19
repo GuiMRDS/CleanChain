@@ -89,7 +89,8 @@ flowchart LR
   `pagefile.sys` e afins, raiz de disco, a pasta do usuário e as pastas principais dela
   (Desktop, Downloads, AppData…), qualquer coisa fora da área escaneada e mais de 100
   itens por vez. A validação roda ao montar o cartão **e** de novo na hora de apagar.
-- O backend escuta só em `127.0.0.1`. Os scans salvos (`backend/data/`) ficam fora do git.
+- O backend escuta só em `127.0.0.1`, recusa *Host* externo e requisições de outras origens
+  (sites abertos no navegador). Os scans salvos (`backend/data/`) ficam fora do git.
 
 ---
 
@@ -149,6 +150,7 @@ Abra o endereço que o Vite mostrar (ex.: `http://localhost:5173`). O Vite repas
 |---|---|---|
 | `GET` | `/api/health` | Modelo em uso e pasta do usuário |
 | `GET` | `/api/drives` | Discos locais com espaço total/usado/livre |
+| `GET` | `/api/system` | Disco do sistema, RAM e temporários (rodapé) |
 | `POST` | `/api/scan` | Inicia o scan (`{path?}`) — NDJSON: `start` → `progress`* → `result` \| `cancelled` \| `error` |
 | `POST` | `/api/scan/cancel` | Interrompe o scan em andamento |
 | `GET` | `/api/scan/latest` | Último scan salvo |

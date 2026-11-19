@@ -10,6 +10,7 @@ POST /api/scan/cancel  →  interrompe o scan em andamento
 POST /api/transcribe   multipart "audio"                       →  {"text": "..."} (voz → texto, Whisper na Groq/OpenAI)
 GET  /api/scan/latest  →  último scan salvo (404 se ainda não houver)
 GET  /api/folder/files?path=...&dirs=true  →  arquivos diretos (+ subpastas medidas) da pasta, só dentro da área escaneada
+GET  /api/system       →  disco do sistema, RAM e temporários (rodapé)
 GET  /api/health       →  {"ok": true, "model": "...", "home": "<pasta do usuário>"}
 """
 
@@ -21,18 +22,36 @@ import queue
 import threading
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
 from app.agent import build_agent
-from app.drives import list_drives, used_bytes_for
+from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
+from app.files import inside, list_files
 from app.speech import transcribe_audio
 from app.storage import load_latest, save_scan
 from app.stream import stream_events
 from app.tools.disk_scan import scan, scan_disk
 
 app = FastAPI(title="CleanChain Agent")
+
+# A API só atende a própria máquina: Host local (barra DNS rebinding) e, em requisições
+# que mudam algo, Origin local (barra sites abertos no navegador chamando 127.0.0.1).
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(LOCAL_HOSTS))
+
+
+@app.middleware("http")
+async def only_local_origins(request: Request, call_next):
+    origin = request.headers.get("origin")
+    if request.method not in ("GET", "HEAD", "OPTIONS") and origin:
+        from urllib.parse import urlparse
+
+        if (urlparse(origin).hostname or "") not in LOCAL_HOSTS:
+            return JSONResponse({"detail": "Origem não permitida."}, status_code=403)
+    return await call_next(request)
 agent, model_label = build_agent()  # um agente para o processo; a memória separa por thread_id
 
 SCAN_DEPTH = 6  # níveis de pastas guardados no JSON (o sunburst desenha os 4 primeiros)
@@ -62,6 +81,12 @@ class ChatRequest(BaseModel):
 @app.get("/api/health")
 def health():
     return {"ok": True, "model": model_label, "home": str(Path.home())}
+
+
+@app.get("/api/system")
+def system():
+    """Dados reais do rodapé: disco do sistema, RAM e pasta de temporários."""
+    return {"disk": system_drive(), "memory": memory(), "temp": temp_usage()}
 
 
 @app.post("/api/chat")
@@ -178,32 +203,17 @@ def folder_files(path: str, limit: int = 100, dirs: bool = False):
     latest = load_latest()
     if not latest:
         raise HTTPException(status_code=404, detail="Nenhum scan salvo ainda.")
-    root = os.path.normcase(os.path.realpath(latest["root"]))
+    root = os.path.normcase(os.path.realpath(latest["root"])).rstrip("\\/")
     target = os.path.realpath(path)
-    if os.path.commonpath([root, os.path.normcase(target)]) != root:
+    if not inside(target, root):
         raise HTTPException(status_code=403, detail="Pasta fora da área escaneada.")
     if not os.path.isdir(target):
         raise HTTPException(status_code=404, detail="Pasta não encontrada.")
 
-    files = []
     try:
-        with os.scandir(target) as it:
-            for entry in it:
-                try:
-                    if entry.is_file(follow_symlinks=False):
-                        files.append({"name": entry.name, "bytes": entry.stat(follow_symlinks=False).st_size})
-                except OSError:
-                    continue
+        out = list_files(target, limit=limit)
     except OSError as err:
         raise HTTPException(status_code=403, detail=f"Sem permissão para ler a pasta: {err.strerror}") from err
-
-    files.sort(key=lambda f: f["bytes"], reverse=True)
-    out = {
-        "path": target,
-        "total_files": len(files),
-        "total_bytes": sum(f["bytes"] for f in files),
-        "files": files[: max(1, min(limit, 500))],
-    }
     if dirs:
         sub = scan(target, max_depth=1, top_n=60, time_budget_s=FOLDER_DIRS_BUDGET_S)
         out["dirs"] = [
@@ -240,4 +250,6 @@ def transcribe(audio: UploadFile = File(...)):
         text = transcribe_audio(audio.filename or "fala.webm", data)
     except RuntimeError as err:
         raise HTTPException(status_code=503, detail=str(err)) from err
+    except Exception as err:  # erro do provedor (cota, formato de áudio…)
+        raise HTTPException(status_code=502, detail=f"Falha na transcrição: {str(err)[:200]}") from err
     return {"text": text}

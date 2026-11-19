@@ -1,11 +1,13 @@
 """Converte a execução do agente em eventos simples, usados pelo terminal e pela API.
 
-Eventos (um dict por passo do loop ReAct):
-    {"type": "action", "text": "scan_disk(path='...')", "tool": "scan_disk", "args": {...}}
-    {"type": "observation", "text": "3.8 MB em 3 arquivos ...", "data": {...}}   # data = JSON da ferramenta
-    {"type": "answer", "text": "<pedaço da resposta>"}                          # vários, em streaming
+Eventos (um dict por passo do loop ReAct) — contrato compartilhado com chat.py e o front:
+    {"type": "action", "id": "...", "text": "read_last_scan()", "tool": "...", "args": {...}}
+    {"type": "observation", "text": "resumo legível", "tool": "...", "data": {...}}  # data = JSON da ferramenta
+    {"type": "answer", "text": "<pedaço da resposta>"}                              # vários, em streaming
+    {"type": "ui", "command": "focus_folder", "args": {"path": "..."}}              # comando para a tela
+    {"type": "approval", "tool": "delete_files", "items": [...], "blocked": [...], "total_bytes": n, "reason": "..."}
     {"type": "error", "text": "..."}
-    {"type": "done"}
+    {"type": "done", "awaiting_approval": bool}
 """
 
 from __future__ import annotations
@@ -32,8 +34,10 @@ def summarize_observation(content: str) -> tuple[str, dict | None]:
         data = json.loads(content)
     except (TypeError, ValueError):
         return str(content)[:200], None
+    if not isinstance(data, dict):
+        return str(content)[:200], None
     if "error" in data:
-        return data["error"], data
+        return str(data["error"]), data
     if "deleted" in data:  # delete_files
         return f"{len(data['deleted'])} itens na Lixeira · {data['freed']} liberados" + (f" · {len(data['skipped'])} ignorados" if data.get("skipped") else ""), data
     if "listing" in data:  # read_last_scan caiu no list_folder
@@ -51,8 +55,10 @@ def summarize_observation(content: str) -> tuple[str, dict | None]:
     if "folders" in data:  # read_last_scan()
         top = ", ".join(f"{c['name']} {c['size']}" for c in data["folders"][:4])
         return f"scan de {data.get('scanned_at', '?')}: {data['total']} em {data['files_scanned']} arquivos{partial} · {top}", data
-    top = ", ".join(f"{c['name']} {c['size']}" for c in data.get("tree", {}).get("children", [])[:4])
-    return f"{data['total']} em {data['files_scanned']} arquivos, {data['seconds']}s{partial} · {top}", data
+    if "total" in data and "files_scanned" in data:  # resultado de scan
+        top = ", ".join(f"{c['name']} {c['size']}" for c in data.get("tree", {}).get("children", [])[:4])
+        return f"{data['total']} em {data['files_scanned']} arquivos{partial} · {top}", data
+    return str(content)[:200], data
 
 
 def _with_screen_context(text: str, ui_state: dict | None) -> str:
