@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from app import config
 from app.storage import load_latest
 
 MAX_DELETE_ITEMS = 100
@@ -70,7 +71,8 @@ def _protected_roots() -> list[str]:
         rf"{drive}\$Recycle.Bin",
         rf"{drive}\Recovery",
         rf"{drive}\Boot",
-        str(Path(__file__).resolve().parents[2]),  # o próprio CleanChain
+        # O próprio CleanChain: código (ou backend empacotado), pasta de instalação e dados.
+        *(str(p) for p in config.pastas_do_app()),
     ]
     return [_norm(r) for r in roots]
 

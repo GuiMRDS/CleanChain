@@ -130,3 +130,45 @@ def test_proprio_app_e_protegido():
 
     app_root = Path(__file__).resolve().parents[2]
     assert files.check_deletable(str(app_root / "backend"), files._norm(app_root.anchor)) is not None
+
+
+# ------------------------------------------------------------------ app desktop instalado
+
+
+@pytest.fixture
+def app_instalado(tmp_path, monkeypatch):
+    """Pastas como no app desktop: instalação e dados vindos do ambiente."""
+    disco = tmp_path / "disco"
+    inst = disco / "Programs" / "CleanChain"
+    dados = disco / "Roaming" / "CleanChain"
+    for d in (inst / "resources" / "backend", dados / "scans"):
+        d.mkdir(parents=True)
+    (inst / "CleanChain.exe").write_bytes(b"x")
+    (dados / "scans" / "latest.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("CLEANCHAIN_INSTALACAO", str(inst))
+    monkeypatch.setenv("CLEANCHAIN_DADOS", str(dados))
+    return disco, inst, dados
+
+
+@pytest.mark.parametrize("rel", ["CleanChain.exe", "resources/backend", ""])
+def test_pasta_de_instalacao_e_protegida(app_instalado, rel):
+    disco, inst, _ = app_instalado
+    assert files.check_deletable(str(inst / rel), files._norm(str(disco))) is not None
+
+
+@pytest.mark.parametrize("rel", ["scans/latest.json", "scans", ""])
+def test_pasta_de_dados_e_protegida(app_instalado, rel):
+    disco, _, dados = app_instalado
+    assert files.check_deletable(str(dados / rel), files._norm(str(disco))) is not None
+
+
+def test_pasta_que_contem_a_instalacao_e_protegida(app_instalado):
+    disco, inst, _ = app_instalado
+    assert files.check_deletable(str(inst.parent), files._norm(str(disco))) == "contém uma pasta protegida"
+
+
+def test_arquivo_ao_lado_do_app_continua_apagavel(app_instalado):
+    disco, inst, _ = app_instalado
+    vizinho = inst.parent / "outro.tmp"
+    vizinho.write_bytes(b"x")
+    assert files.check_deletable(str(vizinho), files._norm(str(disco))) is None
