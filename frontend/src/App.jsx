@@ -33,7 +33,7 @@ function buildTargets(drives, home) {
     badge: d.letter,
     title: d.label,
     tag: d.system ? 'sistema' : d.kind === 'removível' ? 'removível' : null,
-    short: `${d.letter} inteiro`,
+    short: d.short ?? `${d.letter} inteiro`,
     total: d.total,
     used: d.used,
     free: d.free,
@@ -99,7 +99,7 @@ export default function App() {
   const scanned = scan.phase === 'done' && scan.result;
 
   // Disk picker: defaults to the system disk.
-  const { drives, home, status: drivesStatus } = useDrives();
+  const { drives, home, status: drivesStatus, plataforma } = useDrives();
   const targets = useMemo(() => buildTargets(drives, home), [drives, home]);
   const [target, setTarget] = useState(null);
   const chosen = targets.find((t) => t.path === target) ?? targets.find((t) => t.tag === 'sistema') ?? targets[0];
@@ -119,7 +119,7 @@ export default function App() {
   const mainCard = desktop.mostrarConfig ? (
     <ConfigChave atual={desktop.chave} onSalvar={desktop.salvarChave} onCancelar={desktop.fecharConfig} />
   ) : chatting ? (
-    <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} />
+    <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
   ) : scanned ? (
     <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
   ) : (
@@ -153,13 +153,18 @@ export default function App() {
       {desktop.desktop && <DesktopMenu desktop={desktop} />}
 
       <section className={`left${chatting ? ' is-chatting' : ''}`}>
-        <HeroIntro compact={chatting} greeting={greeting} />
+        <HeroIntro compact={chatting} greeting={greeting} titulo={plataforma.titulo} />
         {/* Main card + scan charts share one row, vertically centred together. */}
         <div className="insights-row" ref={cardsRowRef}>
           {mainCard}
           {scanned && (
             <div className="insights-side">
-              <Sunburst scan={scan.result} command={sunburstCommand} onFolderChange={handleFolderChange} />
+              <Sunburst
+                scan={scan.result}
+                command={sunburstCommand}
+                onFolderChange={handleFolderChange}
+                ignoraMaiusculas={plataforma.ignora_maiusculas}
+              />
               <FileTypesChart byType={scan.result.by_type} totalBytes={scan.result.total_bytes} />
             </div>
           )}
