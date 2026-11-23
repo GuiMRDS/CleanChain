@@ -79,6 +79,21 @@ def _pending_actions(agent, config) -> int:
     return sum(len(getattr(i, "value", {}).get("action_requests", [])) for i in (state.interrupts or ()))
 
 
+def _implicit_rejection(user_message: str, pending: int) -> list[dict]:
+    """Recusa as ações pausadas quando o usuário manda outra mensagem em vez de decidir.
+
+    A nova mensagem vai no motivo da primeira recusa, para o modelo respondê-la já nesta
+    retomada (o retorno de uma ferramenta precisa vir logo após a chamada dela).
+    """
+    first = {
+        "type": "reject",
+        "message": "o usuário não confirmou e mandou outra mensagem; nada foi apagado. "
+        f"Não tente apagar de novo sem ele pedir e responda a esta mensagem dele:\n{user_message}",
+    }
+    rest = {"type": "reject", "message": "o usuário não confirmou; nada foi apagado."}
+    return [first] + [rest] * (pending - 1)
+
+
 def _approval_events(interrupts) -> Iterator[dict]:
     """Converte o pedido de aprovação do middleware num cartão para a tela."""
     for intr in interrupts:
@@ -114,12 +129,13 @@ def stream_events(
             }
             inputs = Command(resume={"decisions": [reply] * pending})
         else:
-            if pending:  # nova mensagem sem decidir → trata como recusa, sem apagar nada
-                agent.invoke(Command(resume={"decisions": [{
-                    "type": "reject",
-                    "message": "O usuário mudou de assunto sem confirmar. Nada foi apagado.",
-                }] * pending}), config)
-            inputs = {"messages": [{"role": "user", "content": _with_screen_context(text or "", ui_state)}]}
+            content = _with_screen_context(text or "", ui_state)
+            if pending:
+                # Nova mensagem sem decidir → recusa (nada é apagado) e entrega a mensagem na
+                # mesma retomada: uma chamada ao modelo, e a resposta chega ao usuário.
+                inputs = Command(resume={"decisions": _implicit_rejection(content, pending)})
+            else:
+                inputs = {"messages": [{"role": "user", "content": content}]}
 
         for mode, payload in agent.stream(inputs, config, stream_mode=["messages", "updates"]):
             if mode == "messages":

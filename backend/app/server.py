@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 
 from app.agent import build_agent
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
-from app.files import inside, list_files
+from app.files import inside, list_files, scan_root
 from app.speech import transcribe_audio
 from app.storage import load_latest, save_scan
 from app.stream import stream_events
@@ -202,10 +202,9 @@ def folder_files(path: str, limit: int = 100, dirs: bool = False):
     Com dirs=true também mede as subpastas (scan rápido de 1 nível) — usado para pastas
     mais fundas do que o JSON do scan guarda. Só aceita pastas dentro da raiz do último scan.
     """
-    latest = load_latest()
-    if not latest:
+    root = scan_root()
+    if not root:
         raise HTTPException(status_code=404, detail="Nenhum scan salvo ainda.")
-    root = os.path.normcase(os.path.realpath(latest["root"])).rstrip("\\/")
     target = os.path.realpath(path)
     if not inside(target, root):
         raise HTTPException(status_code=403, detail="Pasta fora da área escaneada.")

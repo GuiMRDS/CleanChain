@@ -13,15 +13,9 @@ import os
 from langchain.tools import tool
 from send2trash import send2trash
 
-from app.files import check_deletable, inside, list_files, scan_root, size_of
+from app.files import check_deletable, deletion_batch, inside, list_files, over_limit_entry, scan_root, size_of
 from app.tools.last_scan import NO_SCAN
-
-
-def _human(n: int) -> str:
-    for unit, size in (("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)):
-        if n >= size:
-            return f"{n / size:.1f} {unit}"
-    return f"{n} B"
+from app.units import human_size
 
 
 @tool
@@ -43,8 +37,8 @@ def list_folder(path: str) -> str:
         data = list_files(path, limit=40)
     except OSError as err:
         return json.dumps({"error": f"Sem acesso à pasta: {err.strerror}"}, ensure_ascii=False)
-    data["files"] = [{"path": os.path.join(data["path"], f["name"]), "size": _human(f["bytes"]), "modified": f["modified"]} for f in data["files"]]
-    data["total"] = _human(data.pop("total_bytes"))
+    data["files"] = [{"path": os.path.join(data["path"], f["name"]), "size": human_size(f["bytes"]), "modified": f["modified"]} for f in data["files"]]
+    data["total"] = human_size(data.pop("total_bytes"))
     return json.dumps(data, ensure_ascii=False)
 
 
@@ -62,7 +56,11 @@ def delete_files(paths: list[str], reason: str) -> str:
     """
     root = scan_root()
     deleted, skipped, freed = [], [], 0
-    for p in paths:
+    # Mesmo lote da prévia (sem repetidos, até o limite): só apaga o que o usuário viu no cartão.
+    batch, extra = deletion_batch(paths)
+    if extra:
+        skipped.append(over_limit_entry(extra))
+    for p in batch:
         # Revalida na hora de executar (a aprovação pode ter acontecido minutos depois).
         why = check_deletable(p, root)
         if why:
@@ -71,7 +69,7 @@ def delete_files(paths: list[str], reason: str) -> str:
         try:
             size = size_of(p, budget_s=1.0)
             send2trash(os.path.realpath(p))
-            deleted.append({"path": p, "size": _human(size)})
+            deleted.append({"path": p, "size": human_size(size)})
             freed += size
         except OSError as err:
             skipped.append({"path": p, "reason": f"erro: {err}"})
@@ -79,7 +77,7 @@ def delete_files(paths: list[str], reason: str) -> str:
         {
             "deleted": deleted,
             "skipped": skipped,
-            "freed": _human(freed),
+            "freed": human_size(freed),
             "note": "Itens movidos para a Lixeira (o espaço só é liberado de fato ao esvaziá-la). "
             "A análise salva não muda até um novo scan.",
         },

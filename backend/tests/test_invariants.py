@@ -97,7 +97,7 @@ def test_aprovacao_de_outra_origem_e_recusada(client):
 def test_listagem_fora_da_area_escaneada_e_recusada(client, sandbox, tmp_path, monkeypatch):
     from app import server
 
-    monkeypatch.setattr(server, "load_latest", lambda: {"root": str(sandbox.root)})
+    monkeypatch.setattr(server, "scan_root", lambda: sandbox.scan_root)
     fora = tmp_path / "fora"
     fora.mkdir()
     assert client.get("/api/folder/files", params={"path": str(fora)}).status_code == 403
