@@ -9,9 +9,11 @@ directories:
   output: release
   buildResources: build
 
-# Só o JavaScript compilado, o ícone da janela e o package.json entram no app.asar.
+# Só o JavaScript compilado, a tela local de abertura/erro, o ícone e o package.json
+# entram no app.asar.
 files:
   - dist/**/*
+  - tela/**/*
   - build/icon.png
   - package.json
   - "!**/*.map"

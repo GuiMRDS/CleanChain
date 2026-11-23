@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Tela local do app desktop: abertura enquanto o backend sobe e aviso se ele parar. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <title>CleanChain</title>
+    <link rel="stylesheet" href="estado.css" />
+  </head>
+  <body class="is-iniciando">
+    <div class="arrastar" aria-hidden="true"></div>
+
+    <header class="marca">
+      <span class="marca__sinal" aria-hidden="true"></span>
+      cleanchain
+    </header>
+
+    <main class="centro">
+      <section class="abertura" aria-live="polite">
+        <div class="orbe" aria-hidden="true">
+          <span class="orbe__anel"></span>
+          <span class="orbe__nucleo"><span class="marca__sinal marca__sinal--grande"></span></span>
+        </div>
+        <h1 class="titulo">Seu Windows, <span class="titulo__grad">mais leve.</span></h1>
+        <p class="linha"><span class="linha__seta">›</span> <span id="texto-abertura">iniciando o agente…</span><span class="cursor" aria-hidden="true"></span></p>
+        <div class="trilho" aria-hidden="true"><span></span></div>
+      </section>
+
+      <section class="erro hud" role="alert" aria-labelledby="erro-titulo">
+        <p class="erro__cabeca"><span>Serviço do agente</span><span class="mono">parado</span></p>
+        <h1 id="erro-titulo" class="erro__titulo">O CleanChain precisa reiniciar o serviço.</h1>
+        <p id="erro-detalhe" class="erro__detalhe"></p>
+        <p class="erro__nota">Seus scans salvos estão intactos. A conversa atual com o agente recomeça.</p>
+        <div class="erro__acoes">
+          <button id="reiniciar" type="button" class="botao botao--principal">Reiniciar</button>
+          <button id="logs" type="button" class="botao">Abrir pasta de logs</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="estado.js"></script>
+  </body>
+</html>

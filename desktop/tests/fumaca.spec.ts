@@ -11,7 +11,7 @@
 //
 // Usa um perfil vazio e temporário (CLEANCHAIN_PERFIL): não toca na chave nem nos scans reais.
 import { _electron as electron, Browser, chromium, expect, Page, test } from '@playwright/test';
-import { ChildProcess, execFile, spawn } from 'node:child_process';
+import { ChildProcess, execFile, execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
@@ -92,6 +92,14 @@ test('o app abre, a interface carrega e a saúde responde', async () => {
 
     // Perfil novo, sem chave: o app pede para conectar o agente.
     await expect(page.getByText('Conectar o agente')).toBeVisible();
+
+    // Moldura integrada: menu do próprio app no lugar da barra de menu do Windows.
+    await page.getByRole('button', { name: 'Menu do CleanChain' }).click();
+    const menu = page.getByRole('menu', { name: 'CleanChain' });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: /Chave do modelo/ })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
   } finally {
     await fechar();
     fs.rmSync(perfil, { recursive: true, force: true });
@@ -115,7 +123,7 @@ test('as travas de segurança estão de pé', async () => {
       process: typeof (window as unknown as { process?: unknown }).process,
       ponte: Object.keys((window as unknown as { cleanchain: object }).cleanchain).sort(),
     }));
-    expect(ambiente).toEqual({ require: 'undefined', process: 'undefined', ponte: ['aoAbrirConfiguracao', 'chave', 'versao'] });
+    expect(ambiente).toEqual({ require: 'undefined', process: 'undefined', ponte: ['aoAtualizacao', 'app', 'chave'] });
 
     // CSP vem no cabeçalho da página.
     const csp = await page.evaluate(() => fetch('/').then((r) => r.headers.get('content-security-policy')));
@@ -136,6 +144,34 @@ test('as travas de segurança estão de pé', async () => {
     });
     await page.waitForTimeout(1500);
     expect(new URL(page.url()).origin).toBe(origem);
+  } finally {
+    await fechar();
+    fs.rmSync(perfil, { recursive: true, force: true });
+  }
+});
+
+test('se o backend cair, o app mostra o aviso e Reiniciar traz tudo de volta', async () => {
+  const { page, perfil, fechar } = await abrirApp();
+  try {
+    const porta = new URL(page.url()).port;
+    // Derruba o backend como um travamento faria (o processo que escuta na porta).
+    const pid = execFileSync('powershell', [
+      '-NoProfile',
+      '-Command',
+      `(Get-NetTCPConnection -LocalPort ${porta} -State Listen | Select-Object -First 1).OwningProcess`,
+    ])
+      .toString()
+      .trim();
+    execFileSync('taskkill', ['/PID', pid, '/F']);
+
+    // A tela de erro local (no visual do app) aparece, sem fechar a janela.
+    await page.waitForURL(/estado\.html\?estado=erro/, { timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'O CleanChain precisa reiniciar o serviço.' })).toBeVisible();
+
+    // Reiniciar: backend novo (outra porta/token) e a interface de volta, já com sessão.
+    await page.getByRole('button', { name: 'Reiniciar' }).click();
+    await page.waitForURL(URL_DO_APP, { timeout: 60_000 });
+    expect(await page.evaluate(() => fetch('/api/drives').then((r) => r.status))).toBe(200);
   } finally {
     await fechar();
     fs.rmSync(perfil, { recursive: true, force: true });

@@ -8,23 +8,35 @@ const CANAIS = {
   chaveSalvar: 'chave:salvar',
   chaveRemover: 'chave:remover',
   versao: 'app:versao',
-  abrirConfig: 'config:abrir',
+  abrirLogs: 'app:abrirLogs',
+  reiniciarServico: 'app:reiniciarServico',
+  atualizacao: 'app:atualizacao',
+  verificarAtualizacoes: 'app:verificarAtualizacoes',
+  instalarAtualizacao: 'app:instalarAtualizacao',
+  eventoAtualizacao: 'atualizacao:estado',
 } as const;
 
 contextBridge.exposeInMainWorld('cleanchain', {
-  versao: (): Promise<string> => ipcRenderer.invoke(CANAIS.versao),
   chave: {
     status: () => ipcRenderer.invoke(CANAIS.chaveStatus),
     salvar: (provedor: string, chave: string) => ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
     remover: () => ipcRenderer.invoke(CANAIS.chaveRemover),
   },
-  /** Menu Arquivo › Configurar chave. Devolve a função que cancela a inscrição. */
-  aoAbrirConfiguracao: (callback: () => void) => {
+  app: {
+    versao: (): Promise<string> => ipcRenderer.invoke(CANAIS.versao),
+    abrirLogs: () => ipcRenderer.invoke(CANAIS.abrirLogs),
+    reiniciarServico: () => ipcRenderer.invoke(CANAIS.reiniciarServico),
+    atualizacao: () => ipcRenderer.invoke(CANAIS.atualizacao),
+    verificarAtualizacoes: () => ipcRenderer.invoke(CANAIS.verificarAtualizacoes),
+    instalarAtualizacao: () => ipcRenderer.invoke(CANAIS.instalarAtualizacao),
+  },
+  /** Mudanças no estado da atualização automática. Devolve a função que cancela a inscrição. */
+  aoAtualizacao: (callback: (estado: unknown) => void) => {
     if (typeof callback !== 'function') return () => {};
-    const ouvinte = () => callback();
-    ipcRenderer.on(CANAIS.abrirConfig, ouvinte);
+    const ouvinte = (_e: unknown, estado: unknown) => callback(estado);
+    ipcRenderer.on(CANAIS.eventoAtualizacao, ouvinte);
     return () => {
-      ipcRenderer.removeListener(CANAIS.abrirConfig, ouvinte);
+      ipcRenderer.removeListener(CANAIS.eventoAtualizacao, ouvinte);
     };
   },
 });

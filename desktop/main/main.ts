@@ -1,11 +1,11 @@
 // Processo principal do CleanChain: inicia o backend local, abre a janela na interface servida
 // por ele e garante que nada fica rodando quando o app fecha.
-import { app, BrowserWindow, dialog, Menu, MenuItemConstructorOptions, screen, session, shell } from 'electron';
+import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, session } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
-import { verificarAgora, verificarAoIniciar } from './atualizacao';
+import { EstadoAtualizacao, iniciarAtualizacao } from './atualizacao';
 import { Backend, Conexao } from './backend';
-import { urlDev } from './caminhos';
+import { icone, telaEstado, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
 import * as segredos from './segredos';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
@@ -19,6 +19,10 @@ log.errorHandler.startCatching();
 const logMain = log.scope('main');
 
 const APP_ID = 'com.guimrds.cleanchain';
+// Barra de título integrada: a interface vai até o topo e os botões da janela ficam numa
+// sobreposição na cor do app (a interface desvia deles com env(titlebar-area-*)).
+// Altura 56: os botões da janela ficam centrados na mesma linha do status e do menu (top 12 + 32).
+const BARRA = { height: 56, color: '#00000000', symbolColor: '#3a4152' };
 const backend = new Backend();
 let janela: BrowserWindow | undefined;
 let saindo = false;
@@ -35,59 +39,44 @@ function urlBootstrap({ porta, token }: Conexao): string {
   return `${base}/bootstrap?t=${encodeURIComponent(token)}`;
 }
 
-const pastaLogs = () => path.dirname(log.transports.file.getFile().path);
+/** Tela local no visual do app: abertura enquanto o backend sobe, ou aviso de erro. */
+async function mostrarEstado(estado: 'iniciando' | 'reiniciando' | 'erro', mensagem = ''): Promise<void> {
+  if (!janela || saindo) return;
+  await janela.loadFile(telaEstado(), { query: { estado, mensagem } }).catch(() => {});
+}
 
 // ---------------------------------------------------------------- backend
 
-async function iniciarBackend(): Promise<void> {
-  janela?.setTitle('CleanChain — iniciando…');
-  const conexao = await backend.iniciar(segredos.envDoBackend());
-  await janela?.loadURL(urlBootstrap(conexao));
-  janela?.setTitle('CleanChain');
+let iniciando = false;
+
+/** Inicia o backend e abre a interface; se falhar, a tela de erro oferece Reiniciar. */
+async function iniciarBackend(estado: 'iniciando' | 'reiniciando' = 'iniciando'): Promise<void> {
+  if (iniciando) return;
+  iniciando = true;
+  try {
+    await mostrarEstado(estado);
+    const conexao = await backend.iniciar(segredos.envDoBackend());
+    await janela?.loadURL(urlBootstrap(conexao));
+  } catch (err) {
+    logMain.error('não consegui iniciar o backend:', (err as Error).message);
+    await mostrarEstado('erro', `Não consegui iniciar o serviço: ${(err as Error).message}`);
+  } finally {
+    iniciando = false;
+  }
 }
 
 async function reiniciarBackend(): Promise<void> {
   await backend.parar();
-  await iniciarComAviso();
-}
-
-/** Inicia o backend; se falhar, explica e oferece tentar de novo, sem fechar o app. */
-async function iniciarComAviso(): Promise<void> {
-  try {
-    await iniciarBackend();
-  } catch (err) {
-    logMain.error('não consegui iniciar o backend:', (err as Error).message);
-    await avisarProblema('Não consegui iniciar o serviço do CleanChain.', (err as Error).message);
-  }
-}
-
-async function avisarProblema(mensagem: string, detalhe: string): Promise<void> {
-  if (saindo || !janela) return;
-  const { response } = await dialog.showMessageBox(janela, {
-    type: 'error',
-    title: 'CleanChain',
-    message: mensagem,
-    detail: `${detalhe}\n\nSeus scans salvos não foram afetados. A conversa atual com o agente é reiniciada.`,
-    buttons: ['Reiniciar', 'Abrir pasta de logs', 'Sair'],
-    defaultId: 0,
-    cancelId: 2,
-    noLink: true,
-  });
-  if (response === 0) return reiniciarBackend();
-  if (response === 1) {
-    await shell.openPath(pastaLogs());
-    return avisarProblema(mensagem, detalhe);
-  }
-  app.quit();
+  await iniciarBackend('reiniciando');
 }
 
 backend.on('caiu', (codigo: number | null) => {
   if (saindo) return;
   logMain.warn(`o backend caiu (código ${codigo})`);
-  void avisarProblema('O serviço do CleanChain parou.', `Ele terminou de forma inesperada (código ${codigo ?? '?'}).`);
+  void mostrarEstado('erro', `O serviço terminou de forma inesperada (código ${codigo ?? '?'}).`);
 });
 
-// ---------------------------------------------------------------- janela e menu
+// ---------------------------------------------------------------- janela
 
 function criarJanela(): BrowserWindow {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -96,12 +85,15 @@ function criarJanela(): BrowserWindow {
     height: Math.min(900, height),
     minWidth: Math.min(1280, width),
     minHeight: Math.min(760, height),
-    backgroundColor: '#f6fafe', // --bg da interface: sem flash branco enquanto o backend sobe
-    title: 'CleanChain — iniciando…',
-    icon: path.join(__dirname, '..', '..', 'build', 'icon.png'), // mesma marca do instalador e do site
-    show: true,
+    backgroundColor: '#f6fafe', // --bg da interface: sem flash de outra cor ao abrir
+    title: 'CleanChain',
+    icon: icone(), // mesma marca do instalador e do site
+    titleBarStyle: 'hidden',
+    titleBarOverlay: BARRA,
+    show: false,
     webPreferences: { ...preferenciasSeguras(path.join(__dirname, '..', 'preload', 'preload.js')), devTools: !app.isPackaged },
   });
+  win.once('ready-to-show', () => win.show()); // a tela de abertura já pintou: nada de janela vazia
   win.on('page-title-updated', (event) => event.preventDefault()); // o título é do app
   win.webContents.on('render-process-gone', (_e, details) => {
     logMain.warn('interface caiu:', details.reason);
@@ -113,46 +105,29 @@ function criarJanela(): BrowserWindow {
   return win;
 }
 
-function montarMenu(): void {
+/**
+ * Sem barra de menu visível (as ações ficam no menu do próprio app). O menu existe só para os
+ * atalhos de teclado: zoom, tela cheia e, em desenvolvimento, recarregar e DevTools.
+ */
+function montarAtalhos(): void {
   const template: MenuItemConstructorOptions[] = [
-    {
-      label: 'Arquivo',
-      submenu: [
-        { label: 'Configurar chave do LLM…', click: () => janela?.webContents.send(CANAIS.abrirConfig) },
-        { label: 'Abrir pasta de logs', click: () => void shell.openPath(pastaLogs()) },
-        { type: 'separator' },
-        { role: 'quit', label: 'Sair' },
-      ],
-    },
     {
       label: 'Exibir',
       submenu: [
-        { role: 'resetZoom', label: 'Tamanho original' },
-        { role: 'zoomIn', label: 'Aumentar' },
-        { role: 'zoomOut', label: 'Diminuir' },
-        { type: 'separator' },
-        { role: 'togglefullscreen', label: 'Tela cheia' },
-        ...(app.isPackaged ? [] : ([{ type: 'separator' }, { role: 'reload' }, { role: 'toggleDevTools' }] as MenuItemConstructorOptions[])),
-      ],
-    },
-    {
-      label: 'Ajuda',
-      submenu: [
-        { label: 'Verificar atualizações…', click: () => void verificarAgora() },
-        {
-          label: 'Sobre o CleanChain',
-          click: () =>
-            void dialog.showMessageBox({
-              type: 'info',
-              title: 'Sobre o CleanChain',
-              message: `CleanChain ${app.getVersion()}`,
-              detail: 'Limpeza de disco com um agente de IA que só apaga com a sua aprovação. Tudo roda neste computador; só as mensagens do chat vão ao provedor do modelo.',
-            }),
-        },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomIn', accelerator: 'CommandOrControl+=', visible: false },
+        { role: 'zoomOut' },
+        { role: 'togglefullscreen' },
+        ...(app.isPackaged ? [] : ([{ role: 'reload' }, { role: 'toggleDevTools' }] as MenuItemConstructorOptions[])),
       ],
     },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function avisarAtualizacao(estado: EstadoAtualizacao): void {
+  janela?.webContents.send(CANAIS.eventoAtualizacao, estado);
 }
 
 // ---------------------------------------------------------------- ciclo de vida
@@ -175,10 +150,10 @@ if (!app.requestSingleInstanceLock()) {
     logMain.info(`CleanChain ${app.getVersion()} (${app.isPackaged ? 'instalado' : 'desenvolvimento'})`);
     protegerSessao(session.defaultSession, origemApp, !urlDev());
     registrarIpc({ origemApp, reiniciarBackend });
-    montarMenu();
+    montarAtalhos();
     janela = criarJanela();
-    await iniciarComAviso();
-    verificarAoIniciar();
+    await iniciarBackend();
+    iniciarAtualizacao(avisarAtualizacao);
   });
 
   app.on('window-all-closed', () => app.quit());

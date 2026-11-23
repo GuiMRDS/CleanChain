@@ -1,0 +1,155 @@
+/* Desktop shell (Electron only, html.is-desktop): no native title bar. The UI runs to the top
+   edge, the top strip drags the window and the window buttons sit in an overlay on the right;
+   env(titlebar-area-*) tells where they are, so the header steers clear of them. */
+html.is-desktop {
+  --window-controls: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
+}
+
+.desktop-drag {
+  position: fixed;
+  z-index: 9;
+  inset: 0 0 auto 0;
+  height: env(titlebar-area-height, 44px);
+  -webkit-app-region: drag;
+}
+
+html.is-desktop .brand { -webkit-app-region: drag; }
+
+html.is-desktop .agent-status {
+  right: calc(var(--window-controls) + 62px);
+  max-width: min(520px, calc(46vw - 60px));
+  -webkit-app-region: no-drag;
+}
+
+/* ---------- app menu ---------- */
+.desktop-menu {
+  position: fixed;
+  z-index: 11;
+  top: 12px;
+  right: calc(var(--window-controls) + 16px);
+  -webkit-app-region: no-drag;
+}
+
+.desktop-menu__chip {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px -18px rgba(0, 145, 255, 0.45), 0 0 0 1px var(--line-soft);
+  backdrop-filter: blur(14px) saturate(150%);
+  color: var(--ink-2);
+  transition: color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.desktop-menu__chip:hover,
+.desktop-menu__chip.is-open {
+  color: var(--blue);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 30px -14px rgba(0, 145, 255, 0.6), 0 0 0 1px rgba(0, 112, 243, 0.35);
+}
+
+.desktop-menu__chip:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+.desktop-menu__dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* .desktop-menu + .desktop-menu__panel: needs to beat .hud-frame { position: relative }. */
+.desktop-menu .desktop-menu__panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 12px 12px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 24px 60px -28px rgba(0, 60, 160, 0.45);
+  animation: fade-in 0.18s ease both;
+}
+
+.desktop-menu__panel .panel-head { margin: 0 4px 6px; }
+
+.desktop-menu__item {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.desktop-menu__item:hover:not(:disabled) {
+  background: #fff;
+  border-color: rgba(0, 112, 243, 0.25);
+}
+
+.desktop-menu__item:disabled { cursor: default; }
+
+.desktop-menu__item.is-highlight {
+  border-color: rgba(0, 112, 243, 0.35);
+  background: rgba(0, 112, 243, 0.06);
+}
+
+.desktop-menu__icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: rgba(15, 20, 40, 0.05);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.desktop-menu__item.is-highlight .desktop-menu__icon {
+  background: linear-gradient(135deg, #0091ff, #8000ff 60%, var(--pink));
+  color: #fff;
+}
+
+.desktop-menu__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.desktop-menu__text strong {
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.desktop-menu__text small {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.desktop-menu__text small.is-warn { color: #a3005f; }
+
+.desktop-menu__note {
+  margin: 6px 4px 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}

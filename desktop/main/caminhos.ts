@@ -15,6 +15,21 @@ export function pastaDados(): string {
   return app.getPath('userData');
 }
 
+/** Tela local de abertura/erro (desktop/tela), mostrada enquanto o backend não responde. */
+export function telaEstado(): string {
+  return path.join(__dirname, '..', '..', 'tela', 'estado.html');
+}
+
+/** Ícone da janela (o mesmo do instalador e do site). */
+export function icone(): string {
+  return path.join(__dirname, '..', '..', 'build', 'icon.png');
+}
+
+/** Pasta dos logs do electron-log (userData/logs). */
+export function pastaLogs(): string {
+  return path.join(app.getPath('userData'), 'logs');
+}
+
 /** Pasta do app instalado (protegida contra exclusão pelo backend). */
 export function pastaInstalacao(): string | undefined {
   return app.isPackaged ? path.dirname(process.execPath) : undefined;

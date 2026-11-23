@@ -9,6 +9,7 @@ import ChatInput from './components/ChatInput.jsx';
 import SystemFooter from './components/SystemFooter.jsx';
 import AgentStatus from './components/AgentStatus.jsx';
 import ConfigChave from './components/ConfigChave.jsx';
+import DesktopMenu from './components/DesktopMenu.jsx';
 import { useChat } from './agent/useChat.js';
 import { useDesktop } from './agent/useDesktop.js';
 import { useScan } from './agent/useScan.js';
@@ -141,12 +142,15 @@ export default function App() {
         <AgentScene clearOfRef={cardsRowRef} />
       </Suspense>
 
+      {desktop.desktop && <div className="desktop-drag" aria-hidden="true" />}
+
       <header className="brand">
         <span className="brand__mark" aria-hidden="true" />
         cleanchain
       </header>
 
       <AgentStatus scan={scan} thinking={busy} currentTool={currentTool} awaitingApproval={awaitingApproval} />
+      {desktop.desktop && <DesktopMenu desktop={desktop} />}
 
       <section className={`left${chatting ? ' is-chatting' : ''}`}>
         <HeroIntro compact={chatting} greeting={greeting} />

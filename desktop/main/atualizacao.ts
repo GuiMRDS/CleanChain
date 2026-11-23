@@ -1,55 +1,73 @@
-// Atualização automática pelos GitHub Releases (só no app empacotado).
-import { app, dialog } from 'electron';
+// Atualização automática pelos GitHub Releases (só no app empacotado). O estado vai para a
+// interface (menu do app), sem caixas de diálogo do Windows.
+import { app } from 'electron';
 import log from 'electron-log/main';
 import { autoUpdater } from 'electron-updater';
 
 const logAtu = log.scope('atualizacao');
+
+export type EstadoAtualizacao =
+  | { estado: 'indisponivel'; mensagem: string } // desenvolvimento
+  | { estado: 'parado' }
+  | { estado: 'verificando' }
+  | { estado: 'atualizado'; versao: string }
+  | { estado: 'baixando'; versao: string }
+  | { estado: 'pronta'; versao: string }
+  | { estado: 'erro'; mensagem: string };
+
+let atual: EstadoAtualizacao = app.isPackaged
+  ? { estado: 'parado' }
+  : { estado: 'indisponivel', mensagem: 'Atualizações só funcionam no app instalado.' };
+let avisar: (estado: EstadoAtualizacao) => void = () => {};
 let configurado = false;
 
+function mudar(novo: EstadoAtualizacao): void {
+  atual = novo;
+  avisar(novo);
+}
+
 function configurar(): void {
-  if (configurado) return;
+  if (configurado || !app.isPackaged) return;
   configurado = true;
   autoUpdater.logger = logAtu;
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('update-downloaded', async (info) => {
-    const { response } = await dialog.showMessageBox({
-      type: 'info',
-      title: 'Atualização pronta',
-      message: `A versão ${info.version} do CleanChain foi baixada.`,
-      detail: 'Reinicie para instalar agora, ou ela será instalada quando você fechar o app.',
-      buttons: ['Reiniciar agora', 'Depois'],
-      defaultId: 0,
-      cancelId: 1,
-    });
-    if (response === 0) autoUpdater.quitAndInstall();
+  autoUpdater.autoInstallOnAppQuit = true; // se o usuário não reiniciar agora, instala ao fechar
+  autoUpdater.on('checking-for-update', () => mudar({ estado: 'verificando' }));
+  autoUpdater.on('update-not-available', () => mudar({ estado: 'atualizado', versao: app.getVersion() }));
+  autoUpdater.on('update-available', (info) => mudar({ estado: 'baixando', versao: info.version }));
+  autoUpdater.on('update-downloaded', (info) => mudar({ estado: 'pronta', versao: info.version }));
+  autoUpdater.on('error', (err) => {
+    logAtu.warn('falha ao atualizar:', err?.message);
+    mudar({ estado: 'erro', mensagem: 'Não consegui verificar atualizações agora.' });
   });
-  autoUpdater.on('error', (err) => logAtu.warn('falha ao atualizar:', err?.message));
 }
 
-/** Verifica em segundo plano ao abrir o app. */
-export function verificarAoIniciar(): void {
+/** `aoMudar` recebe cada mudança de estado (a janela repassa para a interface). */
+export function iniciarAtualizacao(aoMudar: (estado: EstadoAtualizacao) => void): void {
+  avisar = aoMudar;
   if (!app.isPackaged) return;
   configurar();
-  autoUpdater.checkForUpdates().catch((err) => logAtu.warn('verificação falhou:', err?.message));
+  autoUpdater.checkForUpdates().catch(() => {}); // erros chegam pelo evento 'error'
 }
 
-/** Menu Ajuda › Verificar atualizações: avisa também quando não há nada novo. */
-export async function verificarAgora(): Promise<void> {
-  if (!app.isPackaged) {
-    await dialog.showMessageBox({ type: 'info', message: 'Atualizações só funcionam no app instalado.' });
-    return;
-  }
+export function estadoAtualizacao(): EstadoAtualizacao {
+  return atual;
+}
+
+/** Menu do app › Verificar atualizações. */
+export async function verificarAgora(): Promise<EstadoAtualizacao> {
+  if (!app.isPackaged) return atual;
   configurar();
+  if (atual.estado === 'pronta' || atual.estado === 'baixando') return atual;
   try {
-    const resultado = await autoUpdater.checkForUpdates();
-    const nova = resultado?.updateInfo?.version;
-    if (!nova || nova === app.getVersion()) {
-      await dialog.showMessageBox({ type: 'info', message: `Você já tem a versão mais recente (${app.getVersion()}).` });
-    } else {
-      await dialog.showMessageBox({ type: 'info', message: `Baixando a versão ${nova}…`, detail: 'Você será avisado quando ela estiver pronta.' });
-    }
-  } catch (err) {
-    await dialog.showMessageBox({ type: 'warning', message: 'Não consegui verificar atualizações.', detail: (err as Error).message });
+    await autoUpdater.checkForUpdates();
+  } catch {
+    /* o evento 'error' já atualizou o estado */
   }
+  return atual;
+}
+
+/** Reinicia e instala a versão já baixada. */
+export function instalarAgora(): void {
+  if (atual.estado === 'pronta') autoUpdater.quitAndInstall();
 }
