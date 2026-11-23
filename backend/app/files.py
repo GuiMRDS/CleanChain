@@ -124,6 +124,21 @@ def size_of(path: str, budget_s: float = 3.0) -> int:
 PREVIEW_BUDGET_S = 8.0  # tempo total para medir pastas no cartão de confirmação
 
 
+def deletion_batch(paths: list[str]) -> tuple[list[str], int]:
+    """Lote que pode ser apagado de uma vez: sem repetidos e com no máximo MAX_DELETE_ITEMS.
+
+    Usado na prévia e na execução, para o usuário aprovar exatamente o que será apagado.
+    Retorna (lote, quantos ficaram de fora pelo limite).
+    """
+    unique = list(dict.fromkeys(paths))
+    return unique[:MAX_DELETE_ITEMS], max(0, len(unique) - MAX_DELETE_ITEMS)
+
+
+def over_limit_entry(extra: int) -> dict:
+    """Linha de "bloqueado" para os itens além do limite por vez."""
+    return {"path": f"+{extra} itens", "reason": f"máximo de {MAX_DELETE_ITEMS} por vez"}
+
+
 def preview_deletion(paths: list[str]) -> dict:
     """O que será apagado (para o cartão de confirmação): itens válidos e bloqueados."""
     import time
@@ -131,7 +146,8 @@ def preview_deletion(paths: list[str]) -> dict:
     root = scan_root()
     deadline = time.monotonic() + PREVIEW_BUDGET_S
     items, blocked = [], []
-    for p in list(dict.fromkeys(paths))[:MAX_DELETE_ITEMS]:
+    batch, extra = deletion_batch(paths)
+    for p in batch:
         reason = check_deletable(p, root)
         if reason:
             blocked.append({"path": p, "reason": reason})
@@ -140,6 +156,6 @@ def preview_deletion(paths: list[str]) -> dict:
         # Pastas dividem um orçamento total de tempo (100 pastas não travam o chat).
         budget = min(3.0, max(0.2, deadline - time.monotonic()))
         items.append({"path": os.path.realpath(p), "name": os.path.basename(p.rstrip("\\/")), "is_dir": is_dir, "bytes": size_of(p, budget)})
-    if len(paths) > MAX_DELETE_ITEMS:
-        blocked.append({"path": f"+{len(paths) - MAX_DELETE_ITEMS} itens", "reason": f"máximo de {MAX_DELETE_ITEMS} por vez"})
+    if extra:
+        blocked.append(over_limit_entry(extra))
     return {"items": items, "blocked": blocked, "total_bytes": sum(i["bytes"] for i in items)}

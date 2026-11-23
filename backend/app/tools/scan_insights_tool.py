@@ -10,13 +10,7 @@ from langchain.tools import tool
 
 from app.storage import load_latest
 from app.tools.last_scan import NO_SCAN
-
-
-def _human(n: int) -> str:
-    for unit, size in (("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)):
-        if n >= size:
-            return f"{n / size:.1f} {unit}"
-    return f"{n} B"
+from app.units import human_size
 
 
 Kind = Literal["resumo", "caches", "duplicados", "esquecidos", "extensoes", "idades"]
@@ -49,31 +43,31 @@ def read_scan_insights(kind: Kind = "resumo") -> str:
 
     if kind == "caches":
         data = [
-            {"label": c["label"], "size": _human(c["bytes"]), "deletable": c["deletable"], "count": c["count"],
-             "paths": [{"path": p["path"], "size": _human(p["bytes"])} for p in c["paths"]]}
+            {"label": c["label"], "size": human_size(c["bytes"]), "deletable": c["deletable"], "count": c["count"],
+             "paths": [{"path": p["path"], "size": human_size(p["bytes"])} for p in c["paths"]]}
             for c in ins["reclaimable"]
         ]
         return json.dumps({**meta, "caches": data, "note": "Itens com deletable=false ficam em pastas do sistema: sugira a Limpeza de Disco do Windows."}, ensure_ascii=False)
     if kind == "duplicados":
         groups = [
-            {"size_each": _human(g["bytes"]), "copies": g["count"], "wasted": _human(g["wasted"]), "confirmed": g["confirmed"], "paths": g["paths"]}
+            {"size_each": human_size(g["bytes"]), "copies": g["count"], "wasted": human_size(g["wasted"]), "confirmed": g["confirmed"], "paths": g["paths"]}
             for g in dups["groups"][:25]
         ]
-        return json.dumps({**meta, "wasted_confirmed": _human(dups["wasted_total"]), "wasted_likely": _human(dups["likely_total"]), "groups": groups}, ensure_ascii=False)
+        return json.dumps({**meta, "wasted_confirmed": human_size(dups["wasted_total"]), "wasted_likely": human_size(dups["likely_total"]), "groups": groups}, ensure_ascii=False)
     if kind == "esquecidos":
-        files = [{"path": f["path"], "size": _human(f["bytes"]), "modified": datetime.fromtimestamp(f["modified"]).strftime("%Y-%m-%d")} for f in old["files"][:25]]
-        return json.dumps({**meta, "older_than_days": old["older_than_days"], "count": old["count"], "total": _human(old["total_bytes"]), "files": files}, ensure_ascii=False)
+        files = [{"path": f["path"], "size": human_size(f["bytes"]), "modified": datetime.fromtimestamp(f["modified"]).strftime("%Y-%m-%d")} for f in old["files"][:25]]
+        return json.dumps({**meta, "older_than_days": old["older_than_days"], "count": old["count"], "total": human_size(old["total_bytes"]), "files": files}, ensure_ascii=False)
     if kind == "extensoes":
-        return json.dumps({**meta, "extensions": [{"ext": e["ext"], "size": _human(e["bytes"]), "count": e["count"], "pct": e["pct"]} for e in ins["extensions"]]}, ensure_ascii=False)
+        return json.dumps({**meta, "extensions": [{"ext": e["ext"], "size": human_size(e["bytes"]), "count": e["count"], "pct": e["pct"]} for e in ins["extensions"]]}, ensure_ascii=False)
     if kind == "idades":
-        return json.dumps({**meta, "ages": [{"period": a["label"], "size": _human(a["bytes"]), "pct": a["pct"]} for a in ins["ages"]]}, ensure_ascii=False)
+        return json.dumps({**meta, "ages": [{"period": a["label"], "size": human_size(a["bytes"]), "pct": a["pct"]} for a in ins["ages"]]}, ensure_ascii=False)
 
     return json.dumps({
         **meta,
-        "estimated_savings": _human(ins["estimated_savings"]),
-        "caches_deletable": _human(ins["reclaimable_total"]),
-        "caches_by_category": [{"label": c["label"], "size": _human(c["bytes"]), "deletable": c["deletable"]} for c in ins["reclaimable"]],
-        "duplicates_confirmed": _human(dups["wasted_total"]),
-        "duplicates_likely": _human(dups["likely_total"]),
-        "forgotten_files": {"count": old["count"], "total": _human(old["total_bytes"])},
+        "estimated_savings": human_size(ins["estimated_savings"]),
+        "caches_deletable": human_size(ins["reclaimable_total"]),
+        "caches_by_category": [{"label": c["label"], "size": human_size(c["bytes"]), "deletable": c["deletable"]} for c in ins["reclaimable"]],
+        "duplicates_confirmed": human_size(dups["wasted_total"]),
+        "duplicates_likely": human_size(dups["likely_total"]),
+        "forgotten_files": {"count": old["count"], "total": human_size(old["total_bytes"])},
     }, ensure_ascii=False)

@@ -30,6 +30,7 @@ from langchain.tools import tool
 from langchain_core.runnables import RunnableConfig
 
 from app.scan_insights import DUP_MIN_BYTES, classify_dir, find_duplicates, summarize_caches
+from app.units import human_size
 
 TYPE_GROUPS: dict[str, set[str]] = {
     "videos": {".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".flv", ".m4v"},
@@ -159,7 +160,7 @@ class Ctx:
             return
         try:
             self._last_emit = now
-            event = {"current": current, "files": self.files, "size": _human(self.bytes), "bytes": self.bytes, "seconds": round(now - self.started, 1)}
+            event = {"current": current, "files": self.files, "size": human_size(self.bytes), "bytes": self.bytes, "seconds": round(now - self.started, 1)}
             if self.expected:
                 event["pct"] = min(99.0, round(self.bytes * 100 / self.expected, 1))
             self.on_progress(event)
@@ -330,23 +331,16 @@ def _gb(n: int) -> float:
     return round(n / 1024**3, 3)
 
 
-def _human(n: int) -> str:
-    for unit, size in (("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)):
-        if n >= size:
-            return f"{n / size:.1f} {unit}"
-    return f"{n} B"
-
-
 def _to_dict(node: Node, top_n: int, min_bytes: int) -> dict:
     """Converte para JSON: até `top_n` maiores filhos com ≥ `min_bytes`; o resto vira 'outros'."""
     kids = sorted((c for c in node.children if c.size > 0), key=lambda c: c.size, reverse=True)
     shown = [c for c in kids[:top_n] if c.size >= min_bytes]
     rest = kids[len(shown):]
-    out = {"name": node.name, "path": node.path, "bytes": node.size, "size": _human(node.size), "size_gb": _gb(node.size), "files": node.files}
+    out = {"name": node.name, "path": node.path, "bytes": node.size, "size": human_size(node.size), "size_gb": _gb(node.size), "files": node.files}
     children = [_to_dict(c, top_n, min_bytes) for c in shown]
     rest_size = sum(c.size for c in rest)
     if rest_size and children:
-        children.append({"name": "outros", "path": None, "bytes": rest_size, "size": _human(rest_size), "size_gb": _gb(rest_size), "files": sum(c.files for c in rest)})
+        children.append({"name": "outros", "path": None, "bytes": rest_size, "size": human_size(rest_size), "size_gb": _gb(rest_size), "files": sum(c.files for c in rest)})
     if children:
         out["children"] = children
     return out
@@ -425,7 +419,7 @@ def scan(
     insights = _insights(acc, ctx, total, stop, dup_budget_s if not ctx.cancelled else 0)
     return {
         "root": root,
-        "total": _human(tree.size),
+        "total": human_size(tree.size),
         "total_gb": _gb(tree.size),
         "total_bytes": tree.size,
         "files_scanned": acc.files,
@@ -435,11 +429,11 @@ def scan(
         "cancelled": ctx.cancelled or bool(stop is not None and stop.is_set()),
         "unreadable_entries": acc.errors,
         "by_type": sorted(
-            ({"type": k, "bytes": v, "size": _human(v), "size_gb": _gb(v), "pct": round(v * 100 / total, 1)} for k, v in acc.by_type.items()),
+            ({"type": k, "bytes": v, "size": human_size(v), "size_gb": _gb(v), "pct": round(v * 100 / total, 1)} for k, v in acc.by_type.items()),
             key=lambda d: d["bytes"],
             reverse=True,
         ),
-        "largest_files": [{"path": p, "bytes": s, "size": _human(s), "size_gb": _gb(s)} for s, p in sorted(acc.largest, reverse=True)],
+        "largest_files": [{"path": p, "bytes": s, "size": human_size(s), "size_gb": _gb(s)} for s, p in sorted(acc.largest, reverse=True)],
         "insights": insights,
         "tree": _to_dict(tree, top_n, int(tree.size * MIN_SHARE)),
     }
