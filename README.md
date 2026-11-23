@@ -5,58 +5,102 @@
 <h1 align="center">CleanChain</h1>
 
 <p align="center">
-  Limpeza de disco para Windows com um agente de IA que só apaga com a sua aprovação.<br />
-  <a href="https://github.com/GuiMRDS/CleanChain/releases">Baixar para Windows</a> ·
-  <a href="#instalação-app-desktop">Instalação</a> ·
+  Limpeza de disco com um agente de IA que só apaga com a sua aprovação.<br />
+  Windows · macOS · Linux<br />
+  <a href="https://github.com/GuiMRDS/CleanChain/releases/latest">Baixar</a> ·
+  <a href="#instalação">Instalação</a> ·
   <a href="#desenvolvimento">Desenvolvimento</a>
 </p>
 
 ---
 
-**Um "CleanMyMac" para Windows com um agente de IA dentro.** Você escolhe um disco, o
-CleanChain faz um raio-x completo dele e um agente ReAct (LangChain) conversa com você
-sobre o que está ocupando espaço: abre as pastas no mapa enquanto explica, encontra
-o que dá para limpar e, **só com a sua confirmação**, manda os arquivos para a Lixeira.
+**Um "CleanMyMac" com um agente de IA dentro, para Windows, macOS e Linux.** Você escolhe um
+disco, o CleanChain faz um raio-x completo dele e um agente ReAct (LangChain) conversa com
+você sobre o que está ocupando espaço: abre as pastas no mapa enquanto explica, encontra o
+que dá para limpar e, **só com a sua confirmação**, manda os arquivos para a Lixeira.
 
-Roda como **app desktop para Windows** (Electron) ou, para desenvolvimento, no navegador.
+Roda como **app desktop** (Electron) ou, para desenvolvimento, no navegador.
 
 ![Tela inicial do CleanChain](docs/images/01-inicio.png)
 
 ---
 
-## Instalação (app desktop)
+## Instalação
 
-1. Baixe `CleanChain-Setup-<versão>.exe` em
-   [Releases](https://github.com/GuiMRDS/CleanChain/releases).
-2. Execute o instalador. Ele instala só para o seu usuário (não pede administrador) e cria
+### Sistemas suportados
+
+| Sistema | Versões | Arquivo em [Releases](https://github.com/GuiMRDS/CleanChain/releases/latest) |
+|---|---|---|
+| **Windows** | 10 e 11 (64 bits) | `CleanChain-Setup-<versão>.exe` |
+| **macOS** | 12 (Monterey) ou mais novo, **Apple Silicon** (M1/M2/M3/M4) | `CleanChain-<versão>-mac-arm64.dmg` |
+| **Linux** | x64; testado no Ubuntu 24.04 | `.deb` (Ubuntu/Debian, recomendado) ou `.AppImage` |
+
+Em todos você precisa de uma chave de API da **Groq** (gratuita) ou da **OpenAI**. Na primeira
+abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sistema e dá para
+trocar depois no **menu do app** (botão ao lado do status do agente, no topo), que também
+verifica atualizações e abre a pasta de logs.
+
+### Windows
+
+1. Baixe e execute o `.exe`. Ele instala só para o seu usuário (não pede administrador) e cria
    atalhos na área de trabalho e no menu Iniciar.
-3. Na primeira abertura, escolha o provedor (**Groq**, gratuito, ou **OpenAI**) e cole a sua
-   chave de API. Ela fica criptografada neste computador; dá para trocar depois no
-   **menu do app** (botão ao lado do status do agente, no topo à direita), que também
-   verifica atualizações e abre a pasta de logs.
+2. O app se atualiza sozinho: baixa a versão nova em segundo plano e oferece reiniciar.
 
-O app se atualiza sozinho: quando sai uma versão nova, ele baixa em segundo plano e pergunta
-se pode reiniciar.
-
-> **Aviso do Windows (instalador sem assinatura).** O instalador ainda não tem certificado
-> de assinatura de código.
-> - **SmartScreen** ("O Windows protegeu o computador"): clique em **Mais informações ›
->   Executar assim mesmo**.
-> - **Smart App Control** (Windows 11): quando ele está **ligado**, bloqueia programas sem
+> **Instalador sem assinatura de código.**
+> - **SmartScreen** ("O Windows protegeu o computador"): **Mais informações › Executar assim mesmo**.
+> - **Smart App Control** (Windows 11): quando está **ligado**, bloqueia programas sem
 >   assinatura e **não oferece** "executar assim mesmo". Veja o estado em *Segurança do
 >   Windows › Controle de aplicativos e navegador › Smart App Control*. Desligar é uma
 >   decisão sua e **não dá para religar** sem reinstalar o Windows; a solução definitiva é o
->   instalador assinado. O pipeline já está pronto para assinar e só precisa das
->   credenciais: veja [docs/assinatura.md](docs/assinatura.md).
+>   instalador assinado. O pipeline já está pronto para assinar: veja
+>   [docs/assinatura.md](docs/assinatura.md).
 
-**Onde ficam os dados:** `%APPDATA%\CleanChain` (scans, chave cifrada e logs em `logs\`).
-Desinstalar pelo Windows remove o app e mantém essa pasta; apague-a para limpar tudo.
+### macOS
+
+1. Abra o `.dmg` e arraste o **CleanChain** para **Aplicativos**.
+2. **Primeira abertura (Gatekeeper):** o app não tem assinatura nem notarização da Apple, então
+   o macOS avisa que "não pôde verificar" o app. Para abrir:
+   1. tente abrir o CleanChain uma vez e feche o aviso;
+   2. vá em **Ajustes do Sistema › Privacidade e Segurança**, role até "O CleanChain foi
+      bloqueado…" e clique em **Abrir Mesmo Assim**;
+   3. confirme com a sua senha. Das próximas vezes ele abre direto.
+3. Para analisar pastas como Mail, Mensagens ou Safari, conceda **Acesso Total ao Disco** em
+   *Ajustes do Sistema › Privacidade e Segurança › Acesso Total ao Disco*. Sem isso o scan
+   continua, mas essas pastas aparecem como sem permissão.
+4. **Atualizações:** sem a assinatura da Apple, o macOS não deixa o app se atualizar sozinho.
+   O menu do app avisa quando há versão nova e abre a página de download.
+
+### Linux
+
+- **`.deb` (Ubuntu/Debian, recomendado):** `sudo apt install ./CleanChain-<versão>-linux-amd64.deb`.
+  Ele instala também o perfil AppArmor que o Ubuntu 24.04+ exige para o sandbox do Chromium.
+- **`.AppImage`:** `chmod +x CleanChain-*.AppImage` e execute. No Ubuntu 24.04+ o AppImage
+  pode não abrir por causa da restrição de sandbox do AppArmor; nesse caso, use o `.deb`.
+  (O app **não** desliga o sandbox para contornar isso.)
+- **Cofre de senhas:** a chave do LLM fica no GNOME Keyring ou no KWallet. **Sem um deles, o
+  app não salva a chave** (seria texto puro) e explica isso na tela; instale com
+  `sudo apt install gnome-keyring` e abra o app de novo.
+- **Atualizações:** o AppImage se atualiza sozinho; no `.deb`, o menu do app avisa e abre a
+  página de download (instalar pediria senha de administrador).
+
+### Onde ficam os dados
+
+| Sistema | Pasta (scans, chave cifrada e `logs/`) |
+|---|---|
+| Windows | `%APPDATA%\CleanChain` |
+| macOS | `~/Library/Application Support/CleanChain` |
+| Linux | `~/.config/CleanChain` |
+
+Desinstalar remove o app e mantém essa pasta; apague-a para limpar tudo.
+
+**Regras de exclusão de cada sistema** (o que nunca pode ser apagado): veja
+[docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
 
 ---
 
 ## Funcionalidades
 
-- **Scan profundo por disco** — escolha `C:`, `D:`… (ou só a sua pasta de usuário). O
+- **Scan profundo por disco** — escolha `C:`, `D:`… no Windows, o disco ou volumes no macOS e no Linux (ou só a sua pasta de usuário). O
   scan percorre o disco inteiro em paralelo, com progresso em %, pode ser cancelado e
   salva o resultado em JSON.
 - **Oportunidades de limpeza** — o scan encontra caches e temporários conhecidos
@@ -156,13 +200,15 @@ flowchart LR
   funcionam sem CORS e sem `file://`.
 - **Ninguém de fora usa a API.** Sem o cookie, só `/health` e `/bootstrap` respondem (401 no
   resto); o token vale uma vez; porta e token mudam a cada execução.
-- **Nada fica rodando.** Ao fechar, o app encerra o backend e toda a árvore de processos
-  (`taskkill /T /F`). Se o Electron for morto à força, o backend percebe e se encerra sozinho.
+- **Nada fica rodando.** Ao fechar, o app encerra o backend e todos os processos filhos
+  (Windows: `taskkill /T /F`; macOS e Linux: SIGTERM no grupo de processos e, se preciso,
+  SIGKILL). Se o Electron for morto à força, o backend percebe e se encerra sozinho.
 - **Se o backend cair**, o app mostra o aviso e oferece **Reiniciar**, sem fechar.
-- **Janela integrada ao design:** sem a barra de título e o menu do Windows; a interface vai
-  até o topo, os botões da janela ficam numa sobreposição discreta e as ações do app
-  (chave do modelo, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
-  avisos de erro usam o mesmo visual.
+- **Janela integrada ao design:** sem a barra de título nativa; a interface vai até o topo,
+  os botões da janela ficam numa sobreposição discreta (à esquerda no macOS) e as ações do
+  app (chave do modelo, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
+  avisos de erro usam o mesmo visual. No macOS o app continua ativo ao fechar a janela e
+  tem o menu do app (Sobre, Ocultar, Encerrar, Editar).
 
 ### Ferramentas do agente
 
@@ -177,11 +223,16 @@ flowchart LR
 ### Segurança
 
 - O scan é **somente leitura**; atalhos/junctions são ignorados.
-- `delete_files` usa a **Lixeira do Windows** (dá para restaurar) e o backend recusa:
-  pastas do sistema e de programas (`Windows`, `Program Files`, `ProgramData`…),
-  `pagefile.sys` e afins, raiz de disco, a pasta do usuário e as pastas principais dela
-  (Desktop, Downloads, AppData…), qualquer coisa fora da área escaneada e mais de 100
-  itens por vez. A validação roda ao montar o cartão **e** de novo na hora de apagar.
+- `delete_files` usa a **Lixeira** do sistema (dá para restaurar) e o backend recusa:
+  pastas do sistema e de programas, arquivos de sistema (`pagefile.sys`, `sleepimage`,
+  `swapfile`…), raiz de disco, a pasta do usuário e as pastas principais dela, dados
+  pessoais sensíveis (chaves SSH, Keychain, iCloud…), qualquer coisa fora da área escaneada
+  e mais de 100 itens por vez. A validação roda ao montar o cartão **e** de novo na hora de
+  apagar. As listas de cada sistema estão em
+  [docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
+- **Uma camada de plataforma** (`backend/app/plataforma/`) concentra o que muda entre
+  Windows, macOS e Linux; as regras do Windows foram mantidas idênticas (teste de retrato
+  com 631 caminhos).
 - O backend escuta só em `127.0.0.1`, recusa *Host* externo e requisições de outras origens
   (sites abertos no navegador). Os scans salvos (`backend/data/`) ficam fora do git.
 - No app desktop, a API exige o cookie de sessão; a pasta de instalação e a pasta de dados
@@ -191,8 +242,10 @@ flowchart LR
   `https` abrem no navegador padrão), permissões negadas exceto o microfone, IPC só com
   canais listados e argumentos validados, e Electron Fuses (sem `RunAsNode`, sem
   `NODE_OPTIONS`/`--inspect`, integridade do ASAR validada).
-- **A chave do LLM** fica cifrada com `safeStorage` (DPAPI do Windows) e só chega ao backend
-  por variável de ambiente; nunca vai para log, disco em texto puro ou interface.
+- **A chave do LLM** fica cifrada com `safeStorage` (DPAPI no Windows, Keychain no macOS,
+  GNOME Keyring/KWallet no Linux) e só chega ao backend por variável de ambiente; nunca vai
+  para log, disco em texto puro ou interface. No Linux sem cofre de senhas, o app não salva
+  a chave.
 
 ---
 
@@ -200,7 +253,7 @@ flowchart LR
 
 ### Requisitos
 
-- Windows 10/11 (a lista de discos e a Lixeira usam APIs do Windows)
+- Windows 10/11, macOS 12+ (Apple Silicon) ou Linux x64
 - Node.js 20+ e npm
 - Python 3.12+ e [uv](https://docs.astral.sh/uv/)
 - Uma chave da **Groq** (grátis) ou da **OpenAI**
@@ -275,13 +328,16 @@ npm run test:fumaca
 
 ```sh
 cd desktop
-npm run dist       # build da interface → PyInstaller → TypeScript → instalador NSIS
+npm run dist       # build da interface → PyInstaller → TypeScript → instaladores deste sistema
 ```
 
-Saída: `desktop/release/CleanChain-Setup-<versão>.exe`. Para publicar, suba a versão em
-`desktop/package.json` e crie a tag igual (ex.: `v0.1.0`): o workflow **Release** testa,
-gera e publica no GitHub Releases. Ele também pode ser disparado à mão (Actions › Release ›
-Run workflow) para só gerar o instalador como artefato.
+Cada sistema gera os próprios instaladores (o backend do PyInstaller não é multiplataforma),
+em `desktop/release/`: `.exe` no Windows, `.dmg`/`.zip` no macOS e `.AppImage`/`.deb` no
+Linux. Para publicar, suba a versão em `desktop/package.json` e crie a tag igual (ex.:
+`v0.2.0`): o workflow **Release** roda nos três sistemas (testes, PyInstaller, fumaça com o
+backend empacotado e com o app final) e, só se os três passarem, publica tudo num Release.
+Disparado à mão (Actions › Release › Run workflow) ou em pull requests que mexem no
+empacotamento, ele só gera os instaladores como artefatos.
 
 > Com o **Smart App Control** ligado, o Windows bloqueia o executável que o NSIS gera e
 > roda durante o build (`spawn UNKNOWN`). Gere o instalador pelo workflow, ou use
@@ -329,7 +385,8 @@ backend/
     storage.py        scans salvos (pasta de dados/scans/)
     files.py          listagem de pastas e regras de segurança para apagar
     units.py          formatação de tamanhos (bytes → "1.2 GB")
-    drives.py         discos do Windows
+    drives.py         discos, RAM e temporários (via plataforma)
+    plataforma/       o que muda por sistema: windows.py, macos.py, linux.py
     speech.py         transcrição (Whisper)
     scan_insights.py  caches conhecidos e duplicados (hash parcial → hash completo)
     tools/            scan_disk, read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files

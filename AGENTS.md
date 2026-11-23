@@ -13,7 +13,9 @@ em Electron** (`desktop/`), que inicia o backend como processo filho; no desenvo
 também roda no navegador.
 
 - Idioma do produto: **português do Brasil** (UI, prompts, mensagens de erro, commits).
-- Plataforma alvo: **Windows** (`ctypes.windll` para discos, Lixeira via `send2trash`).
+- Plataformas: **Windows, macOS (Apple Silicon) e Linux (x64)**. Tudo o que muda por
+  sistema fica na camada de plataforma (`backend/app/plataforma/` e
+  `desktop/main/plataforma.ts`); a Lixeira é via `send2trash` nos três.
 
 ## Mapa do repositório
 
@@ -101,7 +103,15 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 - `tools/last_scan.py` (`read_last_scan`), `tools/scan_insights_tool.py`
   (`read_scan_insights`), `tools/cleanup.py` (`list_folder`, `delete_files`),
   `tools/ui_actions.py` (`focus_folder`) — ferramentas do agente.
-- `files.py` — **regras de segurança para apagar** (`check_deletable`), o lote de
+- `plataforma/` — **o que muda por sistema**: `base.py` (interface), `windows.py` (as
+  regras de antes, movidas sem mudança), `macos.py`, `linux.py`. Comparação de caminhos
+  (`chave`, `dentro`; no macOS ignora maiúsculas), pastas protegidas inteiras e "só a
+  pasta", arquivos de sistema, links, raiz de volume, catálogo de caches, o que o scan
+  pula, discos, memória, processo vivo e textos. Escolhida uma vez em `plataforma.atual()`;
+  `plataforma.para(nome)` dá a de outro sistema (testes simulados).
+- `files.py` — **regras de segurança para apagar**: `check_deletable` (checagens no disco)
+  + `motivo_por_regras` (parte pura, mesma ordem nos três sistemas) +
+  `motivo_simulado` (regras de qualquer sistema com caminhos simulados); o lote de
   exclusão (`deletion_batch`: sem repetidos, até `MAX_DELETE_ITEMS`, o mesmo na prévia e
   na execução) e listagem.
 - `units.py` — `human_size` (bytes → "1.2 GB"); não duplique esse helper.
@@ -129,10 +139,17 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   para atalhos (invisível), tela de estado enquanto o backend sobe ou quando ele cai,
   encerramento do backend no `before-quit`. Nada de `dialog.showMessageBox`: avisos ficam
   no visual do app.
-- `tela/` — página local de abertura/erro (`estado.html?estado=iniciando|reiniciando|erro`),
-  com CSP própria e as fontes do app; botões "Reiniciar" e "Abrir pasta de logs".
+- `tela/` + `main/tela.ts` — página local de abertura/erro, servida pelo protocolo
+  próprio `cleanchain://tela/estado.html?estado=iniciando|reiniciando|erro` (**não** por
+  `file://`: o Fuse `grantFileProtocolExtraPrivileges` fica desligado e o `file://` não
+  abre no app empacotado). CSP própria e as fontes do app.
+- `main/plataforma.ts` — o que muda por sistema no Electron: encerrar o backend
+  (`taskkill /T /F` × SIGTERM/SIGKILL no grupo), nome do executável, opções da janela
+  (botões à esquerda no macOS), menu nativo (no macOS: app, Editar, Janela), fechar
+  a janela encerra ou não, cofre da chave (no Linux recusa `basic_text`), microfone no
+  macOS e modo de atualização (automática × só avisar).
 - `main/backend.ts` — porta livre + token aleatório, `spawn` com variáveis de ambiente,
-  espera `/health`, logs no `electron-log`, `taskkill /T /F` ao parar.
+  espera `/health`, logs no `electron-log`, encerra pela `plataforma.ts`.
 - `main/segredos.ts` — chave com `safeStorage` em `userData/segredos.json`.
 - `main/ipc.ts` + `preload/preload.ts` — canais `chave:status|salvar|remover`,
   `app:versao|abrirLogs|reiniciarServico|atualizacao|verificarAtualizacoes|instalarAtualizacao`
@@ -146,8 +163,9 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   permissões (só microfone/áudio), `webPreferences` fixas.
 - `main/caminhos.ts` — backend empacotado × `uv run python -m app.desktop` em
   desenvolvimento (`CLEANCHAIN_PYTHON` / `CLEANCHAIN_BACKEND_EXE` como alternativas).
-- `electron-builder.yml` — NSIS por usuário, `extraResources` do PyInstaller, Fuses,
-  publicação no GitHub. O `appId` **não muda** (atualizações e dados dependem dele).
+- `electron-builder.yml` — NSIS por usuário (Windows), `.dmg`/`.zip` arm64 com assinatura
+  ad hoc (macOS), AppImage/`.deb` com perfil AppArmor (Linux), `extraResources` do
+  PyInstaller, Fuses. O `appId` **não muda** (atualizações e dados dependem dele).
 
 ## Invariantes — não quebre
 
@@ -158,15 +176,13 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    ele e não chame `send2trash`/`os.remove` fora de `delete_files`.
 3. **Toda exclusão passa por `files.check_deletable`**, na prévia e na execução, e
    `delete_files` só apaga o lote de `files.deletion_batch` — exatamente o que o cartão
-   de aprovação mostrou. Ao
-   mexer nas regras, rode os casos: `C:\`, `C:\Windows\System32\…`,
-   `C:\Program Files\…`, `C:\ProgramData`, `C:\pagefile.sys`, a pasta do usuário,
-   `…\Downloads` (bloqueados) vs. um arquivo dentro de `…\Downloads` (permitido).
-   Também bloqueia pastas que **contêm** uma protegida (ex.: `D:\Projetos`) e junctions.
-   Use `inside()` para "está dentro de" — não `startswith` em caminhos crus nem
-   `commonpath` com separador final (já causou falso negativo).
-   Toda regra nova ganha teste em `backend/tests/test_delete_rules.py`; os testes usam
-   uma réplica em pasta temporária (fixture `sandbox`) e nunca tocam no disco real.
+   de aprovação mostrou. As listas de cada sistema estão em
+   `docs/seguranca-por-sistema.md` (mantenha em dia). Também bloqueia pastas que
+   **contêm** uma protegida e links/junctions. Use `inside()` / `plataforma.dentro()` para
+   "está dentro de" — não `startswith` em caminhos crus nem `commonpath` com separador
+   final (já causou falso negativo). Regra nova ganha teste em `test_plataforma_regras.py`
+   (simulado, os três sistemas) e, se depender do disco, em `test_delete_rules.py`
+   (fixture `sandbox`, nunca toca no disco real).
 4. **Exclusões vão para a Lixeira**, nunca exclusão permanente.
 5. **O contrato NDJSON é compartilhado** entre `stream.py`, `chat.py` e
    `frontend/src/agent/*`. Ao criar um tipo de evento, trate-o nos três.
@@ -184,7 +200,13 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    Canal IPC novo entra em `ipc.ts` **e** `preload.ts`, com validação.
 11. **A chave do LLM nunca vai para log, disco em texto puro ou interface.**
 12. **Nenhum processo do backend sobrevive ao app.** Se mexer no ciclo de vida, rode
-   `npm run test:fumaca` (o 3º teste confere isso).
+   `npm run test:fumaca` (os testes de queda e de fechamento conferem isso).
+13. **As regras do Windows não mudam.** `test_retrato_windows.py` compara 631 caminhos
+   com o comportamento gravado antes da multiplataforma. Mudança intencional: revise,
+   regenere com `uv run python -m tests.retrato_windows` e explique no PR.
+14. **Nada de `if sistema == …` fora da camada de plataforma** (backend e Electron).
+   Recurso sem equivalente seguro num sistema é **desativado** nesse sistema (ex.: chave
+   no Linux sem cofre de senhas), nunca improvisado.
 
 ## Como estender
 
@@ -230,6 +252,16 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   cobre chamadas diretas à API.
 - `uvicorn --reload` observa `backend/`; arquivos gerados em `backend/data/` disparam
   recarga.
+
+- **macOS:** o APFS não diferencia maiúsculas, mas o Python sim — por isso a plataforma
+  compara com `casefold()`. `/tmp`, `/etc`, `/var` são links para `/private`. As pastas de
+  teste ficam em `/private/var/folders` (protegida por inteiro no Mac): testes que precisam
+  de "apagável" usam a fixture `sandbox` ou isolam as regras.
+- **Linux:** sem GNOME Keyring/KWallet o `safeStorage` cai em `basic_text` (equivale a texto
+  puro): o app recusa salvar a chave. O AppImage não abre no Ubuntu 24.04+ sem perfil
+  AppArmor (o `.deb` instala um); no CI a fumaça roda com `xvfb-run` e o sysctl do AppArmor.
+- **Capturas de janela** (`tests/captura-janela.mjs`, `captura-estados.mjs`) copiam a TELA:
+  qualquer janela na frente aparece. Para o conteúdo do app, use `tests/captura.mjs`.
 
 ## Estilo
 
