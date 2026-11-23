@@ -6,6 +6,7 @@
 # Dependências e builds
 node_modules/
 dist/
+backend/build/
 .venv/
 __pycache__/
 *.pyc
