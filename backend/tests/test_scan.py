@@ -11,9 +11,19 @@ from pathlib import Path
 import pytest
 
 import app.tools.disk_scan as ds
-from app.scan_insights import classify_dir, find_duplicates
+from app import plataforma
+from app.scan_insights import find_duplicates
 
 MB = 1024**2
+
+# Caches conhecidos onde eles ficam em cada sistema: (caminho na pasta do usuário, categoria).
+# O primeiro de cada sistema tem 200 KB (o teste confere o tamanho).
+CACHES = {
+    "windows": [("AppData/Local/Temp/x.tmp", "temporarios"),
+                ("AppData/Local/Google/Chrome/User Data/Default/Cache/f_0001", "cache_navegador")],
+    "macos": [("Library/Caches/com.exemplo.app/x.bin", "cache_app"), ("Library/Logs/App/app.log", "logs")],
+    "linux": [(".cache/pip/x.bin", "cache_app"), (".npm/_cacache/x", "cache_dev")],
+}[plataforma.atual().nome]
 
 
 def _write(path: Path, data: bytes) -> Path:
@@ -36,9 +46,9 @@ def tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         os.link(a, root / "Documentos" / "hardlink.pdf")  # mesmo arquivo físico: não é duplicado
     except OSError:
         pass
-    _write(root / "AppData" / "Local" / "Temp" / "x.tmp", os.urandom(200_000))
+    _write(root / CACHES[0][0], os.urandom(200_000))
     _write(root / "projeto" / "node_modules" / "lib" / "index.js", os.urandom(50_000))
-    _write(root / "AppData" / "Local" / "Google" / "Chrome" / "User Data" / "Default" / "Cache" / "f_0001", os.urandom(80_000))
+    _write(root / CACHES[1][0], os.urandom(80_000))
     old = _write(root / "Videos" / "ferias-2019.mp4", os.urandom(4096))
     past = time.time() - 3 * 365 * 86400
     os.utime(old, (past, past))
@@ -81,8 +91,8 @@ def test_cancelamento(tree):
 
 def test_caches_conhecidos(tree):
     cats = {c["category"]: c for c in _scan(tree)["insights"]["reclaimable"]}
-    assert {"temporarios", "node_modules", "cache_navegador"} <= set(cats)
-    assert cats["temporarios"]["bytes"] == 200_000
+    assert {CACHES[0][1], "node_modules", CACHES[1][1]} <= set(cats)
+    assert cats[CACHES[0][1]]["bytes"] == 200_000
     assert cats["node_modules"]["paths"][0]["path"].endswith("node_modules")
 
 
@@ -145,7 +155,9 @@ def test_extensoes(tree):
     ],
 )
 def test_classifica_pastas(parent, name, cat):
-    assert classify_dir(parent, name) == cat
+    # Catálogo do Windows (roda em qualquer sistema); o do macOS e o do Linux estão em
+    # test_plataforma_regras.py.
+    assert plataforma.para("windows").classificar_cache(parent, name) == cat
 
 
 def test_find_duplicates_respeita_cancelamento(tmp_path):

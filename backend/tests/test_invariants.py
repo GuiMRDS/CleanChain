@@ -147,6 +147,13 @@ def app_instalado(tmp_path, monkeypatch):
     (dados / "scans" / "latest.json").write_text("{}", encoding="utf-8")
     monkeypatch.setenv("CLEANCHAIN_INSTALACAO", str(inst))
     monkeypatch.setenv("CLEANCHAIN_DADOS", str(dados))
+    # Isola as regras do próprio app: as pastas do sistema ficam de fora deste teste (no macOS
+    # a pasta temporária já fica dentro de /private, que é protegida por inteiro).
+    from app import plataforma
+
+    plat = plataforma.atual()
+    monkeypatch.setattr(plat, "pastas_protegidas", lambda home, env: [])
+    monkeypatch.setattr(plat, "pastas_exatas", lambda home: [])
     return disco, inst, dados
 
 

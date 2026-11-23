@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from app import files
+from app import files, plataforma
 from app.files import MAX_DELETE_ITEMS, check_deletable, inside, preview_deletion
 
 windows_only = pytest.mark.skipif(sys.platform != "win32", reason="regra específica do Windows")
@@ -85,7 +85,12 @@ class TestBloqueados:
         f = sandbox.file("Users/fulano/Downloads/a.txt")
         assert check_deletable(str(f), None) == "fora da área analisada"
 
-    @pytest.mark.parametrize("nome", ["pagefile.sys", "hiberfil.sys", "swapfile.sys", "NTUSER.DAT"])
+    # Os arquivos de sistema de cada um (o Windows mantém a lista de sempre).
+    @pytest.mark.parametrize("nome", {
+        "windows": ["pagefile.sys", "hiberfil.sys", "swapfile.sys", "NTUSER.DAT"],
+        "macos": ["sleepimage", ".Spotlight-V100", ".DocumentRevisions-V100", ".fseventsd"],
+        "linux": ["swapfile", "swap.img"],
+    }[plataforma.atual().nome])
     def test_arquivos_do_sistema(self, sandbox, nome):
         f = sandbox.file(nome)
         assert check_deletable(str(f), sandbox.scan_root) == "arquivo do sistema"
