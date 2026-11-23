@@ -1,28 +1,51 @@
 name: Release
 
-# Tag v* (ex.: v0.1.0, igual à versão de desktop/package.json): testa, empacota o backend com
-# PyInstaller, gera o instalador e publica no GitHub Releases (o electron-updater busca lá).
-# Disparo manual: faz tudo, menos publicar — o instalador fica como artefato do workflow.
+# Tag v* (ex.: v0.2.0, igual à versão de desktop/package.json): em cada sistema, testa,
+# empacota o backend com PyInstaller (no próprio sistema), roda a fumaça e gera os
+# instaladores. Só se os três passarem, um job final publica tudo num Release:
+#   Windows  CleanChain-Setup-<v>.exe (NSIS)               + latest.yml
+#   macOS    CleanChain-<v>-mac-arm64.dmg / .zip            + latest-mac.yml
+#   Linux    CleanChain-<v>-linux-x86_64.AppImage / .deb    + latest-linux.yml
+# Disparo manual e pull requests que mexem no empacotamento: faz tudo, menos publicar — os
+# instaladores ficam como artefatos (assim o PR prova que os três sistemas empacotam e abrem).
 #
-# Assinatura de código (Azure Trusted Signing): liga sozinha quando o repositório tem
-#   variáveis  AZURE_SIGNING_ENDPOINT, AZURE_SIGNING_ACCOUNT, AZURE_SIGNING_PROFILE, AZURE_SIGNING_PUBLISHER
-#   segredos   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
-# Sem elas, o instalador sai sem assinatura (como antes). Com elas, tudo é assinado e o
-# workflow falha se sobrar algum binário sem assinatura. Passo a passo: docs/assinatura.md.
+# Assinatura de código do Windows (Azure Artifact Signing): liga sozinha quando o
+# repositório tem as variáveis AZURE_SIGNING_* e os segredos AZURE_* (docs/assinatura.md).
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+  pull_request:
+    paths:
+      - desktop/**
+      - backend/cleanchain-backend.spec
+      - backend/pyproject.toml
+      - backend/app/plataforma/**
+      - .github/workflows/release.yml
 
 permissions:
   contents: write
 
 jobs:
-  windows:
-    runs-on: windows-latest
+  build:
+    name: build (${{ matrix.os }})
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            exe: release/win-unpacked/CleanChain.exe
+            backend: ../backend/dist/cleanchain-backend/cleanchain-backend.exe
+          - os: macos-latest # Apple Silicon (arm64)
+            exe: release/mac-arm64/CleanChain.app/Contents/MacOS/CleanChain
+            backend: ../backend/dist/cleanchain-backend/cleanchain-backend
+          - os: ubuntu-latest
+            exe: release/linux-unpacked/cleanchain
+            backend: ../backend/dist/cleanchain-backend/cleanchain-backend
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
-      ASSINAR: ${{ vars.AZURE_SIGNING_ACCOUNT != '' }}
+      ASSINAR: ${{ vars.AZURE_SIGNING_ACCOUNT != '' && matrix.os == 'windows-latest' }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
@@ -56,6 +79,13 @@ jobs:
             exit 1
           fi
 
+      - name: Linux — tela virtual, sandbox do Chromium e ferramentas do .deb
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb lsof rpm
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+
       - name: Backend — testes de segurança
         working-directory: backend
         run: |
@@ -68,11 +98,11 @@ jobs:
           npm ci
           npm run build
 
-      - name: Backend — PyInstaller
+      - name: Backend — PyInstaller (neste sistema)
         working-directory: backend
         run: uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean
 
-      - name: Assinatura — backend (.exe, .pyd e DLLs sem assinatura)
+      - name: Assinatura — backend do Windows (.exe, .pyd e DLLs sem assinatura)
         if: env.ASSINAR == 'true'
         shell: pwsh
         run: ./desktop/scripts/assinar-backend.ps1
@@ -85,15 +115,17 @@ jobs:
 
       - name: Fumaça — Electron com o backend empacotado
         working-directory: desktop
+        shell: bash
         env:
-          CLEANCHAIN_BACKEND_EXE: ../backend/dist/cleanchain-backend/cleanchain-backend.exe
-        run: npm run test:fumaca
+          CLEANCHAIN_BACKEND_EXE: ${{ matrix.backend }}
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npm run test:fumaca; else npm run test:fumaca; fi
 
-      - name: Instalador
+      - name: Instaladores
         working-directory: desktop
         shell: bash
         run: |
-          args=(--win --publish never)
+          args=(--publish never)
           if [ "$ASSINAR" = "true" ]; then
             # Assina CleanChain.exe, instalador e desinstalador; o electron-updater passa a
             # exigir que as atualizações venham assinadas pelo mesmo publicador.
@@ -105,8 +137,9 @@ jobs:
             )
           fi
           npx electron-builder "${args[@]}"
+          ls -la release
 
-      - name: Assinatura — conferir todos os binários
+      - name: Assinatura — conferir todos os binários do Windows
         if: env.ASSINAR == 'true'
         shell: pwsh
         working-directory: desktop/release
@@ -118,29 +151,52 @@ jobs:
 
       - name: Fumaça — app empacotado com Fuses
         working-directory: desktop
-        env:
-          CLEANCHAIN_EXE: release/win-unpacked/CleanChain.exe
-        run: npm run test:fumaca
-
-      - name: Artefato (disparo manual)
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v4
-        with:
-          name: CleanChain-instalador
-          path: |
-            desktop/release/*.exe
-            desktop/release/latest.yml
-          retention-days: 14
-
-      - name: Publicar no GitHub Releases
-        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: desktop/release
-        # latest.yml + .exe + .blockmap: o que o electron-updater precisa para atualizar.
+          CLEANCHAIN_EXE: ${{ matrix.exe }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "CleanChain $GITHUB_REF_NAME" \
-            --notes "$( [ "$ASSINAR" = "true" ] && echo 'Instalador para Windows, assinado.' || echo 'Instalador para Windows. Sem assinatura de código: veja a seção de instalação do README sobre o SmartScreen e o Smart App Control.' )" \
-            CleanChain-Setup-*.exe CleanChain-Setup-*.exe.blockmap latest.yml
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npm run test:fumaca; else npm run test:fumaca; fi
+
+      - name: Guardar os instaladores
+        uses: actions/upload-artifact@v4
+        with:
+          name: instaladores-${{ runner.os }}
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.dmg
+            desktop/release/*.zip
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+            desktop/release/*.blockmap
+            desktop/release/latest*.yml
+          if-no-files-found: error
+          retention-days: 14
+
+  publicar:
+    name: publicar no GitHub Releases
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: instaladores-*
+          path: release
+          merge-multiple: true
+
+      - name: Criar o Release com os instaladores dos três sistemas
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ASSINADO: ${{ vars.AZURE_SIGNING_ACCOUNT != '' }}
+        working-directory: release
+        run: |
+          ls -la
+          if [ "$ASSINADO" = "true" ]; then aviso_win='assinado'; else aviso_win='sem assinatura (veja o aviso do SmartScreen no README)'; fi
+          notas="Instaladores do CleanChain $GITHUB_REF_NAME.
+
+          - **Windows**: CleanChain-Setup-*.exe — $aviso_win.
+          - **macOS (Apple Silicon)**: .dmg — sem assinatura da Apple; na primeira abertura use *Ajustes do Sistema › Privacidade e Segurança › Abrir mesmo assim* (ver README).
+          - **Linux**: .deb (recomendado no Ubuntu 24.04+) ou .AppImage.
+
+          Instruções completas: https://github.com/${GITHUB_REPOSITORY}#instalação"
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "CleanChain $GITHUB_REF_NAME" --notes "$notas" ./*

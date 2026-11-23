@@ -1,7 +1,8 @@
 name: CI
 
-# Testes a cada push e pull request: backend (pytest), build da interface, tipos do app
-# desktop e teste de fumaça do Electron com o backend real.
+# Testes a cada push e pull request, nos três sistemas: backend (pytest, com as regras de
+# exclusão de cada sistema), build da interface, tipos do app desktop e teste de fumaça do
+# Electron com o backend real.
 on:
   push:
     branches: [main]
@@ -16,7 +17,12 @@ concurrency:
 
 jobs:
   testes:
-    runs-on: windows-latest
+    name: testes (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +39,15 @@ jobs:
           cache-dependency-path: |
             frontend/package-lock.json
             desktop/package-lock.json
+
+      - name: Linux — tela virtual e sandbox do Chromium
+        if: runner.os == 'Linux'
+        # O Ubuntu 24.04 restringe user namespaces (AppArmor), que o sandbox do Electron usa.
+        # Liberado só no runner de testes; o app instalado pelo .deb traz o perfil AppArmor.
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb lsof
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
 
       - name: Backend — dependências
         working-directory: backend
@@ -56,4 +71,6 @@ jobs:
 
       - name: Desktop — teste de fumaça (Electron + backend via uv)
         working-directory: desktop
-        run: npm run test:fumaca
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npm run test:fumaca; else npm run test:fumaca; fi
