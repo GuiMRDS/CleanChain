@@ -121,7 +121,7 @@ def stream_events(
         if decision:
             if not pending:
                 yield {"type": "error", "text": "Não há nenhuma ação aguardando confirmação."}
-                yield {"type": "done"}
+                yield {"type": "done", "awaiting_approval": False}
                 return
             reply = {"type": "approve"} if decision == "approve" else {
                 "type": "reject",

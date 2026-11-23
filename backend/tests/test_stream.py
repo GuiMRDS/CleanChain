@@ -52,4 +52,5 @@ def test_decisao_sem_pendencia_vira_erro():
     agent = FakeAgent(pending=0)
     events = list(stream_events(agent, None, "t1", decision="approve"))
     assert events[0]["type"] == "error"
+    assert events[-1] == {"type": "done", "awaiting_approval": False}  # mesmo formato de sempre
     assert agent.streamed == []
