@@ -17,15 +17,18 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
+from app import config
 from app.tools.last_scan import read_last_scan
 from app.tools.scan_insights_tool import read_scan_insights
 from app.tools.cleanup import delete_files, list_folder
 from app.tools.ui_actions import focus_folder
 
-# .env do backend tem prioridade; depois o da raiz do repositório.
+# Desenvolvimento: .env do backend tem prioridade; depois o da raiz do repositório.
+# No app instalado a chave vem do Electron (safeStorage), pelo ambiente do processo.
 _BACKEND = Path(__file__).resolve().parents[1]
-load_dotenv(_BACKEND / ".env")
-load_dotenv(_BACKEND.parent / ".env")
+if not config.empacotado():
+    load_dotenv(_BACKEND / ".env")
+    load_dotenv(_BACKEND.parent / ".env")
 
 # Modelos padrão por provedor (troque via OPENAI_MODEL / GROQ_MODEL no .env).
 OPENAI_DEFAULT = "gpt-6.2-astra"  # mais recente da OpenAI (nov/2026)
@@ -111,6 +114,8 @@ def build_llm():
         name = os.getenv("GROQ_MODEL", GROQ_DEFAULT)
         return ChatGroq(model=name, temperature=0.2), f"groq · {name}"
 
+    if config.empacotado() or config.token():  # app desktop: a chave é configurada no app
+        raise RuntimeError("Nenhuma chave de LLM configurada. Use o menu Arquivo › Configurar chave do LLM.")
     raise RuntimeError(
         "Nenhuma chave de LLM encontrada. Adicione ao .env da raiz do projeto (ou backend/.env):\n"
         "  GROQ_API_KEY=gsk_...   ou   OPENAI_API_KEY=sk-..."

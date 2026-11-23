@@ -89,7 +89,35 @@ def bootstrap(t: str = ""):
     return resp
 
 
-agent, model_label = build_agent()  # um agente para o processo; a memória separa por thread_id
+# Um agente para o processo (a memória separa por thread_id), criado no primeiro uso: o
+# backend sobe mesmo sem chave de LLM (primeira abertura do app desktop).
+_agent_lock = threading.Lock()
+_agent = None
+_model_label: str | None = None
+
+
+def get_agent():
+    """O agente do processo. RuntimeError se não houver chave de LLM configurada."""
+    global _agent, _model_label
+    with _agent_lock:
+        if _agent is None:
+            _agent, _model_label = build_agent()
+        return _agent
+
+
+def _chat_stream(events) -> StreamingResponse:
+    def ndjson():
+        for event in events:
+            yield _line(event)
+
+    # Gerador síncrono: o FastAPI roda em thread separada, sem travar o servidor.
+    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+
+
+def _no_agent(err: RuntimeError):
+    yield {"type": "error", "text": str(err)}
+    yield {"type": "done", "awaiting_approval": False}
+
 
 SCAN_DEPTH = 6  # níveis de pastas guardados no JSON (o sunburst desenha os 4 primeiros)
 SCAN_TOP_N = 10  # maiores subpastas por pasta; o resto vira "outros"
@@ -118,7 +146,11 @@ class ChatRequest(BaseModel):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "model": model_label, "home": str(Path.home())}
+    try:
+        get_agent()
+    except RuntimeError:
+        return {"ok": True, "configured": False, "model": None, "home": str(Path.home())}
+    return {"ok": True, "configured": True, "model": _model_label, "home": str(Path.home())}
 
 
 @app.get("/api/system")
@@ -129,13 +161,12 @@ def system():
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
-    def ndjson():
-        ui_state = req.ui_state.model_dump() if req.ui_state else None
-        for event in stream_events(agent, req.message, req.thread_id, ui_state):
-            yield _line(event)
-
-    # Gerador síncrono: o FastAPI roda em thread separada, sem travar o servidor.
-    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+    try:
+        agent = get_agent()
+    except RuntimeError as err:
+        return _chat_stream(_no_agent(err))
+    ui_state = req.ui_state.model_dump() if req.ui_state else None
+    return _chat_stream(stream_events(agent, req.message, req.thread_id, ui_state))
 
 
 class ApprovalRequest(BaseModel):
@@ -147,11 +178,11 @@ class ApprovalRequest(BaseModel):
 def chat_approval(req: ApprovalRequest):
     """Decisão do usuário sobre uma ação pausada (ex.: apagar arquivos)."""
 
-    def ndjson():
-        for event in stream_events(agent, None, req.thread_id, decision="approve" if req.approve else "reject"):
-            yield _line(event)
-
-    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+    try:
+        agent = get_agent()
+    except RuntimeError as err:
+        return _chat_stream(_no_agent(err))
+    return _chat_stream(stream_events(agent, None, req.thread_id, decision="approve" if req.approve else "reject"))
 
 
 # ---------------------------------------------------------------- scan
