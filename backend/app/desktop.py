@@ -10,35 +10,17 @@ rodando sozinho, nem se o Electron travar ou for morto pelo Gerenciador de Taref
 from __future__ import annotations
 
 import os
-import sys
 import threading
 import time
 
-from app import config
+from app import config, plataforma
 
 VIGIA_INTERVALO_S = 2.0
 
 
 def processo_vivo(pid: int) -> bool:
     """True se o processo `pid` ainda está rodando."""
-    if sys.platform == "win32":
-        import ctypes
-
-        SYNCHRONIZE = 0x00100000
-        WAIT_TIMEOUT = 0x102
-        kernel32 = ctypes.windll.kernel32
-        handle = kernel32.OpenProcess(SYNCHRONIZE, False, pid)
-        if not handle:
-            return False
-        try:
-            return kernel32.WaitForSingleObject(handle, 0) == WAIT_TIMEOUT
-        finally:
-            kernel32.CloseHandle(handle)
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return False
-    return True
+    return plataforma.atual().processo_vivo(pid)
 
 
 def _vigiar_pai(pid: int) -> None:

@@ -1,18 +1,27 @@
-"""Leitura de pastas e regras de segurança para apagar (compartilhado entre API e ferramentas)."""
+"""Leitura de pastas e regras de segurança para apagar (compartilhado entre API e ferramentas).
+
+O que muda entre sistemas (pastas protegidas, arquivos de sistema, links, raiz de volume,
+maiúsculas) vem da camada de plataforma (app/plataforma). Aqui ficam as checagens que tocam
+o disco e `motivo_por_regras`, a parte pura das regras — testável com caminhos simulados de
+qualquer sistema.
+"""
 
 from __future__ import annotations
 
 import os
-from pathlib import Path
+from collections.abc import Iterable, Mapping
+from pathlib import Path, PurePath
 
-from app import config
+from app import config, plataforma
+from app.plataforma import Plataforma
 from app.storage import load_latest
 
 MAX_DELETE_ITEMS = 100
 
 
 def _norm(p: str) -> str:
-    return os.path.normcase(os.path.realpath(p)).rstrip("\\/")
+    """Caminho real (links resolvidos) na forma comparável da plataforma."""
+    return plataforma.atual().chave(os.path.realpath(p))
 
 
 def scan_root() -> str | None:
@@ -22,11 +31,7 @@ def scan_root() -> str | None:
 
 def inside(path: str, root: str) -> bool:
     """True se `path` é `root` ou está dentro dele (root já normalizado com _norm)."""
-    p = _norm(path)
-    if p == root:
-        return True
-    prefix = root if root.endswith(os.sep) else root + os.sep  # "c:" → "c:\"
-    return p.startswith(prefix)
+    return plataforma.atual().dentro(_norm(path), root)
 
 
 def list_files(path: str, limit: int = 100) -> dict:
@@ -52,25 +57,11 @@ def list_files(path: str, limit: int = 100) -> dict:
 
 # ------------------------------------------------------------- segurança para apagar
 
-_SYSTEM_FILES = {"pagefile.sys", "hiberfil.sys", "swapfile.sys", "dumpstack.log", "dumpstack.log.tmp", "bootmgr", "ntuser.dat"}
-_PROFILE_FOLDERS = ("Desktop", "Documents", "Downloads", "Pictures", "Videos", "Music", "OneDrive", "AppData",
-                    r"AppData\Local", r"AppData\Roaming", r"AppData\LocalLow", "Favorites", "Contacts")
-
 
 def _protected_roots() -> list[str]:
     """Pastas que nunca podem ser apagadas nem ter o conteúdo apagado."""
-    env = os.environ
-    windir = env.get("SystemRoot", r"C:\Windows")
-    drive = env.get("SystemDrive", "C:")
     roots = [
-        windir,
-        env.get("ProgramFiles", rf"{drive}\Program Files"),
-        env.get("ProgramFiles(x86)", rf"{drive}\Program Files (x86)"),
-        env.get("ProgramData", rf"{drive}\ProgramData"),
-        rf"{drive}\System Volume Information",
-        rf"{drive}\$Recycle.Bin",
-        rf"{drive}\Recovery",
-        rf"{drive}\Boot",
+        *plataforma.atual().pastas_protegidas(Path.home(), os.environ),
         # O próprio CleanChain: código (ou backend empacotado), pasta de instalação e dados.
         *(str(p) for p in config.pastas_do_app()),
     ]
@@ -79,39 +70,62 @@ def _protected_roots() -> list[str]:
 
 def _exact_protected() -> set[str]:
     """Pastas que não podem ser apagadas inteiras (o conteúdo delas pode)."""
-    home = Path.home()
-    exact = {_norm(str(home)), _norm(str(home.parent))}
-    exact |= {_norm(str(home / f)) for f in _PROFILE_FOLDERS}
-    return exact
+    return {_norm(r) for r in plataforma.atual().pastas_exatas(Path.home())}
+
+
+def motivo_por_regras(p: Plataforma, real: str, root: str | None, protegidas: Iterable[str], exatas: Iterable[str]) -> str | None:
+    """Parte pura das regras (sem tocar no disco). Todos os caminhos já em p.chave().
+
+    A ordem importa e é a mesma em todos os sistemas: fora da área → arquivo de sistema →
+    pasta protegida → pasta principal do usuário → contém uma pasta protegida.
+    """
+    if root is None or not p.dentro(real, root):
+        return "fora da área analisada"
+    if p.eh_arquivo_de_sistema(real):
+        return "arquivo do sistema"
+    protegidas = list(protegidas)
+    for protected in protegidas:
+        if p.dentro(real, protected):
+            return "pasta protegida (sistema, programas ou o próprio CleanChain)"
+    exatas = set(exatas)
+    if real in exatas:
+        return "pasta principal do usuário (apague o conteúdo, não a pasta)"
+    # Apagar uma pasta "pai" levaria junto uma pasta protegida que está dentro dela.
+    for protected in (*protegidas, *exatas):
+        if p.dentro(protected, real):
+            return "contém uma pasta protegida"
+    return None
 
 
 def check_deletable(path: str, root: str | None) -> str | None:
     """None se pode apagar; senão, o motivo do bloqueio."""
+    p = plataforma.atual()
     if not path or not os.path.isabs(path):
         return "caminho precisa ser completo"
     if not os.path.lexists(path):
         return "não existe mais"
-    if os.path.islink(path) or (hasattr(os.path, "isjunction") and os.path.isjunction(path)):
+    if p.eh_link(path):
         return "é um atalho/link"
     real = _norm(path)
-    if Path(real).anchor and real == _norm(Path(real).anchor):
+    if p.raiz_de_volume(path, real):
         return "é a raiz de um disco"
-    if root is None or not inside(real, root):
-        return "fora da área analisada"
-    if os.path.basename(real).lower() in _SYSTEM_FILES:
-        return "arquivo do sistema"
-    protected_roots = _protected_roots()
-    for protected in protected_roots:
-        if inside(real, protected):
-            return "pasta protegida (sistema, programas ou o próprio CleanChain)"
-    exact = _exact_protected()
-    if real in exact:
-        return "pasta principal do usuário (apague o conteúdo, não a pasta)"
-    # Apagar uma pasta "pai" levaria junto uma pasta protegida que está dentro dela.
-    for protected in (*protected_roots, *exact):
-        if inside(protected, real):
-            return "contém uma pasta protegida"
-    return None
+    return motivo_por_regras(p, real, root, _protected_roots(), _exact_protected())
+
+
+def motivo_simulado(p: Plataforma, caminho: str, area: str, home: PurePath, env: Mapping[str, str] | None = None,
+                    pastas_app: Iterable[str] = ()) -> str | None:
+    """As regras de `p` aplicadas a caminhos simulados (testes de outro sistema).
+
+    Não toca no disco: não resolve links nem confere existência ou pontos de montagem.
+    """
+    if not p.caminhos.isabs(caminho):
+        return "caminho precisa ser completo"
+    real = p.chave(p.caminhos.normpath(caminho))
+    if real == "/" or (p.nome == "windows" and real == p.chave(p.caminhos.splitdrive(real)[0] + p.caminhos.sep)):
+        return "é a raiz de um disco"
+    protegidas = [p.chave(r) for r in (*p.pastas_protegidas(home, dict(env or {})), *pastas_app)]
+    exatas = [p.chave(r) for r in p.pastas_exatas(home)]
+    return motivo_por_regras(p, real, p.chave(area), protegidas, exatas)
 
 
 def size_of(path: str, budget_s: float = 3.0) -> int:

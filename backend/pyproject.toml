@@ -9,6 +9,7 @@ dependencies = [
     "langchain-groq>=1.2.1",
     "langchain-openai>=1.8.2",
     "langgraph>=1.2.22",
+    "pyobjc-framework-cocoa>=11 ; sys_platform == 'darwin'",
     "python-dotenv>=1.2.4",
     "python-multipart>=0.0.34",
     "send2trash>=2.2.0",

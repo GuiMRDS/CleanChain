@@ -33,7 +33,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Red
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
-from app import config, interface
+from app import config, interface, plataforma
 from app.agent import build_agent
 from app.sessao import COOKIE, Sessao
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
@@ -172,7 +172,7 @@ def health():
 @app.get("/api/system")
 def system():
     """Dados reais do rodapé: disco do sistema, RAM e pasta de temporários."""
-    return {"disk": system_drive(), "memory": memory(), "temp": temp_usage()}
+    return {"disk": system_drive(), "memory": memory(), "temp": temp_usage(), "plataforma": plataforma.atual().info()}
 
 
 @app.post("/api/chat")
@@ -214,7 +214,7 @@ _scan_stop: threading.Event | None = None  # scan em andamento (um por vez)
 
 @app.get("/api/drives")
 def drives():
-    return {"drives": list_drives(), "home": str(Path.home())}
+    return {"drives": list_drives(), "home": str(Path.home()), "plataforma": plataforma.atual().info()}
 
 
 @app.post("/api/scan/cancel")

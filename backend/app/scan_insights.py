@@ -12,6 +12,8 @@ import time
 from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 
+from app import plataforma
+
 # ------------------------------------------------------------------ caches e temporários
 
 CATEGORY_LABELS = {
@@ -23,45 +25,16 @@ CATEGORY_LABELS = {
     "cache_shader": "Cache de shaders (GPU)",
     "dumps": "Despejos de travamento",
     "windows_update": "Downloads do Windows Update",
+    "cache_app": "Caches de aplicativos",
+    "logs": "Logs de aplicativos e do sistema",
 }
-
-_BROWSER_CACHE_NAMES = {"cache", "code cache", "gpucache", "cache2", "shadercache", "grshadercache", "dawncache"}
-# (final da pasta-mãe, nome da pasta) → cache de ferramenta de desenvolvimento
-_DEV_CACHES = {
-    ("\\appdata\\local", "npm-cache"),
-    ("\\appdata\\roaming", "npm-cache"),
-    ("\\pip", "cache"),
-    ("\\.gradle", "caches"),
-    ("\\yarn", "cache"),
-    ("\\uv", "cache"),
-    ("\\nuget", "v3-cache"),
-    ("\\appdata\\local", "pnpm-cache"),
-    ("\\.m2", "repository"),
-}
-
 
 def classify_dir(parent: str, name: str) -> str | None:
-    """Categoria de cache/temporário de uma pasta. `parent` e `name` já em normcase."""
-    if name == "temp" and (parent.endswith("\\appdata\\local") or parent.endswith("\\windows")):
-        return "temporarios"
-    if name == "$recycle.bin":
-        return "lixeira"
-    if name in _BROWSER_CACHE_NAMES and ("\\user data\\" in parent or "\\firefox\\profiles\\" in parent):
-        return "cache_navegador"
-    if name == "inetcache" and parent.endswith("\\microsoft\\windows"):
-        return "cache_navegador"
-    for tail, n in _DEV_CACHES:
-        if name == n and parent.endswith(tail):
-            return "cache_dev"
-    if name == "node_modules":
-        return "node_modules"
-    if name in {"d3dscache", "dxcache", "glcache", "nv_cache"}:
-        return "cache_shader"
-    if name == "crashdumps" and parent.endswith("\\appdata\\local"):
-        return "dumps"
-    if name == "download" and parent.endswith("\\windows\\softwaredistribution"):
-        return "windows_update"
-    return None
+    """Categoria de cache/temporário de uma pasta (catálogo da plataforma).
+
+    `parent` e `name` já na forma comparável da plataforma (plataforma.chave_bruta).
+    """
+    return plataforma.atual().classificar_cache(parent, name)
 
 
 def summarize_caches(found: Iterable[tuple[str, str, int, bool]], top: int = 6) -> list[dict]:
