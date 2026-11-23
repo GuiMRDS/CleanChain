@@ -209,8 +209,10 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   teste localmente com `npm run test:fumaca` (`_electron`).
 - O Playwright `_electron` não abre o app empacotado: o Fuse desliga o `--inspect` que ele
   usa. Para o executável final o teste usa CDP (`CLEANCHAIN_EXE=…`).
-- `frontend/public/favicon.svg` é o logo padrão do Vite, não a marca do app; o ícone do
-  instalador sai de `desktop/scripts/icone.mjs` (marca `.brand__mark`).
+- **Ícone:** uma fonte só, a marca `.brand__mark`. `desktop/scripts/icone.mjs`
+  (`npm run icone`) gera `desktop/build/icon.png`, `frontend/public/favicon.png` e
+  `docs/images/logo.png`. Se a marca mudar no CSS, mude no script e regenere — não edite
+  os PNGs à mão.
 - Com uma exclusão aguardando aprovação, uma mensagem nova recusa a exclusão e entrega o
   texto no motivo da recusa (`stream._implicit_rejection`), numa chamada só ao modelo.
   O front e o `chat.py` pedem a decisão antes de aceitar outra mensagem; esse caminho

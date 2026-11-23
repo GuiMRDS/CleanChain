@@ -98,6 +98,7 @@ function criarJanela(): BrowserWindow {
     minHeight: Math.min(760, height),
     backgroundColor: '#f6fafe', // --bg da interface: sem flash branco enquanto o backend sobe
     title: 'CleanChain — iniciando…',
+    icon: path.join(__dirname, '..', '..', 'build', 'icon.png'), // mesma marca do instalador e do site
     show: true,
     webPreferences: { ...preferenciasSeguras(path.join(__dirname, '..', 'preload', 'preload.js')), devTools: !app.isPackaged },
   });

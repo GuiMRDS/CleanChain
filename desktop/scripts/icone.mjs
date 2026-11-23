@@ -1,5 +1,8 @@
-// Gera build/icon.png (512×512, fundo transparente) a partir da marca do app (.brand__mark em
-// frontend/src/App.css), renderizada no próprio Electron. O electron-builder converte em .ico.
+// Gera o ícone do CleanChain a partir da marca do app (.brand__mark em frontend/src/App.css),
+// renderizada no próprio Electron, com fundo transparente. Uma fonte só para tudo:
+//   desktop/build/icon.png        512 px — instalador, .exe e janela (o builder converte em .ico)
+//   frontend/public/favicon.png   128 px — aba do navegador e da interface
+//   docs/images/logo.png          256 px — topo do README
 //
 //   cd desktop && npm run icone
 import { app, BrowserWindow } from 'electron';
@@ -9,7 +12,12 @@ import { fileURLToPath } from 'node:url';
 
 const LADO = 512;
 const k = LADO / 20; // a marca tem 20px na interface
-const saida = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'build', 'icon.png');
+const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SAIDAS = [
+  { arquivo: path.join(repo, 'desktop', 'build', 'icon.png'), lado: 512 },
+  { arquivo: path.join(repo, 'frontend', 'public', 'favicon.png'), lado: 128 },
+  { arquivo: path.join(repo, 'docs', 'images', 'logo.png'), lado: 256 },
+];
 
 const html = `<!doctype html><html><body style="margin:0;background:transparent">
 <div style="position:relative;width:${LADO}px;height:${LADO}px;border-radius:${6 * k}px;
@@ -30,8 +38,10 @@ app.whenReady().then(async () => {
   await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
   await new Promise((r) => setTimeout(r, 300));
   const img = await win.webContents.capturePage({ x: 0, y: 0, width: LADO, height: LADO });
-  fs.mkdirSync(path.dirname(saida), { recursive: true });
-  fs.writeFileSync(saida, img.resize({ width: LADO, height: LADO }).toPNG());
-  console.log('ícone salvo em', saida, img.getSize());
+  for (const { arquivo, lado } of SAIDAS) {
+    fs.mkdirSync(path.dirname(arquivo), { recursive: true });
+    fs.writeFileSync(arquivo, img.resize({ width: lado, height: lado, quality: 'best' }).toPNG());
+    console.log(`ícone ${lado}px → ${path.relative(repo, arquivo)}`);
+  }
   app.quit();
 });

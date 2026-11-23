@@ -1,4 +1,17 @@
-# CleanChain
+<p align="center">
+  <img src="docs/images/logo.png" alt="Ícone do CleanChain" width="96" height="96" />
+</p>
+
+<h1 align="center">CleanChain</h1>
+
+<p align="center">
+  Limpeza de disco para Windows com um agente de IA que só apaga com a sua aprovação.<br />
+  <a href="https://github.com/GuiMRDS/CleanChain/releases">Baixar para Windows</a> ·
+  <a href="#instalação-app-desktop">Instalação</a> ·
+  <a href="#desenvolvimento">Desenvolvimento</a>
+</p>
+
+---
 
 **Um "CleanMyMac" para Windows com um agente de IA dentro.** Você escolhe um disco, o
 CleanChain faz um raio-x completo dele e um agente ReAct (LangChain) conversa com você
@@ -327,9 +340,22 @@ desktop/
   preload/            ponte window.cleanchain (contextBridge)
   tests/              teste de fumaça (Playwright)
   scripts/            modo de desenvolvimento e geração do ícone
+  build/icon.png      ícone do app (instalador, .exe e janela)
   electron-builder.yml   instalador NSIS, Fuses e publicação
 .github/workflows/    CI (testes) e Release (instalador por tag)
-docs/images/          imagens deste README
+docs/images/          imagens deste README (inclui logo.png)
+```
+
+### Ícone
+
+O ícone é a marca do cabeçalho da interface (`.brand__mark`: gradiente azul → rosa →
+violeta com o centro claro) e é o mesmo em todo lugar: instalador, executável, janela do
+app, aba do navegador (`frontend/public/favicon.png`) e o topo deste README. Para
+regenerar todos os tamanhos a partir da marca:
+
+```sh
+cd desktop
+npm run icone
 ```
 
 ## Créditos
