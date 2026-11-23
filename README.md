@@ -31,8 +31,9 @@ Roda como **app desktop para Windows** (Electron) ou, para desenvolvimento, no n
 2. Execute o instalador. Ele instala só para o seu usuário (não pede administrador) e cria
    atalhos na área de trabalho e no menu Iniciar.
 3. Na primeira abertura, escolha o provedor (**Groq**, gratuito, ou **OpenAI**) e cole a sua
-   chave de API. Ela fica criptografada neste computador; dá para trocar depois em
-   **Arquivo › Configurar chave do LLM**.
+   chave de API. Ela fica criptografada neste computador; dá para trocar depois no
+   **menu do app** (botão ao lado do status do agente, no topo à direita), que também
+   verifica atualizações e abre a pasta de logs.
 
 O app se atualiza sozinho: quando sai uma versão nova, ele baixa em segundo plano e pergunta
 se pode reiniciar.
@@ -157,7 +158,11 @@ flowchart LR
   resto); o token vale uma vez; porta e token mudam a cada execução.
 - **Nada fica rodando.** Ao fechar, o app encerra o backend e toda a árvore de processos
   (`taskkill /T /F`). Se o Electron for morto à força, o backend percebe e se encerra sozinho.
-- **Se o backend cair**, o app avisa e oferece **Reiniciar**, sem fechar.
+- **Se o backend cair**, o app mostra o aviso e oferece **Reiniciar**, sem fechar.
+- **Janela integrada ao design:** sem a barra de título e o menu do Windows; a interface vai
+  até o topo, os botões da janela ficam numa sobreposição discreta e as ações do app
+  (chave do modelo, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
+  avisos de erro usam o mesmo visual.
 
 ### Ferramentas do agente
 

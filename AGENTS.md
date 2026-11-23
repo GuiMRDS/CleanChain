@@ -124,13 +124,24 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 
 ### Desktop (`desktop/`)
 
-- `main/main.ts` — instância única, janela, menu, aviso "o serviço parou" com Reiniciar,
-  encerramento do backend no `before-quit`.
+- `main/main.ts` — instância única, janela **sem barra de título nativa**
+  (`titleBarStyle: 'hidden'` + `titleBarOverlay` transparente de 56 px), menu nativo só
+  para atalhos (invisível), tela de estado enquanto o backend sobe ou quando ele cai,
+  encerramento do backend no `before-quit`. Nada de `dialog.showMessageBox`: avisos ficam
+  no visual do app.
+- `tela/` — página local de abertura/erro (`estado.html?estado=iniciando|reiniciando|erro`),
+  com CSP própria e as fontes do app; botões "Reiniciar" e "Abrir pasta de logs".
 - `main/backend.ts` — porta livre + token aleatório, `spawn` com variáveis de ambiente,
   espera `/health`, logs no `electron-log`, `taskkill /T /F` ao parar.
 - `main/segredos.ts` — chave com `safeStorage` em `userData/segredos.json`.
 - `main/ipc.ts` + `preload/preload.ts` — canais `chave:status|salvar|remover`,
-  `app:versao` e o evento `config:abrir`; origem conferida e argumentos validados.
+  `app:versao|abrirLogs|reiniciarServico|atualizacao|verificarAtualizacoes|instalarAtualizacao`
+  e o evento `atualizacao:estado`; cada canal diz quem pode chamar (interface do app e/ou
+  a tela local) e valida os argumentos.
+- `main/atualizacao.ts` — estado da atualização automática, mostrado no menu do app.
+- Interface no desktop: `html.is-desktop` (`main.jsx`), faixa arrastável e
+  `DesktopMenu` (chip + painel HUD ao lado do status); o cabeçalho desvia dos botões da
+  janela com `env(titlebar-area-*)` (`DesktopMenu.css`).
 - `main/seguranca.ts` — CSP (igual à de `backend/app/interface.py`), navegação, pop-ups,
   permissões (só microfone/áudio), `webPreferences` fixas.
 - `main/caminhos.ts` — backend empacotado × `uv run python -m app.desktop` em
