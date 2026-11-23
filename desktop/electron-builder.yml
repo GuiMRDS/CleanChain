@@ -1,0 +1,58 @@
+# Instalador do CleanChain (Windows). Antes: npm run build:frontend && npm run build:backend
+#   npm run dist      → release/CleanChain-Setup-<versão>.exe (sem publicar)
+#   npm run release   → publica no GitHub Releases (usado pelo workflow da tag v*)
+appId: com.guimrds.cleanchain # não mudar: identifica o app nas atualizações e no Windows
+productName: CleanChain
+copyright: Copyright © 2026 Guilherme Marinho
+
+directories:
+  output: release
+  buildResources: build
+
+# Só o JavaScript compilado e o package.json entram no app.asar.
+files:
+  - dist/**/*
+  - package.json
+  - "!**/*.map"
+
+asar: true
+
+# Backend Python empacotado pelo PyInstaller (backend/dist/cleanchain-backend).
+extraResources:
+  - from: ../backend/dist/cleanchain-backend
+    to: backend
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.png
+  artifactName: CleanChain-Setup-${version}.${ext}
+
+nsis:
+  oneClick: true
+  perMachine: false # instala só para o usuário: não pede administrador
+  allowElevation: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: CleanChain
+  deleteAppDataOnUninstall: false # scans e chave ficam se o usuário reinstalar
+
+# Travas do binário do Electron (aplicadas no empacotamento).
+electronFuses:
+  runAsNode: false
+  enableCookieEncryption: true
+  enableNodeOptionsEnvironmentVariable: false
+  enableNodeCliInspectArguments: false
+  enableEmbeddedAsarIntegrityValidation: true
+  onlyLoadAppFromAsar: true
+  grantFileProtocolExtraPrivileges: false
+  loadBrowserProcessSpecificV8Snapshot: false
+
+publish:
+  provider: github
+  owner: GuiMRDS
+  repo: CleanChain
+  releaseType: release
