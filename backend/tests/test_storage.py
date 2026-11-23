@@ -6,15 +6,14 @@ import json
 
 import pytest
 
-from app import storage
+from app import config, storage
 
 
 @pytest.fixture
 def scans_dir(tmp_path, monkeypatch):
-    d = tmp_path / "scans"
-    monkeypatch.setattr(storage, "SCANS_DIR", d)
-    monkeypatch.setattr(storage, "LATEST", d / "latest.json")
-    return d
+    # Mesmo caminho do app desktop: a pasta de dados vem de CLEANCHAIN_DADOS.
+    monkeypatch.setenv("CLEANCHAIN_DADOS", str(tmp_path))
+    return tmp_path / "scans"
 
 
 def test_sem_scan_retorna_none(scans_dir):
@@ -49,3 +48,15 @@ def test_retencao_remove_os_mais_antigos(scans_dir, monkeypatch):
     assert len(kept) == storage.KEEP_SCANS
     assert not (scans_dir / "scan-20260101-000000.json").exists()  # o mais antigo saiu
     assert (scans_dir / "latest.json").exists()
+
+
+def test_sem_variavel_usa_a_pasta_do_backend(monkeypatch):
+    monkeypatch.delenv("CLEANCHAIN_DADOS", raising=False)
+    assert storage.scans_dir() == config.BACKEND_DIR / "data" / "scans"
+
+
+def test_salva_na_pasta_de_dados_indicada(scans_dir):
+    name = storage.save_scan({"root": "C:\\"})
+    assert (scans_dir / name).is_file()
+    assert (scans_dir / "latest.json").is_file()
+    assert not (config.BACKEND_DIR / "data" / "scans" / name).exists()
