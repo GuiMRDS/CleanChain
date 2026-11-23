@@ -1,0 +1,103 @@
+name: Release
+
+# Tag v* (ex.: v0.1.0, igual à versão de desktop/package.json): testa, empacota o backend com
+# PyInstaller, gera o instalador e publica no GitHub Releases (o electron-updater busca lá).
+# Disparo manual: faz tudo, menos publicar — o instalador fica como artefato do workflow.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
+
+      - name: Versão da tag confere com o app
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          app="$(node -p "require('./desktop/package.json').version")"
+          if [ "v$app" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::A tag $GITHUB_REF_NAME não confere com desktop/package.json ($app)."
+            exit 1
+          fi
+
+      - name: Backend — testes de segurança
+        working-directory: backend
+        run: |
+          uv sync --frozen
+          uv run python -m pytest
+
+      - name: Interface — build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Backend — PyInstaller
+        working-directory: backend
+        run: uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean
+
+      - name: Desktop — compilar
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run build:ts
+
+      - name: Fumaça — Electron com o backend empacotado
+        working-directory: desktop
+        env:
+          CLEANCHAIN_BACKEND_EXE: ../backend/dist/cleanchain-backend/cleanchain-backend.exe
+        run: npm run test:fumaca
+
+      - name: Instalador
+        working-directory: desktop
+        run: npx electron-builder --win --publish never
+
+      - name: Fumaça — app empacotado com Fuses
+        working-directory: desktop
+        env:
+          CLEANCHAIN_EXE: release/win-unpacked/CleanChain.exe
+        run: npm run test:fumaca
+
+      - name: Artefato (disparo manual)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CleanChain-instalador
+          path: |
+            desktop/release/*.exe
+            desktop/release/latest.yml
+          retention-days: 14
+
+      - name: Publicar no GitHub Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: desktop/release
+        # latest.yml + .exe + .blockmap: o que o electron-updater precisa para atualizar.
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "CleanChain $GITHUB_REF_NAME" \
+            --notes "Instalador para Windows. Sem assinatura de código: veja a seção de instalação do README sobre o aviso do SmartScreen." \
+            CleanChain-Setup-*.exe CleanChain-Setup-*.exe.blockmap latest.yml

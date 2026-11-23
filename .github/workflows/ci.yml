@@ -1,0 +1,59 @@
+name: CI
+
+# Testes a cada push e pull request: backend (pytest), build da interface, tipos do app
+# desktop e teste de fumaça do Electron com o backend real.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testes:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
+
+      - name: Backend — dependências
+        working-directory: backend
+        run: uv sync --frozen
+
+      - name: Backend — testes de segurança
+        working-directory: backend
+        run: uv run python -m pytest
+
+      - name: Interface — build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Desktop — dependências e tipos
+        working-directory: desktop
+        run: |
+          npm ci
+          npm run build:ts
+
+      - name: Desktop — teste de fumaça (Electron + backend via uv)
+        working-directory: desktop
+        run: npm run test:fumaca

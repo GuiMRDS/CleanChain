@@ -27,7 +27,6 @@
     "icone": "electron scripts/icone.mjs",
     "pack": "npm run build:ts && electron-builder --win --dir",
     "dist": "npm run build:frontend && npm run build:backend && npm run build:ts && electron-builder --win --publish never",
-    "release": "electron-builder --win --publish always",
     "test:fumaca": "playwright test"
   }
 }
