@@ -28,13 +28,18 @@ export interface ComandoBackend {
 
 /**
  * Como iniciar o backend: o executável do PyInstaller no app empacotado; em desenvolvimento,
- * `uv run python -m app.desktop` (ou CLEANCHAIN_PYTHON, se o uv não funcionar na máquina).
+ * `uv run python -m app.desktop` (ou CLEANCHAIN_PYTHON, se o uv não funcionar na máquina, ou
+ * CLEANCHAIN_BACKEND_EXE para usar o backend já empacotado). No app instalado essas variáveis
+ * são ignoradas.
  */
 export function comandoBackend(): ComandoBackend {
   if (app.isPackaged) {
     const dir = path.join(process.resourcesPath, 'backend');
     return { cmd: path.join(dir, 'cleanchain-backend.exe'), args: [], cwd: dir };
   }
+  // Backend já empacotado pelo PyInstaller (teste de fumaça no CI, antes do instalador).
+  const exe = process.env.CLEANCHAIN_BACKEND_EXE;
+  if (exe) return { cmd: path.resolve(exe), args: [], cwd: path.dirname(path.resolve(exe)) };
   const cwd = path.join(REPO, 'backend');
   const python = process.env.CLEANCHAIN_PYTHON;
   if (python) return { cmd: python, args: ['-m', 'app.desktop'], cwd };

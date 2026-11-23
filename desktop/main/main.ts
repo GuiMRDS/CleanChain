@@ -172,7 +172,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(async () => {
     logMain.info(`CleanChain ${app.getVersion()} (${app.isPackaged ? 'instalado' : 'desenvolvimento'})`);
-    protegerSessao(session.fromPartition('cleanchain'), origemApp, !urlDev());
+    protegerSessao(session.defaultSession, origemApp, !urlDev());
     registrarIpc({ origemApp, reiniciarBackend });
     montarMenu();
     janela = criarJanela();

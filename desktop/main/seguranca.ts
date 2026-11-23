@@ -107,6 +107,7 @@ export function preferenciasSeguras(preload: string): Electron.WebPreferences {
     webviewTag: false,
     navigateOnDragDrop: false,
     spellcheck: false,
-    partition: 'cleanchain', // sem "persist:": o cookie de sessão morre quando o app fecha
+    // Sessão padrão: o cookie do /bootstrap não tem validade (não é restaurado ao reabrir) e o
+    // segredo dele muda a cada execução do backend, então um cookie antigo não vale nada.
   };
 }
