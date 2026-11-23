@@ -3,6 +3,12 @@ name: Release
 # Tag v* (ex.: v0.1.0, igual à versão de desktop/package.json): testa, empacota o backend com
 # PyInstaller, gera o instalador e publica no GitHub Releases (o electron-updater busca lá).
 # Disparo manual: faz tudo, menos publicar — o instalador fica como artefato do workflow.
+#
+# Assinatura de código (Azure Trusted Signing): liga sozinha quando o repositório tem
+#   variáveis  AZURE_SIGNING_ENDPOINT, AZURE_SIGNING_ACCOUNT, AZURE_SIGNING_PROFILE, AZURE_SIGNING_PUBLISHER
+#   segredos   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
+# Sem elas, o instalador sai sem assinatura (como antes). Com elas, tudo é assinado e o
+# workflow falha se sobrar algum binário sem assinatura. Passo a passo: docs/assinatura.md.
 on:
   push:
     tags: ['v*']
@@ -14,7 +20,16 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    env:
+      ASSINAR: ${{ vars.AZURE_SIGNING_ACCOUNT != '' }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+      AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+      AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+      AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,6 +72,11 @@ jobs:
         working-directory: backend
         run: uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean
 
+      - name: Assinatura — backend (.exe, .pyd e DLLs sem assinatura)
+        if: env.ASSINAR == 'true'
+        shell: pwsh
+        run: ./desktop/scripts/assinar-backend.ps1
+
       - name: Desktop — compilar
         working-directory: desktop
         run: |
@@ -71,7 +91,30 @@ jobs:
 
       - name: Instalador
         working-directory: desktop
-        run: npx electron-builder --win --publish never
+        shell: bash
+        run: |
+          args=(--win --publish never)
+          if [ "$ASSINAR" = "true" ]; then
+            # Assina CleanChain.exe, instalador e desinstalador; o electron-updater passa a
+            # exigir que as atualizações venham assinadas pelo mesmo publicador.
+            args+=(
+              -c.win.azureSignOptions.endpoint="$AZURE_SIGNING_ENDPOINT"
+              -c.win.azureSignOptions.codeSigningAccountName="$AZURE_SIGNING_ACCOUNT"
+              -c.win.azureSignOptions.certificateProfileName="$AZURE_SIGNING_PROFILE"
+              -c.win.azureSignOptions.publisherName="$AZURE_SIGNING_PUBLISHER"
+            )
+          fi
+          npx electron-builder "${args[@]}"
+
+      - name: Assinatura — conferir todos os binários
+        if: env.ASSINAR == 'true'
+        shell: pwsh
+        working-directory: desktop/release
+        run: |
+          $binarios = @(Get-ChildItem -File CleanChain-Setup-*.exe) + @(Get-ChildItem win-unpacked -Recurse -File -Include *.exe, *.dll, *.pyd)
+          $sem = $binarios | Where-Object { (Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid' }
+          if ($sem) { $sem.FullName; throw "$($sem.Count) binário(s) sem assinatura válida." }
+          "Todos os $($binarios.Count) binários estão assinados."
 
       - name: Fumaça — app empacotado com Fuses
         working-directory: desktop
@@ -99,5 +142,5 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "CleanChain $GITHUB_REF_NAME" \
-            --notes "Instalador para Windows. Sem assinatura de código: veja a seção de instalação do README sobre o aviso do SmartScreen." \
+            --notes "$( [ "$ASSINAR" = "true" ] && echo 'Instalador para Windows, assinado.' || echo 'Instalador para Windows. Sem assinatura de código: veja a seção de instalação do README sobre o SmartScreen e o Smart App Control.' )" \
             CleanChain-Setup-*.exe CleanChain-Setup-*.exe.blockmap latest.yml

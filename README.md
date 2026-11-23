@@ -45,7 +45,8 @@ se pode reiniciar.
 >   assinatura e **não oferece** "executar assim mesmo". Veja o estado em *Segurança do
 >   Windows › Controle de aplicativos e navegador › Smart App Control*. Desligar é uma
 >   decisão sua e **não dá para religar** sem reinstalar o Windows; a solução definitiva é o
->   instalador assinado, previsto para uma próxima versão.
+>   instalador assinado. O pipeline já está pronto para assinar e só precisa das
+>   credenciais: veja [docs/assinatura.md](docs/assinatura.md).
 
 **Onde ficam os dados:** `%APPDATA%\CleanChain` (scans, chave cifrada e logs em `logs\`).
 Desinstalar pelo Windows remove o app e mantém essa pasta; apague-a para limpar tudo.
