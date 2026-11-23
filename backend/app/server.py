@@ -23,11 +23,13 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
+from app import config
 from app.agent import build_agent
+from app.sessao import COOKIE, Sessao
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
 from app.files import inside, list_files, scan_root
 from app.speech import transcribe_audio
@@ -52,6 +54,41 @@ async def only_local_origins(request: Request, call_next):
         if (urlparse(origin).hostname or "") not in LOCAL_HOSTS:
             return JSONResponse({"detail": "Origem não permitida."}, status_code=403)
     return await call_next(request)
+
+
+# App desktop: token de uso único → cookie; sem cookie, só /health e /bootstrap respondem.
+# Em desenvolvimento (sem CLEANCHAIN_TOKEN) a sessão fica desligada.
+sessao = Sessao(config.token())
+
+
+@app.middleware("http")
+async def exige_sessao(request: Request, call_next):
+    if sessao.exige_cookie(request.url.path) and not sessao.valida(request.cookies.get(COOKIE)):
+        if request.url.path.startswith("/api/"):
+            return JSONResponse({"detail": "Sessão inválida. Abra o CleanChain pelo aplicativo."}, status_code=401)
+        return PlainTextResponse("Abra o CleanChain pelo aplicativo.", status_code=401)
+    return await call_next(request)
+
+
+@app.get("/health")
+def health_publico():
+    """Saúde para o Electron esperar o backend subir: não chama o LLM nem expõe caminhos."""
+    return {"ok": True}
+
+
+@app.get("/bootstrap")
+def bootstrap(t: str = ""):
+    """Troca o token de uso único (vindo do Electron) por um cookie de sessão."""
+    if not sessao.ativa:
+        return RedirectResponse("/", status_code=303)
+    segredo = sessao.trocar(t)
+    if not segredo:
+        return PlainTextResponse("Link de acesso inválido ou já usado. Abra o CleanChain pelo aplicativo.", status_code=401)
+    resp = RedirectResponse("/", status_code=303)
+    resp.set_cookie(COOKIE, segredo, httponly=True, samesite="strict", path="/")
+    return resp
+
+
 agent, model_label = build_agent()  # um agente para o processo; a memória separa por thread_id
 
 SCAN_DEPTH = 6  # níveis de pastas guardados no JSON (o sunburst desenha os 4 primeiros)
