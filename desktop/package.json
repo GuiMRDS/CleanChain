@@ -2,7 +2,7 @@
   "name": "cleanchain",
   "productName": "CleanChain",
   "version": "0.1.0",
-  "description": "Limpeza de disco para Windows com um agente de IA que só apaga com a sua aprovação.",
+  "description": "Limpeza de disco com um agente de IA que só apaga com a sua aprovação (Windows, macOS e Linux).",
   "author": "Guilherme Marinho",
   "license": "UNLICENSED",
   "private": true,
@@ -25,8 +25,8 @@
     "start": "npm run build:ts && electron .",
     "dev": "npm run build:ts && node scripts/dev.mjs",
     "icone": "electron scripts/icone.mjs",
-    "pack": "npm run build:ts && electron-builder --win --dir",
-    "dist": "npm run build:frontend && npm run build:backend && npm run build:ts && electron-builder --win --publish never",
+    "pack": "npm run build:ts && electron-builder --dir",
+    "dist": "npm run build:frontend && npm run build:backend && npm run build:ts && electron-builder --publish never",
     "test:fumaca": "playwright test"
   }
 }

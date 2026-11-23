@@ -17,6 +17,8 @@ const CANAIS = {
 } as const;
 
 contextBridge.exposeInMainWorld('cleanchain', {
+  /** 'win32' | 'darwin' | 'linux': só para a interface ajustar a barra de título. */
+  sistema: process.platform,
   chave: {
     status: () => ipcRenderer.invoke(CANAIS.chaveStatus),
     salvar: (provedor: string, chave: string) => ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),

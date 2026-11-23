@@ -1,7 +1,8 @@
-# Instalador do CleanChain (Windows). Antes: npm run build:frontend && npm run build:backend
-#   npm run dist      → release/CleanChain-Setup-<versão>.exe (sem publicar)
-#   npm run release   → publica no GitHub Releases (usado pelo workflow da tag v*)
-appId: com.guimrds.cleanchain # não mudar: identifica o app nas atualizações e no Windows
+# Instaladores do CleanChain. Cada sistema gera os seus, no próprio sistema (o backend do
+# PyInstaller não é multiplataforma). Antes: npm run build:frontend && npm run build:backend
+#   npm run dist   → Windows: .exe (NSIS) · macOS: .dmg + .zip · Linux: .AppImage + .deb
+# Publicação: workflow Release (tag v*), que junta os arquivos dos três sistemas.
+appId: com.guimrds.cleanchain # não mudar: identifica o app nas atualizações e no sistema
 productName: CleanChain
 copyright: Copyright © 2026 Guilherme Marinho
 
@@ -42,6 +43,48 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: CleanChain
   deleteAppDataOnUninstall: false # scans e chave ficam se o usuário reinstalar
+
+# macOS (Apple Silicon). Sem certificado da Apple: assinatura ad hoc ("-"), obrigatória para
+# binários arm64 abrirem; o Gatekeeper pede "Abrir mesmo assim" (ver README). O .zip existe
+# para a verificação de versão nova (o app só avisa; ver desktop/main/plataforma.ts).
+mac:
+  target:
+    - target: dmg
+      arch: [arm64]
+    - target: zip
+      arch: [arm64]
+  category: public.app-category.utilities
+  icon: build/icon.png
+  identity: "-"
+  hardenedRuntime: false # com assinatura ad hoc, o hardened runtime impediria o app de abrir
+  gatekeeperAssess: false
+  notarize: false
+  minimumSystemVersion: "12.0"
+  artifactName: CleanChain-${version}-mac-${arch}.${ext}
+  extendInfo:
+    NSMicrophoneUsageDescription: O CleanChain usa o microfone só quando você toca no botão de voz, para transcrever o que você diz ao agente.
+
+dmg:
+  artifactName: CleanChain-${version}-mac-${arch}.dmg
+
+# Linux (x64). O .deb instala um perfil AppArmor (Ubuntu 24.04+ exige para o sandbox do
+# Chromium); o AppImage não tem como instalar, então no Ubuntu 24.04+ prefira o .deb.
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+  category: Utility
+  icon: build/icon.png
+  executableName: cleanchain
+  synopsis: Limpeza de disco com um agente de IA que só apaga com a sua aprovação
+  maintainer: Guilherme Marinho
+  artifactName: CleanChain-${version}-linux-${arch}.${ext}
+
+deb:
+  # Cofre de senhas para a chave do LLM (sem ele o app não salva a chave; ver segredos.ts).
+  recommends: [gnome-keyring]
 
 # Travas do binário do Electron (aplicadas no empacotamento).
 electronFuses:

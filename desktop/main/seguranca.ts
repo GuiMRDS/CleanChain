@@ -1,6 +1,7 @@
 // Endurecimento da janela e da sessão: CSP, navegação, pop-ups e permissões.
 import { Session, WebContents, shell } from 'electron';
 import log from 'electron-log/main';
+import { autorizarMicrofone } from './plataforma';
 
 const logSeg = log.scope('seguranca');
 
@@ -57,8 +58,13 @@ export function protegerSessao(ses: Session, origemApp: () => string | undefined
       Array.isArray(details.mediaTypes) &&
       details.mediaTypes.length > 0 &&
       details.mediaTypes.every((t) => t === 'audio');
-    if (!ok) logSeg.warn(`permissão negada: ${permission} (${details.requestingUrl})`);
-    callback(ok);
+    if (!ok) {
+      logSeg.warn(`permissão negada: ${permission} (${details.requestingUrl})`);
+      callback(false);
+      return;
+    }
+    // No macOS o sistema também precisa autorizar o microfone (nos outros, sempre true).
+    void autorizarMicrofone().then(callback);
   });
   ses.setPermissionCheckHandler((_wc, permission, requestingOrigin, details) => {
     return permission === 'media' && details.mediaType === 'audio' && origemDe(requestingOrigin) === origemApp();

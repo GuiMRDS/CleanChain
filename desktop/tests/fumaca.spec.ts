@@ -5,9 +5,14 @@
 //       Electron via Playwright (_electron) com o processo principal compilado (dist/main).
 //       Backend: uv (desenvolvimento) ou CLEANCHAIN_BACKEND_EXE=../backend/dist/cleanchain-backend/cleanchain-backend.exe
 //
-//   CLEANCHAIN_EXE=release/win-unpacked/CleanChain.exe npm run test:fumaca
+//   CLEANCHAIN_EXE=<executável empacotado> npm run test:fumaca
 //       O app empacotado, com os Fuses ligados. Os Fuses desligam o --inspect que o _electron
-//       usa, então o Playwright se conecta pelo protocolo do Chromium (CDP).
+//       usa, então o Playwright se conecta pelo protocolo do Chromium (CDP). Executáveis:
+//         Windows  release/win-unpacked/CleanChain.exe
+//         macOS    release/mac-arm64/CleanChain.app/Contents/MacOS/CleanChain
+//         Linux    release/linux-unpacked/cleanchain
+//
+//   No Linux sem tela (CI), rode com xvfb-run.
 //
 // Usa um perfil vazio e temporário (CLEANCHAIN_PERFIL): não toca na chave nem nos scans reais.
 import { _electron as electron, Browser, chromium, expect, Page, test } from '@playwright/test';
@@ -19,6 +24,24 @@ import path from 'node:path';
 
 const DESKTOP = path.resolve(__dirname, '..');
 const URL_DO_APP = /^http:\/\/127\.0\.0\.1:\d+\/$/;
+const WINDOWS = process.platform === 'win32';
+
+/** Mata à força o processo que escuta na porta (simula o backend travando). */
+function matarQuemEscuta(porta: string): void {
+  if (WINDOWS) {
+    const pid = execFileSync('powershell', [
+      '-NoProfile',
+      '-Command',
+      `(Get-NetTCPConnection -LocalPort ${porta} -State Listen | Select-Object -First 1).OwningProcess`,
+    ])
+      .toString()
+      .trim();
+    execFileSync('taskkill', ['/PID', pid, '/F']);
+    return;
+  }
+  const pid = execFileSync('lsof', ['-t', `-iTCP:${porta}`, '-sTCP:LISTEN']).toString().trim().split('\n')[0];
+  process.kill(Number(pid), 'SIGKILL');
+}
 
 interface AppAberto {
   page: Page;
@@ -72,7 +95,10 @@ async function abrirApp(): Promise<AppAberto> {
     const saiu = new Promise<void>((r) => proc.once('exit', () => r()));
     await page.evaluate(() => window.close()).catch(() => {});
     await Promise.race([saiu, new Promise((r) => setTimeout(r, 15_000))]);
-    if (proc.exitCode === null && proc.pid) execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F']);
+    if (proc.exitCode === null && proc.pid) {
+      if (WINDOWS) execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F']);
+      else proc.kill('SIGKILL');
+    }
     await browser?.close().catch(() => {});
   };
   return { page, perfil, fechar };
@@ -123,7 +149,7 @@ test('as travas de segurança estão de pé', async () => {
       process: typeof (window as unknown as { process?: unknown }).process,
       ponte: Object.keys((window as unknown as { cleanchain: object }).cleanchain).sort(),
     }));
-    expect(ambiente).toEqual({ require: 'undefined', process: 'undefined', ponte: ['aoAtualizacao', 'app', 'chave'] });
+    expect(ambiente).toEqual({ require: 'undefined', process: 'undefined', ponte: ['aoAtualizacao', 'app', 'chave', 'sistema'] });
 
     // CSP vem no cabeçalho da página.
     const csp = await page.evaluate(() => fetch('/').then((r) => r.headers.get('content-security-policy')));
@@ -155,14 +181,7 @@ test('se o backend cair, o app mostra o aviso e Reiniciar traz tudo de volta', a
   try {
     const porta = new URL(page.url()).port;
     // Derruba o backend como um travamento faria (o processo que escuta na porta).
-    const pid = execFileSync('powershell', [
-      '-NoProfile',
-      '-Command',
-      `(Get-NetTCPConnection -LocalPort ${porta} -State Listen | Select-Object -First 1).OwningProcess`,
-    ])
-      .toString()
-      .trim();
-    execFileSync('taskkill', ['/PID', pid, '/F']);
+    matarQuemEscuta(porta);
 
     // A tela de erro local (no visual do app) aparece, sem fechar a janela.
     await page.waitForURL(/estado\.html\?estado=erro/, { timeout: 30_000 });

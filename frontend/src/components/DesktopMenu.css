@@ -15,6 +15,9 @@ html.is-desktop {
 
 html.is-desktop .brand { -webkit-app-region: drag; }
 
+/* macOS: red/yellow/green buttons on the left (no overlay on the right). */
+html.is-desktop.is-mac .brand { left: 92px; }
+
 html.is-desktop .agent-status {
   right: calc(var(--window-controls) + 62px);
   max-width: min(520px, calc(46vw - 60px));

@@ -1,10 +1,11 @@
 // O backend Python como processo filho: porta livre, token de uso único, saúde e encerramento.
-import { ChildProcess, execFile, spawn } from 'node:child_process';
+import { ChildProcess, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import net from 'node:net';
 import log from 'electron-log/main';
 import { comandoBackend, pastaDados, pastaInstalacao, urlDev } from './caminhos';
+import { encerrarArvore, OPCOES_SPAWN } from './plataforma';
 
 const logBackend = log.scope('backend');
 const ESPERA_SAUDE_MS = 45_000;
@@ -42,26 +43,6 @@ async function saudavel(porta: number): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/** Encerra o processo e todos os filhos dele (no Windows, taskkill /T /F). */
-function matarArvore(pid: number): Promise<void> {
-  return new Promise((resolve) => {
-    if (process.platform === 'win32') {
-      execFile('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => resolve());
-    } else {
-      try {
-        process.kill(-pid, 'SIGKILL');
-      } catch {
-        try {
-          process.kill(pid, 'SIGKILL');
-        } catch {
-          /* já tinha saído */
-        }
-      }
-      resolve();
-    }
-  });
 }
 
 /**
@@ -107,7 +88,7 @@ export class Backend extends EventEmitter {
 
     logBackend.info(`iniciando na porta ${porta}: ${cmd} ${args.join(' ')}`);
     this.parando = false;
-    const proc = spawn(cmd, args, { cwd, env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const proc = spawn(cmd, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], ...OPCOES_SPAWN });
     this.proc = proc;
     const repassar = (nivel: 'info' | 'warn') => (dados: Buffer) => {
       for (const linha of dados.toString('utf8').split(/\r?\n/)) if (linha.trim()) logBackend[nivel](linha);
@@ -137,14 +118,12 @@ export class Backend extends EventEmitter {
     return Boolean(this.proc && this.proc.exitCode === null);
   }
 
-  /** Para o backend e toda a árvore de processos dele. */
+  /** Para o backend e todos os processos filhos dele. */
   async parar(): Promise<void> {
     const proc = this.proc;
     this.conexao = undefined;
     if (!proc || proc.pid === undefined || proc.exitCode !== null) return;
     this.parando = true;
-    const saiu = new Promise<void>((resolve) => proc.once('exit', () => resolve()));
-    await matarArvore(proc.pid);
-    await Promise.race([saiu, new Promise((r) => setTimeout(r, 5000))]);
+    await encerrarArvore(proc); // Windows: taskkill /T /F; macOS/Linux: SIGTERM no grupo, depois SIGKILL
   }
 }

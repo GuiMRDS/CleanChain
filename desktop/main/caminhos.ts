@@ -1,6 +1,7 @@
 // Onde ficam as coisas no app empacotado e em desenvolvimento.
 import { app } from 'electron';
 import path from 'node:path';
+import { EXECUTAVEL_BACKEND } from './plataforma';
 
 /** Raiz do repositório (só em desenvolvimento): desktop/dist/main → ../../.. */
 export const REPO = path.resolve(__dirname, '..', '..', '..');
@@ -10,7 +11,10 @@ export function urlDev(): string | undefined {
   return app.isPackaged ? undefined : process.env.CLEANCHAIN_DEV_URL || undefined;
 }
 
-/** Pasta de dados do usuário: %APPDATA%\CleanChain (scans, chave cifrada, logs). */
+/**
+ * Pasta de dados do usuário (scans, chave cifrada, logs): %APPDATA%\CleanChain no Windows,
+ * ~/Library/Application Support/CleanChain no macOS e ~/.config/CleanChain no Linux.
+ */
 export function pastaDados(): string {
   return app.getPath('userData');
 }
@@ -50,7 +54,7 @@ export interface ComandoBackend {
 export function comandoBackend(): ComandoBackend {
   if (app.isPackaged) {
     const dir = path.join(process.resourcesPath, 'backend');
-    return { cmd: path.join(dir, 'cleanchain-backend.exe'), args: [], cwd: dir };
+    return { cmd: path.join(dir, EXECUTAVEL_BACKEND), args: [], cwd: dir };
   }
   // Backend já empacotado pelo PyInstaller (teste de fumaça no CI, antes do instalador).
   const exe = process.env.CLEANCHAIN_BACKEND_EXE;

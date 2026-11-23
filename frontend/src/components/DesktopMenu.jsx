@@ -15,6 +15,8 @@ function textoAtualizacao(a) {
       return `baixando a versão ${a.versao}…`;
     case 'pronta':
       return `versão ${a.versao} pronta para instalar`;
+    case 'disponivel':
+      return `versão ${a.versao} disponível para baixar`;
     case 'erro':
     case 'indisponivel':
       return a.mensagem;
@@ -27,7 +29,8 @@ export default function DesktopMenu({ desktop }) {
   const [aberto, setAberto] = useState(false);
   const raiz = useRef(null);
   const { chave, versao, atualizacao } = desktop;
-  const pronta = atualizacao?.estado === 'pronta';
+  const pronta = atualizacao?.estado === 'pronta' || atualizacao?.estado === 'disponivel';
+  const rotuloAtualizar = atualizacao?.estado === 'disponivel' ? 'Baixar a versão nova' : 'Reiniciar e atualizar';
   const alerta = pronta || desktop.precisaChave;
 
   useEffect(() => {
@@ -91,7 +94,7 @@ export default function DesktopMenu({ desktop }) {
           >
             <span className="desktop-menu__icon" aria-hidden="true">↻</span>
             <span className="desktop-menu__text">
-              <strong>{pronta ? 'Reiniciar e atualizar' : 'Atualizações'}</strong>
+              <strong>{pronta ? rotuloAtualizar : 'Atualizações'}</strong>
               <small>{textoAtualizacao(atualizacao)}</small>
             </span>
           </button>

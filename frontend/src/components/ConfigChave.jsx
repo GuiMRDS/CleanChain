@@ -16,6 +16,8 @@ export default function ConfigChave({ atual, onSalvar, onCancelar }) {
   const [estado, setEstado] = useState('idle'); // idle | salvando | erro
   const [erro, setErro] = useState('');
   const escolhido = PROVEDORES.find((p) => p.id === provedor);
+  // Linux without a keyring (GNOME Keyring/KWallet): the key can't be stored safely, so saving is off.
+  const semCofre = atual?.cofre === false;
 
   const salvar = async (e) => {
     e.preventDefault();
@@ -83,10 +85,11 @@ export default function ConfigChave({ atual, onSalvar, onCancelar }) {
           disabled={estado === 'salvando'}
         />
 
+        {semCofre && <p className="start-scan__error" role="alert">{atual.motivoCofre}</p>}
         {estado === 'erro' && <p className="start-scan__error" role="alert">{erro}</p>}
 
         <div className="config-chave__actions">
-          <button type="submit" className="config-chave__go" disabled={!chave.trim() || estado === 'salvando'}>
+          <button type="submit" className="config-chave__go" disabled={semCofre || !chave.trim() || estado === 'salvando'}>
             {estado === 'salvando' ? 'Conectando…' : 'Salvar e conectar'}
           </button>
           {onCancelar && (

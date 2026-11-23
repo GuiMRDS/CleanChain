@@ -1,8 +1,12 @@
-// Atualização automática pelos GitHub Releases (só no app empacotado). O estado vai para a
-// interface (menu do app), sem caixas de diálogo do Windows.
-import { app } from 'electron';
+// Atualização pelos GitHub Releases (só no app empacotado). O estado vai para a interface
+// (menu do app), sem caixas de diálogo do sistema.
+//
+// Modo automático (Windows, AppImage): baixa e instala. Modo manual (macOS sem assinatura da
+// Apple, .deb): só avisa que há versão nova e abre a página de downloads — ver plataforma.ts.
+import { app, shell } from 'electron';
 import log from 'electron-log/main';
 import { autoUpdater } from 'electron-updater';
+import { modoDeAtualizacao, PAGINA_DE_DOWNLOADS } from './plataforma';
 
 const logAtu = log.scope('atualizacao');
 
@@ -12,9 +16,11 @@ export type EstadoAtualizacao =
   | { estado: 'verificando' }
   | { estado: 'atualizado'; versao: string }
   | { estado: 'baixando'; versao: string }
-  | { estado: 'pronta'; versao: string }
+  | { estado: 'pronta'; versao: string } // baixada, instala ao reiniciar
+  | { estado: 'disponivel'; versao: string } // modo manual: baixar pela página
   | { estado: 'erro'; mensagem: string };
 
+const MODO = modoDeAtualizacao();
 let atual: EstadoAtualizacao = app.isPackaged
   ? { estado: 'parado' }
   : { estado: 'indisponivel', mensagem: 'Atualizações só funcionam no app instalado.' };
@@ -30,11 +36,13 @@ function configurar(): void {
   if (configurado || !app.isPackaged) return;
   configurado = true;
   autoUpdater.logger = logAtu;
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true; // se o usuário não reiniciar agora, instala ao fechar
+  autoUpdater.autoDownload = MODO === 'automatica';
+  autoUpdater.autoInstallOnAppQuit = MODO === 'automatica'; // se não reiniciar agora, instala ao fechar
   autoUpdater.on('checking-for-update', () => mudar({ estado: 'verificando' }));
   autoUpdater.on('update-not-available', () => mudar({ estado: 'atualizado', versao: app.getVersion() }));
-  autoUpdater.on('update-available', (info) => mudar({ estado: 'baixando', versao: info.version }));
+  autoUpdater.on('update-available', (info) =>
+    mudar(MODO === 'automatica' ? { estado: 'baixando', versao: info.version } : { estado: 'disponivel', versao: info.version })
+  );
   autoUpdater.on('update-downloaded', (info) => mudar({ estado: 'pronta', versao: info.version }));
   autoUpdater.on('error', (err) => {
     logAtu.warn('falha ao atualizar:', err?.message);
@@ -58,7 +66,7 @@ export function estadoAtualizacao(): EstadoAtualizacao {
 export async function verificarAgora(): Promise<EstadoAtualizacao> {
   if (!app.isPackaged) return atual;
   configurar();
-  if (atual.estado === 'pronta' || atual.estado === 'baixando') return atual;
+  if (atual.estado === 'pronta' || atual.estado === 'baixando' || atual.estado === 'disponivel') return atual;
   try {
     await autoUpdater.checkForUpdates();
   } catch {
@@ -67,7 +75,8 @@ export async function verificarAgora(): Promise<EstadoAtualizacao> {
   return atual;
 }
 
-/** Reinicia e instala a versão já baixada. */
+/** Instala a versão baixada (automático) ou abre a página de downloads (manual). */
 export function instalarAgora(): void {
   if (atual.estado === 'pronta') autoUpdater.quitAndInstall();
+  else if (atual.estado === 'disponivel') void shell.openExternal(PAGINA_DE_DOWNLOADS);
 }

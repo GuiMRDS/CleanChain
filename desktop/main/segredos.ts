@@ -4,6 +4,7 @@ import { safeStorage } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pastaDados } from './caminhos';
+import { cofreSeguro } from './plataforma';
 
 export type Provedor = 'groq' | 'openai';
 export const PROVEDORES: Record<Provedor, { prefixo: string; variavel: string }> = {
@@ -41,16 +42,22 @@ export function validar(provedor: unknown, chave: unknown): { provedor: Provedor
   return { provedor: provedor as Provedor, chave: limpa };
 }
 
-export function status(): { configurada: boolean; provedor: Provedor | null } {
+export function status(): { configurada: boolean; provedor: Provedor | null; cofre: boolean; motivoCofre?: string } {
   const dados = ler();
+  const cofre = cofreSeguro();
   // Configurada = existe E dá para decifrar (um perfil copiado de outra máquina não dá).
-  return { configurada: Object.keys(envDoBackend()).length > 0, provedor: dados?.provedor ?? null };
+  return {
+    configurada: Object.keys(envDoBackend()).length > 0,
+    provedor: dados?.provedor ?? null,
+    cofre: cofre.ok,
+    ...(cofre.motivo ? { motivoCofre: cofre.motivo } : {}),
+  };
 }
 
 export function salvar(provedor: Provedor, chave: string): void {
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('A criptografia do sistema não está disponível; não dá para guardar a chave com segurança.');
-  }
+  // Sem um cofre de verdade (Linux sem GNOME Keyring/KWallet), não salva: seria texto puro.
+  const cofre = cofreSeguro();
+  if (!cofre.ok) throw new Error(cofre.motivo ?? 'Não dá para guardar a chave com segurança neste sistema.');
   const dados: Arquivo = { provedor, cifrada: safeStorage.encryptString(chave).toString('base64') };
   fs.mkdirSync(pastaDados(), { recursive: true });
   const tmp = `${arquivo()}.tmp`;
@@ -65,7 +72,7 @@ export function remover(): void {
 /** Variáveis de ambiente para o backend (vazio se não houver chave). */
 export function envDoBackend(): Record<string, string> {
   const dados = ler();
-  if (!dados) return {};
+  if (!dados || !cofreSeguro().ok) return {};
   try {
     const chave = safeStorage.decryptString(Buffer.from(dados.cifrada, 'base64'));
     return { LLM_PROVIDER: dados.provedor, [PROVEDORES[dados.provedor].variavel]: chave };

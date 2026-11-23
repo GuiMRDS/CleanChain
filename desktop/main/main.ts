@@ -1,12 +1,13 @@
 // Processo principal do CleanChain: inicia o backend local, abre a janela na interface servida
 // por ele e garante que nada fica rodando quando o app fecha.
-import { app, BrowserWindow, Menu, MenuItemConstructorOptions, screen, session } from 'electron';
+import { app, BrowserWindow, Menu, screen, session } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { EstadoAtualizacao, iniciarAtualizacao } from './atualizacao';
 import { Backend, Conexao } from './backend';
 import { icone, telaEstado, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
+import { FECHAR_JANELA_ENCERRA, menuNativo, opcoesDeJanela } from './plataforma';
 import * as segredos from './segredos';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
 
@@ -19,10 +20,6 @@ log.errorHandler.startCatching();
 const logMain = log.scope('main');
 
 const APP_ID = 'com.guimrds.cleanchain';
-// Barra de título integrada: a interface vai até o topo e os botões da janela ficam numa
-// sobreposição na cor do app (a interface desvia deles com env(titlebar-area-*)).
-// Altura 56: os botões da janela ficam centrados na mesma linha do status e do menu (top 12 + 32).
-const BARRA = { height: 56, color: '#00000000', symbolColor: '#3a4152' };
 const backend = new Backend();
 let janela: BrowserWindow | undefined;
 let saindo = false;
@@ -88,8 +85,7 @@ function criarJanela(): BrowserWindow {
     backgroundColor: '#f6fafe', // --bg da interface: sem flash de outra cor ao abrir
     title: 'CleanChain',
     icon: icone(), // mesma marca do instalador e do site
-    titleBarStyle: 'hidden',
-    titleBarOverlay: BARRA,
+    ...opcoesDeJanela(), // barra de título integrada (botões à direita; no macOS, à esquerda)
     show: false,
     webPreferences: { ...preferenciasSeguras(path.join(__dirname, '..', 'preload', 'preload.js')), devTools: !app.isPackaged },
   });
@@ -105,25 +101,9 @@ function criarJanela(): BrowserWindow {
   return win;
 }
 
-/**
- * Sem barra de menu visível (as ações ficam no menu do próprio app). O menu existe só para os
- * atalhos de teclado: zoom, tela cheia e, em desenvolvimento, recarregar e DevTools.
- */
-function montarAtalhos(): void {
-  const template: MenuItemConstructorOptions[] = [
-    {
-      label: 'Exibir',
-      submenu: [
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomIn', accelerator: 'CommandOrControl+=', visible: false },
-        { role: 'zoomOut' },
-        { role: 'togglefullscreen' },
-        ...(app.isPackaged ? [] : ([{ role: 'reload' }, { role: 'toggleDevTools' }] as MenuItemConstructorOptions[])),
-      ],
-    },
-  ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+/** Menu nativo de cada sistema (invisível no Windows/Linux; o do app no macOS). */
+function montarMenu(): void {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuNativo()));
 }
 
 function avisarAtualizacao(estado: EstadoAtualizacao): void {
@@ -150,13 +130,24 @@ if (!app.requestSingleInstanceLock()) {
     logMain.info(`CleanChain ${app.getVersion()} (${app.isPackaged ? 'instalado' : 'desenvolvimento'})`);
     protegerSessao(session.defaultSession, origemApp, !urlDev());
     registrarIpc({ origemApp, reiniciarBackend });
-    montarAtalhos();
+    montarMenu();
     janela = criarJanela();
     await iniciarBackend();
     iniciarAtualizacao(avisarAtualizacao);
   });
 
-  app.on('window-all-closed', () => app.quit());
+  // Windows/Linux: fechar a janela encerra o app. macOS: o app continua ativo (com o backend
+  // rodando) e o Dock reabre a janela; o cookie de sessão continua valendo enquanto o app vive.
+  app.on('window-all-closed', () => {
+    if (FECHAR_JANELA_ENCERRA) app.quit();
+  });
+  app.on('activate', () => {
+    if (janela || !app.isReady()) return;
+    janela = criarJanela();
+    const origem = origemApp();
+    if (backend.rodando && origem) void janela.loadURL(`${origem}/`);
+    else void iniciarBackend();
+  });
 
   // Antes de sair: encerra o backend e toda a árvore de processos dele.
   app.on('before-quit', (event) => {

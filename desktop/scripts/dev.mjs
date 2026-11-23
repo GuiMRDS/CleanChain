@@ -20,10 +20,22 @@ const env = { ...process.env, CLEANCHAIN_PORTA_DEV: process.env.CLEANCHAIN_PORTA
 function matar(proc) {
   if (!proc?.pid || proc.exitCode !== null) return;
   if (process.platform === 'win32') execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F'], () => {});
-  else proc.kill('SIGTERM');
+  else {
+    try {
+      process.kill(-proc.pid, 'SIGTERM'); // o grupo inteiro (npm → vite)
+    } catch {
+      proc.kill('SIGTERM');
+    }
+  }
 }
 
-const vite = spawn('npm', ['run', 'dev', '--', '--port', '5173', '--strictPort'], { cwd: frontend, env, stdio: 'inherit', shell: true });
+const vite = spawn('npm', ['run', 'dev', '--', '--port', '5173', '--strictPort'], {
+  cwd: frontend,
+  env,
+  stdio: 'inherit',
+  shell: true,
+  detached: process.platform !== 'win32', // grupo próprio: dá para encerrar npm e vite juntos
+});
 
 async function esperarVite() {
   for (let i = 0; i < 120; i++) {
