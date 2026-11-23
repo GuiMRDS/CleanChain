@@ -23,11 +23,11 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
-from app import config
+from app import config, interface
 from app.agent import build_agent
 from app.sessao import COOKIE, Sessao
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
@@ -54,6 +54,16 @@ async def only_local_origins(request: Request, call_next):
         if (urlparse(origin).hostname or "") not in LOCAL_HOSTS:
             return JSONResponse({"detail": "Origem não permitida."}, status_code=403)
     return await call_next(request)
+
+
+@app.middleware("http")
+async def cabecalhos_de_seguranca(request: Request, call_next):
+    resp = await call_next(request)
+    for name, value in interface.SECURITY_HEADERS.items():
+        resp.headers.setdefault(name, value)
+    if resp.headers.get("content-type", "").startswith("text/html"):
+        resp.headers["Content-Security-Policy"] = interface.CSP
+    return resp
 
 
 # App desktop: token de uso único → cookie; sem cookie, só /health e /bootstrap respondem.
@@ -322,3 +332,19 @@ def transcribe(audio: UploadFile = File(...)):
     except Exception as err:  # erro do provedor (cota, formato de áudio…)
         raise HTTPException(status_code=502, detail=f"Falha na transcrição: {str(err)[:200]}") from err
     return {"text": text}
+
+
+# ---------------------------------------------------------------- interface (frontend/dist)
+# Fica por último: as rotas da API acima têm prioridade sobre este "pega-tudo".
+
+
+@app.get("/{caminho:path}", include_in_schema=False)
+def interface_web(caminho: str):
+    """Serve a interface buildada na mesma origem da API (app desktop e produção)."""
+    if caminho.startswith("api/") or caminho == "api":
+        raise HTTPException(status_code=404, detail="Rota não encontrada.")
+    alvo = interface.arquivo(caminho)
+    if alvo is None:
+        raise HTTPException(status_code=404, detail="Interface não encontrada. Rode npm run build em frontend/.")
+    headers = {"Cache-Control": "no-cache"} if alvo.name == "index.html" else None
+    return FileResponse(alvo, headers=headers)
