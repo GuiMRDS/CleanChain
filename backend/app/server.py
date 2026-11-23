@@ -11,7 +11,13 @@ POST /api/transcribe   multipart "audio"                       →  {"text": "..
 GET  /api/scan/latest  →  último scan salvo (404 se ainda não houver)
 GET  /api/folder/files?path=...&dirs=true  →  arquivos diretos (+ subpastas medidas) da pasta, só dentro da área escaneada
 GET  /api/system       →  disco do sistema, RAM e temporários (rodapé)
-GET  /api/health       →  {"ok": true, "model": "...", "home": "<pasta do usuário>"}
+GET  /api/health       →  {"ok": true, "configured": bool, "model": "...", "home": "<pasta do usuário>"}
+GET  /health           →  {"ok": true} (sem LLM e sem cookie: o Electron espera o backend por aqui)
+GET  /bootstrap?t=…    →  app desktop: token de uso único → cookie de sessão (ver app/sessao.py)
+GET  /…                →  interface buildada (frontend/dist), com CSP
+
+App desktop (CLEANCHAIN_TOKEN definido): tudo menos /health e /bootstrap exige o cookie.
+Ponto de entrada do app desktop: app/desktop.py.
 """
 
 from __future__ import annotations
