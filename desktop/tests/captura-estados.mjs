@@ -1,11 +1,14 @@
 // Capturas das telas do app desktop (perfil vazio): janela inteira, menu do app aberto,
 // tela de abertura e tela de erro.  node tests/captura-estados.mjs <pasta-de-saída>
+// ATENÇÃO: copia uma região da TELA do sistema (para mostrar a moldura da janela). Se outra
+// janela estiver na frente, ela aparece na captura: feche/minimize as outras antes. Para ver
+// só o conteúdo do app, use tests/captura.mjs (page.screenshot).
 import { _electron as electron } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const desktop = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pasta = path.resolve(process.argv[2] || '.');
@@ -41,7 +44,7 @@ try {
   await capturarJanela('2-menu.png');
   await page.keyboard.press('Escape');
 
-  const tela = pathToFileURL(path.join(desktop, 'tela', 'estado.html')).href;
+  const tela = 'cleanchain://tela/estado.html';
   await page.goto(`${tela}?estado=iniciando`);
   await page.waitForTimeout(900);
   await capturarJanela('3-abertura.png');

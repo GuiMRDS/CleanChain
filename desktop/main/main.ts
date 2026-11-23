@@ -5,11 +5,12 @@ import log from 'electron-log/main';
 import path from 'node:path';
 import { EstadoAtualizacao, iniciarAtualizacao } from './atualizacao';
 import { Backend, Conexao } from './backend';
-import { icone, telaEstado, urlDev } from './caminhos';
+import { icone, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
 import { FECHAR_JANELA_ENCERRA, menuNativo, opcoesDeJanela } from './plataforma';
 import * as segredos from './segredos';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
+import { registrarEsquema, servirTela, urlDaTela } from './tela';
 
 // Perfil isolado (testes de fumaça): precisa vir antes de qualquer uso de userData.
 if (process.env.CLEANCHAIN_PERFIL) app.setPath('userData', path.resolve(process.env.CLEANCHAIN_PERFIL));
@@ -39,7 +40,7 @@ function urlBootstrap({ porta, token }: Conexao): string {
 /** Tela local no visual do app: abertura enquanto o backend sobe, ou aviso de erro. */
 async function mostrarEstado(estado: 'iniciando' | 'reiniciando' | 'erro', mensagem = ''): Promise<void> {
   if (!janela || saindo) return;
-  await janela.loadFile(telaEstado(), { query: { estado, mensagem } }).catch(() => {});
+  await janela.loadURL(urlDaTela(estado, mensagem)).catch(() => {});
 }
 
 // ---------------------------------------------------------------- backend
@@ -112,6 +113,8 @@ function avisarAtualizacao(estado: EstadoAtualizacao): void {
 
 // ---------------------------------------------------------------- ciclo de vida
 
+registrarEsquema(); // cleanchain://tela (precisa vir antes do app ficar pronto)
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -128,6 +131,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(async () => {
     logMain.info(`CleanChain ${app.getVersion()} (${app.isPackaged ? 'instalado' : 'desenvolvimento'})`);
+    servirTela();
     protegerSessao(session.defaultSession, origemApp, !urlDev());
     registrarIpc({ origemApp, reiniciarBackend });
     montarMenu();

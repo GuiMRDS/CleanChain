@@ -1,6 +1,9 @@
 // Captura a janela inteira do app, com a moldura (barra de título, botões e bordas), como o
 // usuário vê. Perfil vazio e temporário.
 //   node tests/captura-janela.mjs <arquivo.png> [espera-ms]
+// ATENÇÃO: copia uma região da TELA do sistema (para mostrar a moldura da janela). Se outra
+// janela estiver na frente, ela aparece na captura: feche/minimize as outras antes. Para ver
+// só o conteúdo do app, use tests/captura.mjs (page.screenshot).
 import { _electron as electron } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';

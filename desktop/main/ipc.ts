@@ -3,11 +3,11 @@
 // outro canal simplesmente não existe.
 import { app, ipcMain, IpcMainInvokeEvent, shell } from 'electron';
 import log from 'electron-log/main';
-import { pathToFileURL } from 'node:url';
 import { estadoAtualizacao, instalarAgora, verificarAgora } from './atualizacao';
-import { pastaLogs, telaEstado } from './caminhos';
+import { pastaLogs } from './caminhos';
 import { daOrigemDoApp } from './seguranca';
 import * as segredos from './segredos';
+import { ehTela as ehTelaLocal } from './tela';
 
 const logIpc = log.scope('ipc');
 
@@ -36,7 +36,7 @@ type Quem = 'app' | 'tela';
 function exigirOrigem(event: IpcMainInvokeEvent, origemApp: () => string | undefined, aceita: Quem[]): void {
   const url = event.senderFrame?.url ?? '';
   const ehApp = daOrigemDoApp(url, origemApp);
-  const ehTela = url.split(/[?#]/)[0] === pathToFileURL(telaEstado()).href;
+  const ehTela = ehTelaLocal(url);
   if ((ehApp && aceita.includes('app')) || (ehTela && aceita.includes('tela'))) return;
   logIpc.warn('chamada IPC recusada de', url);
   throw new Error('Origem não permitida.');
