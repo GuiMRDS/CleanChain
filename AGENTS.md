@@ -19,10 +19,11 @@ tela e apaga arquivos **apenas com aprovação humana**.
 |---|---|---|
 | `backend/` | FastAPI + LangChain (Python ≥ 3.12, `uv`) | código principal do agente |
 | `frontend/` | React 19 + Vite + Three.js | app que o usuário usa |
-| `clarix/` | template de referência visual | **não editar**; só fonte de inspiração |
-| `hero-mock/`, `mocks/`, `hero-proposta-a.md` | propostas e mocks estáticos de tela | históricos; não fazem parte do app |
-| `.agents/skills/` | skills usadas no planejamento de telas | — |
 | `docs/images/` | screenshots do README | regenerar quando a UI mudar muito |
+
+O template visual (`clarix/`) e os mocks de tela foram removidos do repositório; se
+restar uma pasta `clarix/` local (só `node_modules`), ela é sobra e pode ser apagada.
+`.agents/` é local e fica fora do git.
 
 ## Comandos
 
@@ -73,7 +74,10 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 - `tools/last_scan.py` (`read_last_scan`), `tools/scan_insights_tool.py`
   (`read_scan_insights`), `tools/cleanup.py` (`list_folder`, `delete_files`),
   `tools/ui_actions.py` (`focus_folder`) — ferramentas do agente.
-- `files.py` — **regras de segurança para apagar** (`check_deletable`) e listagem.
+- `files.py` — **regras de segurança para apagar** (`check_deletable`), o lote de
+  exclusão (`deletion_batch`: sem repetidos, até `MAX_DELETE_ITEMS`, o mesmo na prévia e
+  na execução) e listagem.
+- `units.py` — `human_size` (bytes → "1.2 GB"); não duplique esse helper.
 - `storage.py` — `data/scans/scan-*.json` + `latest.json` (fora do git).
 
 ### Frontend (`frontend/src/`)
@@ -95,7 +99,9 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 2. **Apagar sempre passa por aprovação humana.** Não remova o
    `HumanInTheLoopMiddleware`, não crie outra ferramenta que apague/mova arquivos sem
    ele e não chame `send2trash`/`os.remove` fora de `delete_files`.
-3. **Toda exclusão passa por `files.check_deletable`**, na prévia e na execução. Ao
+3. **Toda exclusão passa por `files.check_deletable`**, na prévia e na execução, e
+   `delete_files` só apaga o lote de `files.deletion_batch` — exatamente o que o cartão
+   de aprovação mostrou. Ao
    mexer nas regras, rode os casos: `C:\`, `C:\Windows\System32\…`,
    `C:\Program Files\…`, `C:\ProgramData`, `C:\pagefile.sys`, a pasta do usuário,
    `…\Downloads` (bloqueados) vs. um arquivo dentro de `…\Downloads` (permitido).
@@ -137,7 +143,14 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 - O modelo padrão (`gpt-oss-20b`) segue instruções de forma irregular; regras críticas
   devem estar **no código** (validação, middleware), não só no prompt.
 - Em Windows, `python -c` com caminhos `C:\Users\…` dentro de strings comuns quebra
-  (`\U`); use raw strings ou scripts em arquivo.
+  (`\U`); use raw strings ou scripts em arquivo. O `sed` do GNU também trata `\U` como
+  "maiúsculas" na substituição.
+- Se `uv run …` falhar com `uv trampoline failed to canonicalize script path`, rode pela
+  venv: `.venv\Scripts\python.exe -m pytest` (ou `-m uvicorn …`).
+- Com uma exclusão aguardando aprovação, uma mensagem nova recusa a exclusão e entrega o
+  texto no motivo da recusa (`stream._implicit_rejection`), numa chamada só ao modelo.
+  O front e o `chat.py` pedem a decisão antes de aceitar outra mensagem; esse caminho
+  cobre chamadas diretas à API.
 - `uvicorn --reload` observa `backend/`; arquivos gerados em `backend/data/` disparam
   recarga.
 

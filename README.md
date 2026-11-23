@@ -186,6 +186,7 @@ backend/
     stream.py         execução do agente → eventos NDJSON
     storage.py        scans salvos (data/scans/)
     files.py          listagem de pastas e regras de segurança para apagar
+    units.py          formatação de tamanhos (bytes → "1.2 GB")
     drives.py         discos do Windows
     speech.py         transcrição (Whisper)
     scan_insights.py  caches conhecidos e duplicados (hash parcial → hash completo)
@@ -197,12 +198,9 @@ frontend/
     agent/            hooks e clientes da API (chat, scan, discos, voz…)
     components/       StartScan, Sunburst, ScanCard, ChatThread, ChatInput…
     three/            fundo animado e material holográfico do robô
-clarix/               template de referência visual (fundo e robô 3D)
-hero-mock/            mocks estáticos das propostas de tela
 docs/images/          imagens deste README
 ```
 
 ## Créditos
 
-O fundo animado e o robô holográfico partem do template **Clarix** (GetLayers),
-incluído em `clarix/` como referência.
+O fundo animado e o robô holográfico partem do template **Clarix** (GetLayers).
