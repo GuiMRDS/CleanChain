@@ -8,7 +8,9 @@ import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import SystemFooter from './components/SystemFooter.jsx';
 import AgentStatus from './components/AgentStatus.jsx';
+import ConfigChave from './components/ConfigChave.jsx';
 import { useChat } from './agent/useChat.js';
+import { useDesktop } from './agent/useDesktop.js';
 import { useScan } from './agent/useScan.js';
 import { useDrives } from './agent/useDrives.js';
 import { bytesLabel, formatCount } from './agent/format.js';
@@ -19,6 +21,7 @@ const AgentScene = lazy(() => import('./components/AgentScene.jsx'));
 
 const GREETINGS = {
   idle: 'Oi! Escolha um disco e eu faço um raio-x completo dele.',
+  setup: 'Oi! Antes de começar, me conecte a um modelo de linguagem.',
   error: 'Não consegui terminar o scan. Vamos tentar de novo?',
 };
 
@@ -42,6 +45,7 @@ const UI_STEP_MS = 900; // gap between agent screen commands, so each transition
 
 export default function App() {
   const scan = useScan();
+  const desktop = useDesktop(); // Electron only: LLM key setup (first run / menu)
 
   // --- Agent ⇄ screen -------------------------------------------------------
   // The agent's focus_folder calls arrive as 'ui' events; they're queued and applied
@@ -103,13 +107,17 @@ export default function App() {
   const live = busy ? messages.at(-1) : null;
   const currentTool = live?.steps.findLast((s) => s.type === 'action')?.text;
 
-  const greeting = scanned
-    ? `Pronto! ${formatCount(scan.result.files_scanned)} arquivos analisados (${bytesLabel(scan.result.total_bytes)}).`
-    : scan.phase === 'scanning'
-      ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
-      : GREETINGS[scan.phase] ?? GREETINGS.idle;
+  const greeting = desktop.precisaChave
+    ? GREETINGS.setup
+    : scanned
+      ? `Pronto! ${formatCount(scan.result.files_scanned)} arquivos analisados (${bytesLabel(scan.result.total_bytes)}).`
+      : scan.phase === 'scanning'
+        ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
+        : GREETINGS[scan.phase] ?? GREETINGS.idle;
 
-  const mainCard = chatting ? (
+  const mainCard = desktop.mostrarConfig ? (
+    <ConfigChave atual={desktop.chave} onSalvar={desktop.salvarChave} onCancelar={desktop.fecharConfig} />
+  ) : chatting ? (
     <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} />
   ) : scanned ? (
     <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
