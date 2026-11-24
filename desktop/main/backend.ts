@@ -48,6 +48,10 @@ async function saudavel(porta: number): Promise<boolean> {
 /**
  * Eventos: 'caiu' (código de saída) quando o backend termina sem ter sido parado por nós.
  */
+/** Avisos do backend para o app (ex.: proposta MCP nova): uma linha JSON no stdout. */
+const PREFIXO_EVENTO = 'CLEANCHAIN_EVENTO ';
+
+/** Eventos: 'evento' (objeto com `tipo`), avisos do backend como uma proposta via MCP. */
 export class Backend extends EventEmitter {
   private proc?: ChildProcess;
   private parando = false;
@@ -91,7 +95,11 @@ export class Backend extends EventEmitter {
     const proc = spawn(cmd, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], ...OPCOES_SPAWN });
     this.proc = proc;
     const repassar = (nivel: 'info' | 'warn') => (dados: Buffer) => {
-      for (const linha of dados.toString('utf8').split(/\r?\n/)) if (linha.trim()) logBackend[nivel](linha);
+      for (const linha of dados.toString('utf8').split(/\r?\n/)) {
+        if (!linha.trim()) continue;
+        logBackend[nivel](linha);
+        if (nivel === 'info' && linha.startsWith(PREFIXO_EVENTO)) this.repassarEvento(linha.slice(PREFIXO_EVENTO.length));
+      }
     };
     proc.stdout?.on('data', repassar('info'));
     proc.stderr?.on('data', repassar('warn'));
@@ -112,6 +120,15 @@ export class Backend extends EventEmitter {
       await new Promise((r) => setTimeout(r, 250));
     }
     throw new Error(`o backend não respondeu em ${ESPERA_SAUDE_MS / 1000}s`);
+  }
+
+  private repassarEvento(texto: string): void {
+    try {
+      const evento = JSON.parse(texto);
+      if (evento && typeof evento === 'object' && typeof evento.tipo === 'string') this.emit('evento', evento);
+    } catch {
+      logBackend.warn('evento do backend ilegível');
+    }
   }
 
   get rodando(): boolean {

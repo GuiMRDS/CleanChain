@@ -42,17 +42,11 @@ def list_folder(path: str) -> str:
     return json.dumps(data, ensure_ascii=False)
 
 
-@tool
-def delete_files(paths: list[str], reason: str) -> str:
-    """Move arquivos ou pastas para a Lixeira do Windows para liberar espaço.
+def executar_exclusao(paths: list[str]) -> dict:
+    """Manda para a Lixeira os itens JÁ APROVADOS pelo usuário (no chat ou numa proposta MCP).
 
-    O usuário vê a lista na tela e precisa aprovar antes de qualquer coisa ser apagada.
-    Use só caminhos completos que vieram de read_last_scan ou list_folder. Pastas do
-    sistema, de programas e as pastas principais do usuário são recusadas.
-
-    Args:
-        paths: caminhos completos dos arquivos/pastas a apagar (até 100).
-        reason: explicação curta para o usuário do porquê apagar esses itens.
+    Único lugar do app que chama send2trash. Revalida cada item na hora (a aprovação pode
+    ter acontecido minutos depois) e só considera o lote que o cartão mostrou.
     """
     root = scan_root()
     deleted, skipped, freed = [], [], 0
@@ -73,13 +67,26 @@ def delete_files(paths: list[str], reason: str) -> str:
             freed += size
         except OSError as err:
             skipped.append({"path": p, "reason": f"erro: {err}"})
-    return json.dumps(
-        {
-            "deleted": deleted,
-            "skipped": skipped,
-            "freed": human_size(freed),
-            "note": "Itens movidos para a Lixeira (o espaço só é liberado de fato ao esvaziá-la). "
-            "A análise salva não muda até um novo scan.",
-        },
-        ensure_ascii=False,
-    )
+    return {
+        "deleted": deleted,
+        "skipped": skipped,
+        "freed": human_size(freed),
+        "note": "Itens movidos para a Lixeira (o espaço só é liberado de fato ao esvaziá-la). "
+        "A análise salva não muda até um novo scan.",
+    }
+
+
+@tool
+def delete_files(paths: list[str], reason: str) -> str:
+    """Move arquivos ou pastas para a Lixeira para liberar espaço.
+
+    O usuário vê a lista na tela e precisa aprovar antes de qualquer coisa ser apagada.
+    Use só caminhos completos que vieram de read_last_scan ou list_folder. Pastas do
+    sistema, de programas e as pastas principais do usuário são recusadas.
+
+    Args:
+        paths: caminhos completos dos arquivos/pastas a apagar (até 100).
+        reason: explicação curta para o usuário do porquê apagar esses itens.
+    """
+    # Só roda depois da aprovação (HumanInTheLoopMiddleware em app/agent.py).
+    return json.dumps(executar_exclusao(paths), ensure_ascii=False)

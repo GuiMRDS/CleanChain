@@ -189,6 +189,9 @@ class Windows(Plataforma):
             return None
         return {"total": status.ullTotalPhys, "used": status.ullTotalPhys - status.ullAvailPhys}
 
+    def pasta_dados_padrao(self) -> Path:
+        return Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming") / "CleanChain"
+
     def processo_vivo(self, pid: int) -> bool:
         SYNCHRONIZE = 0x00100000
         WAIT_TIMEOUT = 0x102

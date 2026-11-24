@@ -9,6 +9,7 @@ desenvolvimento de sempre: porta 8000, sem sessão por cookie e dados em backend
     CLEANCHAIN_INSTALACAO  pasta do app instalado (protegida contra exclusão)
     CLEANCHAIN_PAI         PID do Electron: o backend se encerra se ele morrer
     CLEANCHAIN_FRONTEND    pasta da interface buildada (padrão: frontend/dist ou a do pacote)
+    CLEANCHAIN_MCP_TOKEN   token das rotas /api/mcp/* (integração MCP); sem ele, MCP desligado
 
 As funções leem o ambiente a cada chamada, para os testes poderem trocá-lo.
 """
@@ -45,6 +46,16 @@ def token() -> str | None:
 def pasta_dados() -> Path:
     custom = _env("CLEANCHAIN_DADOS")
     return Path(custom) if custom else BACKEND_DIR / "data"
+
+
+def mcp_token() -> str | None:
+    """Token MCP desta execução (gerado pelo Electron). Separado do cookie da interface."""
+    return _env("CLEANCHAIN_MCP_TOKEN")
+
+
+def arquivo_runtime() -> Path:
+    """runtime.json: o Electron o grava (porta, token MCP, PID) só com a integração MCP ligada."""
+    return pasta_dados() / "runtime.json"
 
 
 def pasta_instalacao() -> Path | None:

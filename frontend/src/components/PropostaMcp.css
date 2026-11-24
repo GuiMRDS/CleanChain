@@ -1,0 +1,44 @@
+/* MCP cleanup proposal: a HUD panel around the chat's approval card (ChatThread.css). */
+.proposta-mcp {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 100%;
+  padding: 22px 24px;
+  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.proposta-mcp .panel-head { margin: 0; }
+
+.proposta-mcp__corpo {
+  min-height: 0;
+  overflow: auto;
+}
+
+.approval__selo {
+  align-self: flex-start;
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(0, 145, 255, 0.12), rgba(128, 0, 255, 0.12));
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #4b1fd1;
+}
+
+.proposta-mcp__resultado {
+  margin: 8px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #0f8a56;
+}
+
+.proposta-mcp__nota {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.proposta-mcp .link-btn { align-self: flex-start; }

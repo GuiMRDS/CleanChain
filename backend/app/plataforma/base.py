@@ -14,7 +14,7 @@ import os
 import posixpath
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from types import ModuleType
 
 
@@ -122,6 +122,10 @@ class Plataforma(ABC):
     @abstractmethod
     def memoria(self) -> dict | None:
         """{"total", "used"} da RAM, ou None se não der para ler."""
+
+    @abstractmethod
+    def pasta_dados_padrao(self) -> Path:
+        """Onde o app desktop guarda os dados (o userData do Electron para "CleanChain")."""
 
     def processo_vivo(self, pid: int) -> bool:
         try:

@@ -115,6 +115,13 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   exclusão (`deletion_batch`: sem repetidos, até `MAX_DELETE_ITEMS`, o mesmo na prévia e
   na execução) e listagem.
 - `units.py` — `human_size` (bytes → "1.2 GB"); não duplique esse helper.
+- `mcp_rotas.py` — `/api/mcp/*` (token MCP; leitura + criar proposta). `propostas.py` —
+  propostas em memória (expiram em 30 min, recusadas inteiras se algo for bloqueado; avisam
+  o Electron por uma linha `CLEANCHAIN_EVENTO …` no stdout). Decisão em
+  `/api/propostas/{id}/decisao` (cookie).
+- `../cleanchain_mcp/` — o servidor MCP (SDK oficial 2.x, `MCPServer`, stdio): só uma
+  ponte que lê `runtime.json` e chama `/api/mcp/*`. Ferramentas em inglês, mensagens em
+  português, `read_only_hint` nas de leitura. Executável: `cleanchain-mcp.spec`.
 - `storage.py` — `<pasta de dados>/scans/scan-*.json` + `latest.json` (pasta de dados =
   `CLEANCHAIN_DADOS`, ou `backend/data` em desenvolvimento; fora do git).
 
@@ -156,6 +163,10 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   e o evento `atualizacao:estado`; cada canal diz quem pode chamar (interface do app e/ou
   a tela local) e valida os argumentos.
 - `main/atualizacao.ts` — estado da atualização automática, mostrado no menu do app.
+- `main/mcp.ts` — integração MCP: preferência (desligada por padrão), token MCP por
+  execução, `runtime.json` (0600, só com a integração ligada, apagado ao sair) e a
+  configuração pronta para Claude Desktop/Claude Code/Cursor. Proposta nova (evento do
+  backend) → notificação + janela na frente + evento `mcp:proposta` para a interface.
 - Interface no desktop: `html.is-desktop` (`main.jsx`), faixa arrastável e
   `DesktopMenu` (chip + painel HUD ao lado do status); o cabeçalho desvia dos botões da
   janela com `env(titlebar-area-*)` (`DesktopMenu.css`).
@@ -173,7 +184,9 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    `scan_disk` às ferramentas do agente.
 2. **Apagar sempre passa por aprovação humana.** Não remova o
    `HumanInTheLoopMiddleware`, não crie outra ferramenta que apague/mova arquivos sem
-   ele e não chame `send2trash`/`os.remove` fora de `delete_files`.
+   ele e não chame `send2trash`/`os.remove` fora de `cleanup.executar_exclusao` — que só
+   roda depois de uma aprovação: a do chat (`delete_files`, pausado pelo middleware) ou o
+   clique do usuário numa proposta MCP (`propostas.decidir`, rota com cookie).
 3. **Toda exclusão passa por `files.check_deletable`**, na prévia e na execução, e
    `delete_files` só apaga o lote de `files.deletion_batch` — exatamente o que o cartão
    de aprovação mostrou. As listas de cada sistema estão em
@@ -207,6 +220,11 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 14. **Nada de `if sistema == …` fora da camada de plataforma** (backend e Electron).
    Recurso sem equivalente seguro num sistema é **desativado** nesse sistema (ex.: chave
    no Linux sem cofre de senhas), nunca improvisado.
+15. **MCP só lê e propõe.** O token MCP (`/api/mcp/*`) nunca dá acesso a aprovar, apagar,
+   escanear ou ao chat; não crie ferramenta MCP que aprove ou apague. Proposta passa por
+   `preview_deletion` e é recusada INTEIRA se qualquer caminho for bloqueado. Integração
+   desligada (sem `runtime.json` com o token desta execução) = 403. Testes em
+   `test_mcp_rotas.py`, `test_cleanchain_mcp.py` e no 4º teste da fumaça.
 
 ## Como estender
 

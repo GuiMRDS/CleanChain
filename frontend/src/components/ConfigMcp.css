@@ -1,0 +1,50 @@
+/* "Integração MCP" panel: reuses ConfigChave.css (.config-chave__*). Compact on purpose: the
+   page never scrolls, so the panel must fit the cards row. */
+.config-mcp { gap: 10px; }
+.config-mcp .config-chave__label { margin-top: 0; }
+
+.config-mcp__switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  padding: 6px 4px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.config-mcp__switch:disabled { opacity: 0.55; cursor: default; }
+
+.config-mcp__trilho {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(15, 20, 40, 0.14);
+  transition: background 0.2s;
+}
+
+.config-mcp__trilho span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.config-mcp__switch.is-on .config-mcp__trilho { background: linear-gradient(135deg, #0091ff, #8000ff 70%); }
+.config-mcp__switch.is-on .config-mcp__trilho span { transform: translateX(18px); }
+.config-mcp__switch:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+.config-mcp__clientes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.config-mcp__clientes button { padding: 7px 11px; font-size: 12.5px; }

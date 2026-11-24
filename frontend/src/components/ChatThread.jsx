@@ -16,12 +16,14 @@ function RichText({ text }) {
 }
 
 // Human-in-the-loop card: nothing is deleted until the user clicks "Mover para a Lixeira".
-function ApprovalCard({ approval, onDecide, disabled, lixeira }) {
+// Also used for cleanup proposals from MCP clients (PropostaMcp), with the `selo` badge.
+export function ApprovalCard({ approval, onDecide, disabled, lixeira, selo }) {
   const { items = [], blocked = [], total_bytes: total = 0, reason, status } = approval;
   const pending = status === 'pending';
 
   return (
     <div className={`approval is-${status}`} role="group" aria-label="Confirmar exclusão">
+      {selo && <p className="approval__selo">{selo}</p>}
       <header className="approval__head">
         <span className="approval__icon" aria-hidden="true">!</span>
         <span>Confirmar limpeza</span>

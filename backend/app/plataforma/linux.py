@@ -126,6 +126,10 @@ class Linux(Plataforma):
                 out.append(d)
         return out
 
+    def pasta_dados_padrao(self) -> Path:
+        base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+        return Path(base) / "CleanChain"
+
     def memoria(self) -> dict | None:
         try:
             info = dict(

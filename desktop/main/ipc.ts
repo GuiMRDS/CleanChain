@@ -1,10 +1,11 @@
 // Canais IPC permitidos (lista fechada). Cada handler confere quem chama — a interface do app
 // (origem do backend local) ou a tela local de estado — e valida os argumentos; qualquer
 // outro canal simplesmente não existe.
-import { app, ipcMain, IpcMainInvokeEvent, shell } from 'electron';
+import { app, clipboard, ipcMain, IpcMainInvokeEvent, shell } from 'electron';
 import log from 'electron-log/main';
 import { estadoAtualizacao, instalarAgora, verificarAgora } from './atualizacao';
 import { pastaLogs } from './caminhos';
+import * as mcp from './mcp';
 import { daOrigemDoApp } from './seguranca';
 import * as segredos from './segredos';
 import { ehTela as ehTelaLocal } from './tela';
@@ -22,12 +23,18 @@ export const CANAIS = {
   verificarAtualizacoes: 'app:verificarAtualizacoes',
   instalarAtualizacao: 'app:instalarAtualizacao',
   eventoAtualizacao: 'atualizacao:estado', // main → interface
+  mcpStatus: 'mcp:status',
+  mcpDefinir: 'mcp:definir',
+  mcpCopiar: 'mcp:copiar',
+  eventoPropostaMcp: 'mcp:proposta', // main → interface: chegou uma proposta de limpeza via MCP
 } as const;
 
 interface Dependencias {
   origemApp: () => string | undefined;
   /** Reinicia o backend (com a chave atual) e recarrega a janela. */
   reiniciarBackend: () => Promise<void>;
+  /** Porta do backend no ar (para o runtime.json da integração MCP). */
+  portaBackend: () => number | undefined;
 }
 
 type Quem = 'app' | 'tela';
@@ -42,7 +49,7 @@ function exigirOrigem(event: IpcMainInvokeEvent, origemApp: () => string | undef
   throw new Error('Origem não permitida.');
 }
 
-export function registrarIpc({ origemApp, reiniciarBackend }: Dependencias): void {
+export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Dependencias): void {
   const so = (aceita: Quem[], fn: (event: IpcMainInvokeEvent, arg: unknown) => unknown) =>
     (event: IpcMainInvokeEvent, arg: unknown) => {
       exigirOrigem(event, origemApp, aceita);
@@ -79,4 +86,23 @@ export function registrarIpc({ origemApp, reiniciarBackend }: Dependencias): voi
   ipcMain.handle(CANAIS.atualizacao, so(['app'], () => estadoAtualizacao()));
   ipcMain.handle(CANAIS.verificarAtualizacoes, so(['app'], () => verificarAgora()));
   ipcMain.handle(CANAIS.instalarAtualizacao, so(['app'], () => instalarAgora()));
+
+  // Integração MCP: só a interface do app liga, desliga e copia a configuração.
+  ipcMain.handle(CANAIS.mcpStatus, so(['app'], () => mcp.status()));
+  ipcMain.handle(
+    CANAIS.mcpDefinir,
+    so(['app'], (_event, arg) => {
+      if (typeof arg !== 'boolean') throw new Error('Valor inválido.');
+      mcp.definir(arg, portaBackend());
+      return mcp.status();
+    })
+  );
+  ipcMain.handle(
+    CANAIS.mcpCopiar,
+    so(['app'], (_event, arg) => {
+      if (typeof arg !== 'string' || !(mcp.CLIENTES as readonly string[]).includes(arg)) throw new Error('Cliente inválido.');
+      clipboard.writeText(mcp.configuracao(arg as mcp.ClienteMcp));
+      return true;
+    })
+  );
 }
