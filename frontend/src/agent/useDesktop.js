@@ -12,6 +12,8 @@ export function useDesktop() {
   const [configAberta, setConfigAberta] = useState(false);
   const [versao, setVersao] = useState('');
   const [atualizacao, setAtualizacao] = useState(null); // see desktop/main/atualizacao.ts
+  const [mcp, setMcp] = useState(null); // { ativo, executavel, instalado, configuracoes }
+  const [mcpAberta, setMcpAberta] = useState(false);
 
   useEffect(() => {
     if (!bridge) return undefined;
@@ -19,6 +21,7 @@ export function useDesktop() {
     bridge.chave.status().then((s) => vivo && setChave(s)).catch(() => {});
     bridge.app.versao().then((v) => vivo && setVersao(v)).catch(() => {});
     bridge.app.atualizacao().then((a) => vivo && setAtualizacao(a)).catch(() => {});
+    bridge.mcp?.status().then((m) => vivo && setMcp(m)).catch(() => {});
     const parar = bridge.aoAtualizacao((a) => setAtualizacao(a));
     return () => {
       vivo = false;
@@ -32,6 +35,8 @@ export function useDesktop() {
     setAtualizacao({ estado: 'verificando' });
     setAtualizacao(await bridge.app.verificarAtualizacoes());
   }, []);
+  const definirMcp = useCallback(async (ativo) => setMcp(await bridge.mcp.definir(ativo)), []);
+  const copiarMcp = useCallback((cliente) => bridge.mcp.copiar(cliente), []);
 
   const precisaChave = Boolean(bridge && chave && !chave.configurada);
   return {
@@ -42,10 +47,23 @@ export function useDesktop() {
     mostrarConfig: precisaChave || configAberta,
     precisaChave,
     salvarChave,
-    abrirConfig: () => setConfigAberta(true),
+    abrirConfig: () => {
+      setMcpAberta(false);
+      setConfigAberta(true);
+    },
     fecharConfig: chave?.configurada ? () => setConfigAberta(false) : null,
     verificarAtualizacoes,
     instalarAtualizacao: () => bridge?.app.instalarAtualizacao(),
     abrirLogs: () => bridge?.app.abrirLogs(),
+    // Integração MCP
+    mcp,
+    mcpAberta: Boolean(bridge) && mcpAberta,
+    abrirMcp: () => {
+      setConfigAberta(false);
+      setMcpAberta(true);
+    },
+    fecharMcp: () => setMcpAberta(false),
+    definirMcp,
+    copiarMcp,
   };
 }

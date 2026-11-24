@@ -10,6 +10,9 @@ import SystemFooter from './components/SystemFooter.jsx';
 import AgentStatus from './components/AgentStatus.jsx';
 import ConfigChave from './components/ConfigChave.jsx';
 import DesktopMenu from './components/DesktopMenu.jsx';
+import ConfigMcp from './components/ConfigMcp.jsx';
+import PropostaMcp from './components/PropostaMcp.jsx';
+import { usePropostasMcp } from './agent/usePropostasMcp.js';
 import { useChat } from './agent/useChat.js';
 import { useDesktop } from './agent/useDesktop.js';
 import { useScan } from './agent/useScan.js';
@@ -46,7 +49,8 @@ const UI_STEP_MS = 900; // gap between agent screen commands, so each transition
 
 export default function App() {
   const scan = useScan();
-  const desktop = useDesktop(); // Electron only: LLM key setup (first run / menu)
+  const desktop = useDesktop(); // Electron only: LLM key setup (first run / menu), MCP settings
+  const propostasMcp = usePropostasMcp(); // Electron only: cleanup proposals from MCP clients
 
   // --- Agent ⇄ screen -------------------------------------------------------
   // The agent's focus_folder calls arrive as 'ui' events; they're queued and applied
@@ -116,7 +120,21 @@ export default function App() {
         ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
         : GREETINGS[scan.phase] ?? GREETINGS.idle;
 
-  const mainCard = desktop.mostrarConfig ? (
+  // Priority: a cleanup proposal from an MCP client waits for the user's decision above all.
+  const mainCard = propostasMcp.atual || propostasMcp.ultima ? (
+    <PropostaMcp
+      proposta={propostasMcp.atual}
+      ultima={propostasMcp.atual ? null : propostasMcp.ultima}
+      restantes={propostasMcp.restantes}
+      decidindo={propostasMcp.decidindo}
+      onDecide={propostasMcp.decidir}
+      onFechar={propostasMcp.fecharUltima}
+      lixeira={plataforma.lixeira}
+    />
+  ) : desktop.mcpAberta ? (
+    // Opened from the menu: shows even before the LLM key is set (MCP doesn't need it).
+    <ConfigMcp mcp={desktop.mcp} onDefinir={desktop.definirMcp} onCopiar={desktop.copiarMcp} onFechar={desktop.fecharMcp} />
+  ) : desktop.mostrarConfig ? (
     <ConfigChave atual={desktop.chave} onSalvar={desktop.salvarChave} onCancelar={desktop.fecharConfig} />
   ) : chatting ? (
     <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />

@@ -1,12 +1,13 @@
 // Processo principal do CleanChain: inicia o backend local, abre a janela na interface servida
 // por ele e garante que nada fica rodando quando o app fecha.
-import { app, BrowserWindow, Menu, screen, session } from 'electron';
+import { app, BrowserWindow, Menu, Notification, screen, session } from 'electron';
 import log from 'electron-log/main';
 import path from 'node:path';
 import { EstadoAtualizacao, iniciarAtualizacao } from './atualizacao';
 import { Backend, Conexao } from './backend';
 import { icone, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
+import * as mcp from './mcp';
 import { FECHAR_JANELA_ENCERRA, menuNativo, opcoesDeJanela } from './plataforma';
 import * as segredos from './segredos';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
@@ -53,7 +54,8 @@ async function iniciarBackend(estado: 'iniciando' | 'reiniciando' = 'iniciando')
   iniciando = true;
   try {
     await mostrarEstado(estado);
-    const conexao = await backend.iniciar(segredos.envDoBackend());
+    const conexao = await backend.iniciar({ ...segredos.envDoBackend(), ...mcp.envDoBackend() });
+    mcp.atualizarRuntime(conexao.porta); // integração MCP: o cleanchain-mcp acha o app por aqui
     await janela?.loadURL(urlBootstrap(conexao));
   } catch (err) {
     logMain.error('não consegui iniciar o backend:', (err as Error).message);
@@ -67,6 +69,40 @@ async function reiniciarBackend(): Promise<void> {
   await backend.parar();
   await iniciarBackend('reiniciando');
 }
+
+// ---------------------------------------------------------------- propostas via MCP
+
+/** Uma proposta de limpeza chegou de um cliente MCP: avisa e mostra o cartão de aprovação. */
+function avisarProposta(evento: { cliente?: unknown; itens?: unknown }): void {
+  const cliente = typeof evento.cliente === 'string' ? evento.cliente.slice(0, 80) : 'um cliente MCP';
+  const itens = typeof evento.itens === 'number' ? evento.itens : 0;
+  if (Notification.isSupported()) {
+    const n = new Notification({
+      title: 'CleanChain: proposta de limpeza',
+      body: `${cliente} propôs mandar ${itens} item(ns) para a Lixeira. Só você aprova, no app.`,
+    });
+    n.on('click', () => trazerParaFrente());
+    n.show();
+  }
+  trazerParaFrente();
+  janela?.webContents.send(CANAIS.eventoPropostaMcp, { cliente, itens });
+}
+
+function trazerParaFrente(): void {
+  if (!janela) {
+    // macOS sem janela aberta: recria e volta para a interface (o cookie segue válido).
+    janela = criarJanela();
+    const origem = origemApp();
+    if (backend.rodando && origem) void janela.loadURL(`${origem}/`);
+  }
+  if (janela.isMinimized()) janela.restore();
+  janela.show();
+  janela.focus();
+}
+
+backend.on('evento', (evento: { tipo?: string; cliente?: unknown; itens?: unknown }) => {
+  if (evento.tipo === 'proposta_mcp' && !saindo) avisarProposta(evento);
+});
 
 backend.on('caiu', (codigo: number | null) => {
   if (saindo) return;
@@ -133,7 +169,7 @@ if (!app.requestSingleInstanceLock()) {
     logMain.info(`CleanChain ${app.getVersion()} (${app.isPackaged ? 'instalado' : 'desenvolvimento'})`);
     servirTela();
     protegerSessao(session.defaultSession, origemApp, !urlDev());
-    registrarIpc({ origemApp, reiniciarBackend });
+    registrarIpc({ origemApp, reiniciarBackend, portaBackend: () => backend.conexao?.porta });
     montarMenu();
     janela = criarJanela();
     await iniciarBackend();
@@ -158,6 +194,7 @@ if (!app.requestSingleInstanceLock()) {
     if (saindo) return;
     saindo = true;
     event.preventDefault();
+    mcp.apagarRuntime(); // app fechado: o cleanchain-mcp passa a responder "abra o app"
     backend
       .parar()
       .catch((err) => logMain.error('falha ao encerrar o backend:', err))

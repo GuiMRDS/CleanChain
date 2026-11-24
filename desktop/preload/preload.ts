@@ -14,6 +14,10 @@ const CANAIS = {
   verificarAtualizacoes: 'app:verificarAtualizacoes',
   instalarAtualizacao: 'app:instalarAtualizacao',
   eventoAtualizacao: 'atualizacao:estado',
+  mcpStatus: 'mcp:status',
+  mcpDefinir: 'mcp:definir',
+  mcpCopiar: 'mcp:copiar',
+  eventoPropostaMcp: 'mcp:proposta',
 } as const;
 
 contextBridge.exposeInMainWorld('cleanchain', {
@@ -31,6 +35,21 @@ contextBridge.exposeInMainWorld('cleanchain', {
     atualizacao: () => ipcRenderer.invoke(CANAIS.atualizacao),
     verificarAtualizacoes: () => ipcRenderer.invoke(CANAIS.verificarAtualizacoes),
     instalarAtualizacao: () => ipcRenderer.invoke(CANAIS.instalarAtualizacao),
+  },
+  /** Integração MCP: status, ligar/desligar e copiar a configuração de um cliente. */
+  mcp: {
+    status: () => ipcRenderer.invoke(CANAIS.mcpStatus),
+    definir: (ativo: boolean) => ipcRenderer.invoke(CANAIS.mcpDefinir, Boolean(ativo)),
+    copiar: (cliente: string) => ipcRenderer.invoke(CANAIS.mcpCopiar, String(cliente)),
+  },
+  /** Chegou uma proposta de limpeza via MCP. Devolve a função que cancela a inscrição. */
+  aoPropostaMcp: (callback: (info: unknown) => void) => {
+    if (typeof callback !== 'function') return () => {};
+    const ouvinte = (_e: unknown, info: unknown) => callback(info);
+    ipcRenderer.on(CANAIS.eventoPropostaMcp, ouvinte);
+    return () => {
+      ipcRenderer.removeListener(CANAIS.eventoPropostaMcp, ouvinte);
+    };
   },
   /** Mudanças no estado da atualização automática. Devolve a função que cancela a inscrição. */
   aoAtualizacao: (callback: (estado: unknown) => void) => {

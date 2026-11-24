@@ -15,6 +15,8 @@ const ESPERA_SIGTERM_MS = 5000;
 
 /** Nome do executável do backend gerado pelo PyInstaller. */
 export const EXECUTAVEL_BACKEND = SISTEMA === 'windows' ? 'cleanchain-backend.exe' : 'cleanchain-backend';
+/** Nome do executável do servidor MCP (cleanchain-mcp, também do PyInstaller). */
+export const EXECUTAVEL_MCP = SISTEMA === 'windows' ? 'cleanchain-mcp.exe' : 'cleanchain-mcp';
 
 /**
  * Opções de spawn do backend. Fora do Windows ele nasce num grupo de processos próprio

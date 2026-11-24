@@ -99,6 +99,14 @@ export default function DesktopMenu({ desktop }) {
             </span>
           </button>
 
+          <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirMcp)}>
+            <span className="desktop-menu__icon" aria-hidden="true">⇄</span>
+            <span className="desktop-menu__text">
+              <strong>Integração MCP</strong>
+              <small>{desktop.mcp?.ativo ? 'ligada · Claude, Cursor e outros' : 'desligada · conectar outros assistentes'}</small>
+            </span>
+          </button>
+
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirLogs)}>
             <span className="desktop-menu__icon" aria-hidden="true">▤</span>
             <span className="desktop-menu__text">

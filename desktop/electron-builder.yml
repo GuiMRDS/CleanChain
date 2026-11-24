@@ -27,6 +27,11 @@ extraResources:
     to: backend
     filter:
       - "**/*"
+  # Servidor MCP (stdio) que clientes como Claude Desktop, Claude Code e Cursor iniciam.
+  - from: ../backend/dist/cleanchain-mcp
+    to: mcp
+    filter:
+      - "**/*"
 
 win:
   target:
