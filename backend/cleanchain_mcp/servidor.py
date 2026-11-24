@@ -17,6 +17,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
+from app import __version__
 from cleanchain_mcp.ponte import AppIndisponivel, Ponte
 
 INSTRUCOES = (
@@ -35,6 +36,7 @@ Tipo = Literal["resumo", "caches", "duplicados", "esquecidos", "extensoes", "ida
 servidor = MCPServer(
     "CleanChain",
     title="CleanChain",
+    version=__version__,
     description="Disk cleanup with an AI agent that only deletes with your approval.",
     instructions=INSTRUCOES,
 )

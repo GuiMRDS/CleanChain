@@ -33,7 +33,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Red
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
-from app import config, interface, plataforma
+from app import __version__, config, interface, plataforma
 from app.agent import build_agent
 from app.mcp_rotas import rotas as rotas_mcp
 from app.propostas import propostas
@@ -45,7 +45,7 @@ from app.storage import load_latest, save_scan
 from app.stream import stream_events
 from app.tools.disk_scan import scan, scan_disk
 
-app = FastAPI(title="CleanChain Agent")
+app = FastAPI(title="CleanChain Agent", version=__version__)
 
 # A API só atende a própria máquina: Host local (barra DNS rebinding) e, em requisições
 # que mudam algo, Origin local (barra sites abertos no navegador chamando 127.0.0.1).
