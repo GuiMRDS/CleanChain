@@ -191,6 +191,10 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 
 ## Invariantes — não quebre
 
+Conferidas automaticamente por `backend/tests/test_invariants.py` (agente e API em execução) e
+`backend/tests/test_invariantes_codigo.py` (código-fonte do backend e do Electron). Teste falhando
+aqui = a mudança quebrou uma regra: reveja a mudança, não o teste.
+
 1. **O agente não escaneia o disco.** Scans vêm do botão Start scan. Não adicione
    `scan_disk` às ferramentas do agente.
 2. **Apagar sempre passa por aprovação humana.** Não remova o
@@ -222,7 +226,9 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
    `sandbox` ou `webSecurity`, não exponha `ipcRenderer` cru no preload, não afrouxe a CSP
    (`backend/app/interface.py` e `desktop/main/seguranca.ts` andam juntas) nem os Fuses.
    Canal IPC novo entra em `ipc.ts` **e** `preload.ts`, com validação.
-11. **A chave do LLM nunca vai para log, disco em texto puro ou interface.**
+11. **A chave do LLM nunca vai para log, disco em texto puro ou interface.** Erros mostrados ou
+   logados passam por `config.sem_segredos` (backend) e a saída do backend passa por
+   `desktop/main/ocultar.ts` antes do log do Electron — inclusive erros do provedor que repitam a chave.
 12. **Nenhum processo do backend sobrevive ao app.** Se mexer no ciclo de vida, rode
    `npm run test:fumaca` (os testes de queda e de fechamento conferem isso).
 13. **As regras do Windows não mudam.** `test_retrato_windows.py` compara 631 caminhos
