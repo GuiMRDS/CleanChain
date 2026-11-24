@@ -157,6 +157,14 @@ jobs:
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then xvfb-run -a npm run test:fumaca; else npm run test:fumaca; fi
 
+      - name: Resultados da fumaça (se falhou)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fumaca-${{ runner.os }}
+          path: desktop/test-results
+          retention-days: 7
+
       - name: Guardar os instaladores
         uses: actions/upload-artifact@v4
         with:

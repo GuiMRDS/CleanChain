@@ -8,6 +8,7 @@ import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import SystemFooter from './components/SystemFooter.jsx';
 import AgentStatus from './components/AgentStatus.jsx';
+import CenaSegura from './components/CenaSegura.jsx';
 import ConfigChave from './components/ConfigChave.jsx';
 import DesktopMenu from './components/DesktopMenu.jsx';
 import { useChat } from './agent/useChat.js';
@@ -138,9 +139,11 @@ export default function App() {
 
   return (
     <main className="app">
-      <Suspense fallback={null}>
-        <AgentScene clearOfRef={cardsRowRef} />
-      </Suspense>
+      <CenaSegura>
+        <Suspense fallback={null}>
+          <AgentScene clearOfRef={cardsRowRef} />
+        </Suspense>
+      </CenaSegura>
 
       {desktop.desktop && <div className="desktop-drag" aria-hidden="true" />}
 
