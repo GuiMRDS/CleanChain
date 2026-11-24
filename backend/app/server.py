@@ -35,6 +35,8 @@ from pydantic import BaseModel, Field
 
 from app import config, interface, plataforma
 from app.agent import build_agent
+from app.mcp_rotas import rotas as rotas_mcp
+from app.propostas import propostas
 from app.sessao import COOKIE, Sessao
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
 from app.files import inside, list_files, scan_root
@@ -338,6 +340,35 @@ def transcribe(audio: UploadFile = File(...)):
     except Exception as err:  # erro do provedor (cota, formato de áudio…)
         raise HTTPException(status_code=502, detail=f"Falha na transcrição: {str(err)[:200]}") from err
     return {"text": text}
+
+
+# ---------------------------------------------------------------- integração MCP
+# /api/mcp/*: só token MCP (leitura + criar proposta). A DECISÃO fica aqui embaixo, em
+# /api/propostas/*, que exige o cookie da interface como o resto da API: só o usuário, no
+# app, aprova — e a aprovação executa a mesma exclusão do chat (revalidando cada item).
+
+app.include_router(rotas_mcp)
+
+
+@app.get("/api/propostas")
+def listar_propostas():
+    """Propostas de limpeza pendentes (vindas de clientes MCP) para o cartão do app."""
+    return {"propostas": [p.publico() for p in propostas.pendentes()]}
+
+
+class Decisao(BaseModel):
+    aprovar: bool
+
+
+@app.post("/api/propostas/{pid}/decisao")
+def decidir_proposta(pid: str, body: Decisao):
+    try:
+        p = propostas.decidir(pid, body.aprovar)
+    except KeyError as err:
+        raise HTTPException(status_code=404, detail="Proposta não encontrada.") from err
+    except ValueError as err:
+        raise HTTPException(status_code=409, detail=str(err)) from err
+    return p.publico()
 
 
 # ---------------------------------------------------------------- interface (frontend/dist)

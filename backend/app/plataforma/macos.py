@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 import posixpath
 import subprocess
-from pathlib import PurePath
+from pathlib import Path, PurePath
 
 from app.plataforma.base import Plataforma, Textos, caches_comuns, disco_posix
 
@@ -88,6 +88,9 @@ class MacOS(Plataforma):
             if d:
                 out.append(d)
         return out
+
+    def pasta_dados_padrao(self) -> Path:
+        return Path.home() / "Library" / "Application Support" / "CleanChain"
 
     def memoria(self) -> dict | None:
         try:

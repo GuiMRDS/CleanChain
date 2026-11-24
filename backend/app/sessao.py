@@ -18,6 +18,9 @@ import threading
 COOKIE = "cc_sessao"
 # Rotas que funcionam sem cookie: a checagem de saúde do Electron e a troca do token.
 LIVRES = frozenset({"/health", "/bootstrap"})
+# Rotas da integração MCP: têm autenticação PRÓPRIA (token MCP, app/mcp_rotas.py) e só
+# leem ou criam propostas. Aprovar/apagar continua exigindo o cookie (fora deste prefixo).
+PREFIXO_MCP = "/api/mcp/"
 
 
 class Sessao:
@@ -51,4 +54,4 @@ class Sessao:
 
     def exige_cookie(self, path: str) -> bool:
         """True se esta rota precisa de cookie (sessão ligada e rota fora de LIVRES)."""
-        return self.ativa and path not in LIVRES
+        return self.ativa and path not in LIVRES and not path.startswith(PREFIXO_MCP)
