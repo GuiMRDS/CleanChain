@@ -23,6 +23,13 @@ BACKEND = Path(__file__).resolve().parents[1]
 TOKEN = "token-mcp-teste"
 
 
+def _comando_mcp() -> tuple[str, list[str]]:
+    """O servidor MCP a testar pelo stdio: o executável do PyInstaller (CLEANCHAIN_MCP_EXE, no
+    CI) ou o módulo Python."""
+    exe = os.environ.get("CLEANCHAIN_MCP_EXE")
+    return (str(Path(exe).resolve()), []) if exe else (sys.executable, ["-m", "cleanchain_mcp"])
+
+
 def _runtime(pasta: Path, porta: int = 54321, pid: int | None = None, token: str = TOKEN) -> None:
     pasta.mkdir(parents=True, exist_ok=True)
     (pasta / "runtime.json").write_text(json.dumps({"porta": porta, "token": token, "pid": pid or os.getpid()}), encoding="utf-8")
@@ -245,7 +252,8 @@ def test_ponta_a_ponta_cliente_mcp_pelo_stdio(backend_real):
     from mcp.types import Implementation
 
     env = {**os.environ, "CLEANCHAIN_DADOS": str(backend_real["dados"]), "PYTHONIOENCODING": "utf-8"}
-    params = StdioServerParameters(command=sys.executable, args=["-m", "cleanchain_mcp"], env=env, cwd=str(BACKEND))
+    cmd, args = _comando_mcp()
+    params = StdioServerParameters(command=cmd, args=args, env=env, cwd=str(BACKEND))
 
     async def sessao():
         async with stdio_client(params) as (leitura, escrita):
@@ -279,7 +287,8 @@ def test_ponta_a_ponta_com_o_app_fechado(tmp_path):
     from mcp.client.stdio import StdioServerParameters, stdio_client
 
     env = {**os.environ, "CLEANCHAIN_DADOS": str(tmp_path / "sem-app"), "PYTHONIOENCODING": "utf-8"}
-    params = StdioServerParameters(command=sys.executable, args=["-m", "cleanchain_mcp"], env=env, cwd=str(BACKEND))
+    cmd, args = _comando_mcp()
+    params = StdioServerParameters(command=cmd, args=args, env=env, cwd=str(BACKEND))
 
     async def sessao():
         async with stdio_client(params) as (leitura, escrita):
