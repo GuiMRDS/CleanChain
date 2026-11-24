@@ -1,23 +1,46 @@
-# Segredos
+# ------------------------------------------------------------------ segredos
 .env
 .env.*
 !.env.example
 
-# Dependências e builds
+# ------------------------------------------------------------------ dados do app
+# Scans (caminhos de arquivos do usuário), chave cifrada, runtime.json da integração MCP, logs.
+backend/data/
+runtime.json
+segredos.json
+
+# ------------------------------------------------------------------ dependências
 node_modules/
+.venv/
+venv/
+
+# ------------------------------------------------------------------ builds e saídas
+# "build/" não é global de propósito: desktop/build/ guarda o ícone do app (versionado).
 dist/
 backend/build/
 desktop/release/
 desktop/test-results/
 desktop/playwright-report/
-.venv/
+*.tsbuildinfo
+
+# ------------------------------------------------------------------ caches
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.vite/
+.eslintcache
+.coverage
+htmlcov/
+coverage/
+*.tmp
 
-# Dados locais do app (scans com caminhos de arquivos do usuário)
-backend/data/
-
-# Sistema / editores
+# ------------------------------------------------------------------ sistema e editores
 .DS_Store
 Thumbs.db
+desktop.ini
 *.log
+*.swp
+.idea/
