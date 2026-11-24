@@ -107,7 +107,8 @@ async function abrirApp(): Promise<AppAberto> {
 test('o app abre, a interface carrega e a saúde responde', async () => {
   const { page, perfil, fechar } = await abrirApp();
   try {
-    await expect(page.locator('.brand')).toContainText('cleanchain');
+    // Primeira abertura do app empacotado (sem cache): a interface pode levar alguns segundos.
+    await expect(page.locator('.brand')).toContainText('cleanchain', { timeout: 30_000 });
     expect(await page.title()).toBe('CleanChain');
 
     // Saúde e API de dentro do app (o cookie de sessão foi criado pelo /bootstrap).

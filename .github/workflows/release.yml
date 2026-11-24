@@ -30,7 +30,7 @@ jobs:
   build:
     name: build (${{ matrix.os }})
     strategy:
-      fail-fast: true
+      fail-fast: false # cada sistema mostra o próprio resultado; publicar exige os três
       matrix:
         include:
           - os: windows-latest
