@@ -43,7 +43,9 @@ def mcp(sandbox, trash_calls, tmp_path, monkeypatch):
 
     cliente_mcp = TestClient(server.app, base_url="http://127.0.0.1", headers={"Authorization": f"Bearer {TOKEN_MCP}", "X-MCP-Client": "Cliente de Teste"})
     interface = TestClient(server.app, base_url="http://127.0.0.1")
-    assert interface.get("/bootstrap", params={"t": TOKEN_SESSAO}).status_code == 200  # cookie da interface
+    # Cookie da interface (o redirecionamento para "/" não importa aqui: no CI os testes
+    # rodam antes do build da interface, e "/" daria 404).
+    assert interface.get("/bootstrap", params={"t": TOKEN_SESSAO}, follow_redirects=False).status_code == 303
     return {"mcp": cliente_mcp, "ui": interface, "sandbox": sandbox, "lixeira": trash_calls, "dados": dados, "propostas": novas}
 
 
