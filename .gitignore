@@ -6,6 +6,10 @@
 # Dependências e builds
 node_modules/
 dist/
+backend/build/
+desktop/release/
+desktop/test-results/
+desktop/playwright-report/
 .venv/
 __pycache__/
 *.pyc

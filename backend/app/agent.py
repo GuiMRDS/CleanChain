@@ -17,22 +17,25 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
+from app import config, plataforma
 from app.tools.last_scan import read_last_scan
 from app.tools.scan_insights_tool import read_scan_insights
 from app.tools.cleanup import delete_files, list_folder
 from app.tools.ui_actions import focus_folder
 
-# .env do backend tem prioridade; depois o da raiz do repositório.
+# Desenvolvimento: .env do backend tem prioridade; depois o da raiz do repositório.
+# No app instalado a chave vem do Electron (safeStorage), pelo ambiente do processo.
 _BACKEND = Path(__file__).resolve().parents[1]
-load_dotenv(_BACKEND / ".env")
-load_dotenv(_BACKEND.parent / ".env")
+if not config.empacotado():
+    load_dotenv(_BACKEND / ".env")
+    load_dotenv(_BACKEND.parent / ".env")
 
 # Modelos padrão por provedor (troque via OPENAI_MODEL / GROQ_MODEL no .env).
 OPENAI_DEFAULT = "gpt-6.2-astra"  # mais recente da OpenAI (nov/2026)
 GROQ_DEFAULT = "openai/gpt-oss-20b"  # modelo aberto, pequeno e rápido — bom para testes
 
 SYSTEM_PROMPT = """Você é o agente do CleanChain, um assistente que ajuda o usuário a entender e \
-organizar o computador Windows dele: encontrar o que ocupa espaço, sugerir limpezas e organizar pastas.
+organizar <<COMPUTADOR>> dele: encontrar o que ocupa espaço, sugerir limpezas e organizar pastas.
 
 O que você consegue acessar:
 - Você NÃO escaneia o disco. Você só tem acesso às análises que o usuário já fez: ele gera \
@@ -53,11 +56,11 @@ Regras:
 Oportunidades de limpeza:
 - A análise já traz descobertas prontas: use read_scan_insights ("resumo" primeiro; depois "caches", "duplicados", "esquecidos", "extensoes" ou "idades") para sugerir o que limpar, com tamanhos e caminhos reais.
 - Duplicados: só os "confirmed": true são idênticos byte a byte. Proponha apagar as cópias extras desses (mantendo uma) e nunca os "prováveis" sem avisar.
-- Caches com deletable=false estão em pastas do sistema: sugira a Limpeza de Disco do Windows.
+- Caches com deletable=false estão em pastas do sistema: sugira <<LIMPEZA>>.
 
 Limpeza (apagar arquivos):
 - Você pode listar arquivos de uma pasta com list_folder e apagar com delete_files, que manda os \
-itens para a Lixeira do Windows (o usuário pode restaurar).
+itens para a <<LIXEIRA>> (o usuário pode restaurar).
 - read_last_scan só guarda as pastas grandes. Para ver os arquivos de QUALQUER pasta dentro da área \
 analisada (mesmo pequena, ou um caminho que o usuário digitou), use list_folder com o caminho completo \
 — não peça um novo scan por isso.
@@ -87,6 +90,16 @@ entender "aqui", "essa pasta", etc. Não repita esse colchete na resposta.
 tabelas nem títulos markdown — o chat não os exibe."""
 
 
+def system_prompt() -> str:
+    """SYSTEM_PROMPT com os textos do sistema operacional (Windows, macOS ou Linux)."""
+    t = plataforma.atual().textos
+    return (
+        SYSTEM_PROMPT.replace("<<COMPUTADOR>>", t.computador)
+        .replace("<<LIMPEZA>>", t.limpeza_do_sistema)
+        .replace("<<LIXEIRA>>", t.lixeira)
+    )
+
+
 def _machine_context() -> str:
     """Caminhos reais desta máquina, para o agente não precisar adivinhar."""
     home = Path.home()
@@ -111,6 +124,8 @@ def build_llm():
         name = os.getenv("GROQ_MODEL", GROQ_DEFAULT)
         return ChatGroq(model=name, temperature=0.2), f"groq · {name}"
 
+    if config.empacotado() or config.token():  # app desktop: a chave é configurada no app
+        raise RuntimeError("Nenhuma chave de LLM configurada. Use o menu Arquivo › Configurar chave do LLM.")
     raise RuntimeError(
         "Nenhuma chave de LLM encontrada. Adicione ao .env da raiz do projeto (ou backend/.env):\n"
         "  GROQ_API_KEY=gsk_...   ou   OPENAI_API_KEY=sk-..."
@@ -125,7 +140,7 @@ def build_agent():
         tools=[read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files],
         # Apagar exige aprovação humana: o loop pausa antes de delete_files rodar.
         middleware=[HumanInTheLoopMiddleware(interrupt_on={"delete_files": {"allowed_decisions": ["approve", "reject"]}})],
-        system_prompt=SYSTEM_PROMPT + _machine_context(),
+        system_prompt=system_prompt() + _machine_context(),
         checkpointer=InMemorySaver(),
     )
     return agent, label

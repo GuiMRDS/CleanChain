@@ -16,7 +16,7 @@ function RichText({ text }) {
 }
 
 // Human-in-the-loop card: nothing is deleted until the user clicks "Mover para a Lixeira".
-function ApprovalCard({ approval, onDecide, disabled }) {
+function ApprovalCard({ approval, onDecide, disabled, lixeira }) {
   const { items = [], blocked = [], total_bytes: total = 0, reason, status } = approval;
   const pending = status === 'pending';
 
@@ -69,12 +69,12 @@ function ApprovalCard({ approval, onDecide, disabled }) {
       ) : (
         <p className="approval__result">{status === 'approved' ? '✓ Aprovado — itens enviados para a Lixeira.' : '✕ Cancelado — nada foi apagado.'}</p>
       )}
-      {pending && <p className="approval__note">Dá para restaurar pela Lixeira do Windows.</p>}
+      {pending && <p className="approval__note">Dá para restaurar pela {lixeira}.</p>}
     </div>
   );
 }
 
-function AgentMessage({ message, onDecide, busy }) {
+function AgentMessage({ message, onDecide, busy, lixeira }) {
   const { steps, text, status, error, approval } = message;
   return (
     <div className="msg msg--agent">
@@ -100,13 +100,13 @@ function AgentMessage({ message, onDecide, busy }) {
           {status === 'answering' && <span className="msg__caret" aria-hidden="true" />}
         </p>
       )}
-      {approval && <ApprovalCard approval={approval} onDecide={onDecide} disabled={busy} />}
+      {approval && <ApprovalCard approval={approval} onDecide={onDecide} disabled={busy} lixeira={lixeira} />}
       {error && <p className="msg__error">{error}</p>}
     </div>
   );
 }
 
-export default function ChatThread({ messages, onReset, onDecide, busy }) {
+export default function ChatThread({ messages, onReset, onDecide, busy, lixeira = 'Lixeira' }) {
   const scrollRef = useRef(null);
   const stickRef = useRef(true); // follow new content only while the user is at the bottom
   const [unread, setUnread] = useState(false);
@@ -152,7 +152,7 @@ export default function ChatThread({ messages, onReset, onDecide, busy }) {
               <p className="msg__text">{m.text}</p>
             </div>
           ) : (
-            <AgentMessage key={m.id} message={m} onDecide={onDecide} busy={busy} />
+            <AgentMessage key={m.id} message={m} onDecide={onDecide} busy={busy} lixeira={lixeira} />
           )
         )}
       </div>

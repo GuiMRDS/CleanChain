@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { bytesLabel, formatCount } from '../agent/format.js';
+import { mesmoCaminho } from '../agent/plataforma.js';
 import { clearFolderFilesCache, useFolderFiles } from '../agent/useFolderFiles.js';
 import './Sunburst.css';
 
@@ -66,20 +67,18 @@ function layout(tree) {
 }
 
 // Nodes from the root down to the folder with `path` (inclusive), or null.
-function chainTo(node, path) {
-  if (samePath(node.path, path)) return [node];
+function chainTo(node, path, ignoraMaiusculas) {
+  if (mesmoCaminho(node.path, path, ignoraMaiusculas)) return [node];
   for (const child of node.children ?? []) {
-    const rest = chainTo(child, path);
+    const rest = chainTo(child, path, ignoraMaiusculas);
     if (rest) return [node, ...rest];
   }
   return null;
 }
 
-const samePath = (a, b) => !!a && !!b && a.replace(/[\\/]+$/, '').toLowerCase() === b.replace(/[\\/]+$/, '').toLowerCase();
-
 // `command`: { seq, path } — open that folder (sent by the agent via the chat).
 // `onFolderChange(path)`: reports the folder open in the table (sent back to the agent as ui_state).
-export default function Sunburst({ scan, command, onFolderChange }) {
+export default function Sunburst({ scan, command, onFolderChange, ignoraMaiusculas = true }) {
   const [hovered, setHovered] = useState(null); // arc id under the pointer
   const [selected, setSelected] = useState(null); // arc id of the opened folder (null = root)
   const [deeper, setDeeper] = useState([]); // folders opened beyond the rings: [{ name, path, bytes }]
@@ -116,7 +115,7 @@ export default function Sunburst({ scan, command, onFolderChange }) {
   // Agent command → open the folder (root or any drawn arc) and flag it for a moment.
   useEffect(() => {
     if (!command?.path) return;
-    const chain = chainTo(tree, command.path);
+    const chain = chainTo(tree, command.path, ignoraMaiusculas);
     if (!chain) return;
     // Deepest drawn ancestor becomes the selected arc; the rest opens "beyond the rings".
     let cut = 0;

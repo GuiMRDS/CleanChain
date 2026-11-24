@@ -25,13 +25,13 @@ function useTyped(text, speed = 32, delay = 500) {
   return text.slice(0, count);
 }
 
-export default function HeroIntro({ compact, greeting }) {
+export default function HeroIntro({ compact, greeting, titulo = 'Seu Windows,' }) {
   const typed = useTyped(greeting);
 
   return (
     <div className={`hero-intro${compact ? ' is-compact' : ''}`}>
       <h1 className="hero-title">
-        Seu Windows,
+        {titulo}
         <br />
         <em>mais leve.</em>
       </h1>

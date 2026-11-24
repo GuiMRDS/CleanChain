@@ -25,7 +25,14 @@ export default function AgentScene({ clearOfRef }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    } catch (err) {
+      // No WebGL (blocklisted driver, remote desktop, VM, headless CI): the app works without the robot.
+      console.warn('CleanChain: WebGL indisponível, cena 3D desligada.', err);
+      return undefined;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;

@@ -1,0 +1,91 @@
+/* Desktop first-run panel. Reuses .hud-frame, .panel-head and the .target cards of StartScan. */
+.config-chave {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 26px;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.config-chave .panel-head { margin: 0; }
+
+.config-chave__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-chave .targets { flex-direction: row; }
+.config-chave .target { flex: 1; }
+
+.config-chave__label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.config-chave__label a { color: var(--blue); text-decoration: none; }
+.config-chave__label a:hover { text-decoration: underline; }
+
+.config-chave__input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.config-chave__input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+}
+
+.config-chave__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.config-chave__go,
+.config-chave__no {
+  padding: 9px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: transform 0.15s, opacity 0.2s, background 0.2s;
+}
+
+.config-chave__go {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(0, 80, 200, 0.8);
+}
+
+.config-chave__go:hover:not(:disabled) { background: #005fd0; transform: translateY(-1px); }
+
+.config-chave__no {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-2);
+}
+
+.config-chave__no:hover:not(:disabled) { border-color: var(--ink-2); }
+
+.config-chave__go:disabled,
+.config-chave__no:disabled { opacity: 0.45; cursor: default; }
+
+.config-chave__note {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}

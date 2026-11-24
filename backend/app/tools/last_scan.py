@@ -11,6 +11,7 @@ import os
 
 from langchain.tools import tool
 
+from app import plataforma
 from app.storage import load_latest
 
 NO_SCAN = (
@@ -35,12 +36,13 @@ def _slim(node: dict, whole: int, depth: int) -> dict:
 
 def find_folder(node: dict, query: str) -> dict | None:
     """Acha uma pasta pelo caminho completo ou pelo nome (sem diferenciar maiúsculas)."""
-    q = os.path.normcase(os.path.normpath(query)) if any(s in query for s in "\\/:") else query.lower()
+    chave = plataforma.atual().chave_bruta  # no Windows e no macOS, sem diferenciar maiúsculas
+    q = chave(os.path.normpath(query)) if any(s in query for s in "\\/:") else query.lower()
     stack = [node]
     while stack:
         n = stack.pop(0)  # busca em largura: pastas mais rasas primeiro
         path = n.get("path")
-        if path and os.path.normcase(os.path.normpath(path)) == q:
+        if path and chave(os.path.normpath(path)) == q:
             return n
         if n.get("name", "").lower() == q:
             return n

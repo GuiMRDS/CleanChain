@@ -18,7 +18,6 @@ from __future__ import annotations
 import heapq
 import json
 import os
-import stat
 import sys
 import threading
 import time
@@ -29,6 +28,7 @@ from dataclasses import dataclass, field
 from langchain.tools import tool
 from langchain_core.runnables import RunnableConfig
 
+from app import plataforma
 from app.scan_insights import DUP_MIN_BYTES, classify_dir, find_duplicates, summarize_caches
 from app.units import human_size
 
@@ -45,8 +45,6 @@ TYPE_GROUPS: dict[str, set[str]] = {
     "sistema_e_cache": {".dll", ".sys", ".tmp", ".log", ".cache", ".dat", ".db", ".etl", ".dmp", ".pak"},
 }
 EXT_TO_GROUP = {ext: group for group, exts in TYPE_GROUPS.items() for ext in exts}
-
-_REPARSE = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
 
 # Poda da árvore salva: pastas abaixo destes limites viram "outros" (mantém o JSON pequeno).
 MIN_NODE_BYTES = 32 * 1024**2
@@ -125,13 +123,15 @@ class Acc:
 class Ctx:
     """Estado compartilhado entre as threads: limites, cancelamento e progresso."""
 
-    def __init__(self, time_budget_s, keep_depth, on_progress, stop, expected_bytes, protected_roots):
+    def __init__(self, time_budget_s, keep_depth, on_progress, stop, expected_bytes, protected_roots, ignored=frozenset()):
         self.deadline = time.monotonic() + time_budget_s
         self.keep_depth = keep_depth
         self.on_progress = on_progress
         self.stop = stop
         self.expected = expected_bytes
         self.protected_roots = protected_roots
+        self.ignored = ignored  # pastas que o scan não percorre (virtuais, duplicadas, de rede)
+        self.plat = plataforma.atual()
         self.started = time.monotonic()
         self.now = time.time()
         self.age_limits = [self.now - d * 86400 if d else None for d, _ in AGE_BUCKETS]
@@ -168,14 +168,11 @@ class Ctx:
             self._lock.release()
 
 
-def _is_link(entry: os.DirEntry) -> bool:
-    """Ignora atalhos/junctions para não contar a mesma coisa duas vezes."""
-    try:
-        if entry.is_symlink():
-            return True
-        return bool(getattr(entry.stat(follow_symlinks=False), "st_file_attributes", 0) & _REPARSE)
-    except OSError:
+def _skip(entry: os.DirEntry, ctx: Ctx) -> bool:
+    """Atalhos/links (não contar a mesma coisa duas vezes) e pastas que o scan não percorre."""
+    if ctx.plat.eh_link_entrada(entry):
         return True
+    return bool(ctx.ignored) and ctx.plat.chave(entry.path) in ctx.ignored
 
 
 def _add_file(entry: os.DirEntry, acc: Acc, ctx: Ctx, in_cache: bool, protected: bool) -> int:
@@ -229,8 +226,8 @@ def _add_file(entry: os.DirEntry, acc: Acc, ctx: Ctx, in_cache: bool, protected:
 
 def _child_flags(entry: os.DirEntry, parent_norm: str, ctx: Ctx, in_cache: bool, protected: bool) -> tuple[str | None, bool, bool]:
     """(categoria de cache da subpasta, está em cache, está protegida)."""
-    norm = os.path.normcase(entry.path)
-    cat = None if in_cache else classify_dir(parent_norm, os.path.normcase(entry.name))
+    norm = ctx.plat.chave_bruta(entry.path)
+    cat = None if in_cache else classify_dir(parent_norm, ctx.plat.chave_bruta(entry.name))
     return cat, in_cache or cat is not None, protected or norm in ctx.protected_roots
 
 
@@ -243,13 +240,13 @@ def _walk(path: str, name: str, depth: int, ctx: Ctx, acc: Acc, in_cache: bool, 
         acc.errors += 1
         return node
     ctx.report(path)
-    parent_norm = os.path.normcase(path)
+    parent_norm = ctx.plat.chave_bruta(path)
     with it:
         for entry in it:
             if ctx.should_stop():
                 break
             try:
-                if _is_link(entry):
+                if _skip(entry, ctx):
                     continue
                 if entry.is_dir(follow_symlinks=False):
                     cat, c_cache, c_prot = _child_flags(entry, parent_norm, ctx, in_cache, protected)
@@ -282,13 +279,13 @@ def _walk_top(path, name, depth, ctx, acc, in_cache, protected, pool) -> Node:
         acc.errors += 1
         return node
     ctx.report(path)
-    parent_norm = os.path.normcase(path)
+    parent_norm = ctx.plat.chave_bruta(path)
     with it:
         for entry in it:
             if ctx.should_stop():
                 break
             try:
-                if _is_link(entry):
+                if _skip(entry, ctx):
                     continue
                 if entry.is_dir(follow_symlinks=False):
                     cat, c_cache, c_prot = _child_flags(entry, parent_norm, ctx, in_cache, protected)
@@ -350,7 +347,8 @@ def _protected_roots() -> set[str]:
     try:
         from app.files import _protected_roots as roots
 
-        return {os.path.normcase(r) for r in roots()}
+        chave = plataforma.atual().chave_bruta
+        return {chave(r) for r in roots()}
     except Exception:  # noqa: BLE001 — o scan funciona mesmo sem as regras de exclusão
         return set()
 
@@ -402,11 +400,12 @@ def scan(
     if not os.path.isdir(root):
         return {"error": f"Pasta não encontrada: {root}"}
 
-    ctx = Ctx(time_budget_s, max(1, max_depth), on_progress, stop, expected_bytes, _protected_roots())
+    plat = plataforma.atual()
+    ctx = Ctx(time_budget_s, max(1, max_depth), on_progress, stop, expected_bytes, _protected_roots(), plat.ignorar_no_scan())
     acc = Acc()
     name = os.path.basename(root.rstrip("\\/")) or root
     t0 = time.monotonic()
-    root_protected = os.path.normcase(root) in ctx.protected_roots
+    root_protected = plat.chave_bruta(root) in ctx.protected_roots
     if workers > 1:
         with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="scan") as pool:
             tree = _walk_top(root, name, 0, ctx, acc, False, root_protected, pool)

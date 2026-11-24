@@ -1,0 +1,34 @@
+{
+  "name": "cleanchain",
+  "productName": "CleanChain",
+  "version": "0.1.0",
+  "description": "Limpeza de disco com um agente de IA que só apaga com a sua aprovação (Windows, macOS e Linux).",
+  "homepage": "https://github.com/GuiMRDS/CleanChain",
+  "desktopName": "cleanchain.desktop",
+  "author": "Guilherme Marinho",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "dist/main/main.js",
+  "dependencies": {
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.11"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
+    "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "build:ts": "tsc -p tsconfig.json",
+    "build:frontend": "npm --prefix ../frontend run build",
+    "build:backend": "cd ../backend && uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean",
+    "start": "npm run build:ts && electron .",
+    "dev": "npm run build:ts && node scripts/dev.mjs",
+    "icone": "electron scripts/icone.mjs",
+    "pack": "npm run build:ts && electron-builder --dir",
+    "dist": "npm run build:frontend && npm run build:backend && npm run build:ts && electron-builder --publish never",
+    "test:fumaca": "playwright test"
+  }
+}

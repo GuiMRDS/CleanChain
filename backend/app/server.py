@@ -11,7 +11,13 @@ POST /api/transcribe   multipart "audio"                       →  {"text": "..
 GET  /api/scan/latest  →  último scan salvo (404 se ainda não houver)
 GET  /api/folder/files?path=...&dirs=true  →  arquivos diretos (+ subpastas medidas) da pasta, só dentro da área escaneada
 GET  /api/system       →  disco do sistema, RAM e temporários (rodapé)
-GET  /api/health       →  {"ok": true, "model": "...", "home": "<pasta do usuário>"}
+GET  /api/health       →  {"ok": true, "configured": bool, "model": "...", "home": "<pasta do usuário>"}
+GET  /health           →  {"ok": true} (sem LLM e sem cookie: o Electron espera o backend por aqui)
+GET  /bootstrap?t=…    →  app desktop: token de uso único → cookie de sessão (ver app/sessao.py)
+GET  /…                →  interface buildada (frontend/dist), com CSP
+
+App desktop (CLEANCHAIN_TOKEN definido): tudo menos /health e /bootstrap exige o cookie.
+Ponto de entrada do app desktop: app/desktop.py.
 """
 
 from __future__ import annotations
@@ -23,11 +29,13 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse, StreamingResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
+from app import config, interface, plataforma
 from app.agent import build_agent
+from app.sessao import COOKIE, Sessao
 from app.drives import list_drives, memory, system_drive, temp_usage, used_bytes_for
 from app.files import inside, list_files, scan_root
 from app.speech import transcribe_audio
@@ -52,7 +60,80 @@ async def only_local_origins(request: Request, call_next):
         if (urlparse(origin).hostname or "") not in LOCAL_HOSTS:
             return JSONResponse({"detail": "Origem não permitida."}, status_code=403)
     return await call_next(request)
-agent, model_label = build_agent()  # um agente para o processo; a memória separa por thread_id
+
+
+@app.middleware("http")
+async def cabecalhos_de_seguranca(request: Request, call_next):
+    resp = await call_next(request)
+    for name, value in interface.SECURITY_HEADERS.items():
+        resp.headers.setdefault(name, value)
+    if resp.headers.get("content-type", "").startswith("text/html"):
+        resp.headers["Content-Security-Policy"] = interface.CSP
+    return resp
+
+
+# App desktop: token de uso único → cookie; sem cookie, só /health e /bootstrap respondem.
+# Em desenvolvimento (sem CLEANCHAIN_TOKEN) a sessão fica desligada.
+sessao = Sessao(config.token())
+
+
+@app.middleware("http")
+async def exige_sessao(request: Request, call_next):
+    if sessao.exige_cookie(request.url.path) and not sessao.valida(request.cookies.get(COOKIE)):
+        if request.url.path.startswith("/api/"):
+            return JSONResponse({"detail": "Sessão inválida. Abra o CleanChain pelo aplicativo."}, status_code=401)
+        return PlainTextResponse("Abra o CleanChain pelo aplicativo.", status_code=401)
+    return await call_next(request)
+
+
+@app.get("/health")
+def health_publico():
+    """Saúde para o Electron esperar o backend subir: não chama o LLM nem expõe caminhos."""
+    return {"ok": True}
+
+
+@app.get("/bootstrap")
+def bootstrap(t: str = ""):
+    """Troca o token de uso único (vindo do Electron) por um cookie de sessão."""
+    if not sessao.ativa:
+        return RedirectResponse("/", status_code=303)
+    segredo = sessao.trocar(t)
+    if not segredo:
+        return PlainTextResponse("Link de acesso inválido ou já usado. Abra o CleanChain pelo aplicativo.", status_code=401)
+    resp = RedirectResponse("/", status_code=303)
+    resp.set_cookie(COOKIE, segredo, httponly=True, samesite="strict", path="/")
+    return resp
+
+
+# Um agente para o processo (a memória separa por thread_id), criado no primeiro uso: o
+# backend sobe mesmo sem chave de LLM (primeira abertura do app desktop).
+_agent_lock = threading.Lock()
+_agent = None
+_model_label: str | None = None
+
+
+def get_agent():
+    """O agente do processo. RuntimeError se não houver chave de LLM configurada."""
+    global _agent, _model_label
+    with _agent_lock:
+        if _agent is None:
+            _agent, _model_label = build_agent()
+        return _agent
+
+
+def _chat_stream(events) -> StreamingResponse:
+    def ndjson():
+        for event in events:
+            yield _line(event)
+
+    # Gerador síncrono: o FastAPI roda em thread separada, sem travar o servidor.
+    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+
+
+def _no_agent(err: RuntimeError):
+    yield {"type": "error", "text": str(err)}
+    yield {"type": "done", "awaiting_approval": False}
+
 
 SCAN_DEPTH = 6  # níveis de pastas guardados no JSON (o sunburst desenha os 4 primeiros)
 SCAN_TOP_N = 10  # maiores subpastas por pasta; o resto vira "outros"
@@ -81,24 +162,27 @@ class ChatRequest(BaseModel):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "model": model_label, "home": str(Path.home())}
+    try:
+        get_agent()
+    except RuntimeError:
+        return {"ok": True, "configured": False, "model": None, "home": str(Path.home())}
+    return {"ok": True, "configured": True, "model": _model_label, "home": str(Path.home())}
 
 
 @app.get("/api/system")
 def system():
     """Dados reais do rodapé: disco do sistema, RAM e pasta de temporários."""
-    return {"disk": system_drive(), "memory": memory(), "temp": temp_usage()}
+    return {"disk": system_drive(), "memory": memory(), "temp": temp_usage(), "plataforma": plataforma.atual().info()}
 
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
-    def ndjson():
-        ui_state = req.ui_state.model_dump() if req.ui_state else None
-        for event in stream_events(agent, req.message, req.thread_id, ui_state):
-            yield _line(event)
-
-    # Gerador síncrono: o FastAPI roda em thread separada, sem travar o servidor.
-    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+    try:
+        agent = get_agent()
+    except RuntimeError as err:
+        return _chat_stream(_no_agent(err))
+    ui_state = req.ui_state.model_dump() if req.ui_state else None
+    return _chat_stream(stream_events(agent, req.message, req.thread_id, ui_state))
 
 
 class ApprovalRequest(BaseModel):
@@ -110,11 +194,11 @@ class ApprovalRequest(BaseModel):
 def chat_approval(req: ApprovalRequest):
     """Decisão do usuário sobre uma ação pausada (ex.: apagar arquivos)."""
 
-    def ndjson():
-        for event in stream_events(agent, None, req.thread_id, decision="approve" if req.approve else "reject"):
-            yield _line(event)
-
-    return StreamingResponse(ndjson(), media_type="application/x-ndjson", headers=NDJSON_HEADERS)
+    try:
+        agent = get_agent()
+    except RuntimeError as err:
+        return _chat_stream(_no_agent(err))
+    return _chat_stream(stream_events(agent, None, req.thread_id, decision="approve" if req.approve else "reject"))
 
 
 # ---------------------------------------------------------------- scan
@@ -130,7 +214,7 @@ _scan_stop: threading.Event | None = None  # scan em andamento (um por vez)
 
 @app.get("/api/drives")
 def drives():
-    return {"drives": list_drives(), "home": str(Path.home())}
+    return {"drives": list_drives(), "home": str(Path.home()), "plataforma": plataforma.atual().info()}
 
 
 @app.post("/api/scan/cancel")
@@ -254,3 +338,19 @@ def transcribe(audio: UploadFile = File(...)):
     except Exception as err:  # erro do provedor (cota, formato de áudio…)
         raise HTTPException(status_code=502, detail=f"Falha na transcrição: {str(err)[:200]}") from err
     return {"text": text}
+
+
+# ---------------------------------------------------------------- interface (frontend/dist)
+# Fica por último: as rotas da API acima têm prioridade sobre este "pega-tudo".
+
+
+@app.get("/{caminho:path}", include_in_schema=False)
+def interface_web(caminho: str):
+    """Serve a interface buildada na mesma origem da API (app desktop e produção)."""
+    if caminho.startswith("api/") or caminho == "api":
+        raise HTTPException(status_code=404, detail="Rota não encontrada.")
+    alvo = interface.arquivo(caminho)
+    if alvo is None:
+        raise HTTPException(status_code=404, detail="Interface não encontrada. Rode npm run build em frontend/.")
+    headers = {"Cache-Control": "no-cache"} if alvo.name == "index.html" else None
+    return FileResponse(alvo, headers=headers)

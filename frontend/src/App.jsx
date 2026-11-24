@@ -8,7 +8,11 @@ import ChatThread from './components/ChatThread.jsx';
 import ChatInput from './components/ChatInput.jsx';
 import SystemFooter from './components/SystemFooter.jsx';
 import AgentStatus from './components/AgentStatus.jsx';
+import CenaSegura from './components/CenaSegura.jsx';
+import ConfigChave from './components/ConfigChave.jsx';
+import DesktopMenu from './components/DesktopMenu.jsx';
 import { useChat } from './agent/useChat.js';
+import { useDesktop } from './agent/useDesktop.js';
 import { useScan } from './agent/useScan.js';
 import { useDrives } from './agent/useDrives.js';
 import { bytesLabel, formatCount } from './agent/format.js';
@@ -19,6 +23,7 @@ const AgentScene = lazy(() => import('./components/AgentScene.jsx'));
 
 const GREETINGS = {
   idle: 'Oi! Escolha um disco e eu faço um raio-x completo dele.',
+  setup: 'Oi! Antes de começar, me conecte a um modelo de linguagem.',
   error: 'Não consegui terminar o scan. Vamos tentar de novo?',
 };
 
@@ -29,7 +34,7 @@ function buildTargets(drives, home) {
     badge: d.letter,
     title: d.label,
     tag: d.system ? 'sistema' : d.kind === 'removível' ? 'removível' : null,
-    short: `${d.letter} inteiro`,
+    short: d.short ?? `${d.letter} inteiro`,
     total: d.total,
     used: d.used,
     free: d.free,
@@ -42,6 +47,7 @@ const UI_STEP_MS = 900; // gap between agent screen commands, so each transition
 
 export default function App() {
   const scan = useScan();
+  const desktop = useDesktop(); // Electron only: LLM key setup (first run / menu)
 
   // --- Agent ⇄ screen -------------------------------------------------------
   // The agent's focus_folder calls arrive as 'ui' events; they're queued and applied
@@ -94,7 +100,7 @@ export default function App() {
   const scanned = scan.phase === 'done' && scan.result;
 
   // Disk picker: defaults to the system disk.
-  const { drives, home, status: drivesStatus } = useDrives();
+  const { drives, home, status: drivesStatus, plataforma } = useDrives();
   const targets = useMemo(() => buildTargets(drives, home), [drives, home]);
   const [target, setTarget] = useState(null);
   const chosen = targets.find((t) => t.path === target) ?? targets.find((t) => t.tag === 'sistema') ?? targets[0];
@@ -103,14 +109,18 @@ export default function App() {
   const live = busy ? messages.at(-1) : null;
   const currentTool = live?.steps.findLast((s) => s.type === 'action')?.text;
 
-  const greeting = scanned
-    ? `Pronto! ${formatCount(scan.result.files_scanned)} arquivos analisados (${bytesLabel(scan.result.total_bytes)}).`
-    : scan.phase === 'scanning'
-      ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
-      : GREETINGS[scan.phase] ?? GREETINGS.idle;
+  const greeting = desktop.precisaChave
+    ? GREETINGS.setup
+    : scanned
+      ? `Pronto! ${formatCount(scan.result.files_scanned)} arquivos analisados (${bytesLabel(scan.result.total_bytes)}).`
+      : scan.phase === 'scanning'
+        ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
+        : GREETINGS[scan.phase] ?? GREETINGS.idle;
 
-  const mainCard = chatting ? (
-    <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} />
+  const mainCard = desktop.mostrarConfig ? (
+    <ConfigChave atual={desktop.chave} onSalvar={desktop.salvarChave} onCancelar={desktop.fecharConfig} />
+  ) : chatting ? (
+    <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
   ) : scanned ? (
     <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
   ) : (
@@ -129,9 +139,13 @@ export default function App() {
 
   return (
     <main className="app">
-      <Suspense fallback={null}>
-        <AgentScene clearOfRef={cardsRowRef} />
-      </Suspense>
+      <CenaSegura>
+        <Suspense fallback={null}>
+          <AgentScene clearOfRef={cardsRowRef} />
+        </Suspense>
+      </CenaSegura>
+
+      {desktop.desktop && <div className="desktop-drag" aria-hidden="true" />}
 
       <header className="brand">
         <span className="brand__mark" aria-hidden="true" />
@@ -139,15 +153,21 @@ export default function App() {
       </header>
 
       <AgentStatus scan={scan} thinking={busy} currentTool={currentTool} awaitingApproval={awaitingApproval} />
+      {desktop.desktop && <DesktopMenu desktop={desktop} />}
 
       <section className={`left${chatting ? ' is-chatting' : ''}`}>
-        <HeroIntro compact={chatting} greeting={greeting} />
+        <HeroIntro compact={chatting} greeting={greeting} titulo={plataforma.titulo} />
         {/* Main card + scan charts share one row, vertically centred together. */}
         <div className="insights-row" ref={cardsRowRef}>
           {mainCard}
           {scanned && (
             <div className="insights-side">
-              <Sunburst scan={scan.result} command={sunburstCommand} onFolderChange={handleFolderChange} />
+              <Sunburst
+                scan={scan.result}
+                command={sunburstCommand}
+                onFolderChange={handleFolderChange}
+                ignoraMaiusculas={plataforma.ignora_maiusculas}
+              />
               <FileTypesChart byType={scan.result.by_type} totalBytes={scan.result.total_bytes} />
             </div>
           )}
