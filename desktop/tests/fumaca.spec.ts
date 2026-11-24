@@ -104,9 +104,11 @@ async function abrirApp(): Promise<AppAberto> {
     const saiu = new Promise<void>((r) => proc.once('exit', () => r()));
     await page.evaluate(() => window.close()).catch(() => {});
     await Promise.race([saiu, new Promise((r) => setTimeout(r, 15_000))]);
-    if (proc.exitCode === null && proc.pid) {
+    if (proc.exitCode === null && proc.signalCode === null && proc.pid) {
       if (WINDOWS) execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F']);
       else proc.kill('SIGKILL');
+      // Espera o processo sair de fato: logo após o kill o PID ainda existe até ser recolhido.
+      await Promise.race([saiu, new Promise((r) => setTimeout(r, 10_000))]);
     }
     await browser?.close().catch(() => {});
   };
