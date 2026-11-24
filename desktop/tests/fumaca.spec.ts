@@ -26,6 +26,15 @@ const DESKTOP = path.resolve(__dirname, '..');
 const URL_DO_APP = /^http:\/\/127\.0\.0\.1:\d+\/$/;
 const WINDOWS = process.platform === 'win32';
 
+function processoVivo(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Mata à força o processo que escuta na porta (simula o backend travando). */
 function matarQuemEscuta(porta: string): void {
   if (WINDOWS) {
@@ -259,7 +268,12 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
     await definirMcp(page, true);
     expect(fs.existsSync(runtime)).toBe(true);
     await fechar();
-    expect(fs.existsSync(runtime)).toBe(false);
+    // App fechado = o cleanchain-mcp passa a responder "abra o app". Na saída normal o arquivo
+    // some; se o processo foi encerrado à força (no macOS fechar a janela não encerra o app, então
+    // o teste do app empacotado mata o processo), sobra o arquivo com um PID que já não existe —
+    // e o cleanchain-mcp confere o PID (test_app_fechado_com_pid_morto).
+    const sobrou = fs.existsSync(runtime) ? Number(JSON.parse(fs.readFileSync(runtime, 'utf8')).pid) : null;
+    expect(sobrou === null || !processoVivo(sobrou)).toBe(true);
   } finally {
     await fechar().catch(() => {});
     fs.rmSync(perfil, { recursive: true, force: true });
