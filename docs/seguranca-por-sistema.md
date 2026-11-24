@@ -26,6 +26,9 @@ Além disso, em todos:
   é ignorado, **nunca** apagado de vez;
 - o scan **não segue links** (não conta nada duas vezes nem sai da área escolhida);
 - a instalação, a pasta de dados e o código do próprio CleanChain são protegidos por inteiro.
+- **propostas via MCP** (clientes como Claude Desktop ou Cursor) passam pelas mesmas regras e
+  são recusadas **inteiras** se qualquer caminho for bloqueado ou se passarem de 100 itens. Um
+  cliente MCP nunca apaga: só o clique do usuário no app executa, com a mesma revalidação.
 
 ## Windows (sem mudanças em relação à versão só-Windows)
 

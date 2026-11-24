@@ -19,6 +19,17 @@ export const EXECUTAVEL_BACKEND = SISTEMA === 'windows' ? 'cleanchain-backend.ex
 export const EXECUTAVEL_MCP = SISTEMA === 'windows' ? 'cleanchain-mcp.exe' : 'cleanchain-mcp';
 
 /**
+ * O caminho do executável MCP é estável (dá para colocar na configuração de um cliente)?
+ * No AppImage, não: ele roda de uma montagem temporária que muda a cada abertura.
+ */
+export function avisoCaminhoMcp(): string | undefined {
+  if (SISTEMA === 'linux' && process.env.APPIMAGE) {
+    return 'No AppImage o caminho do executável muda a cada abertura: para usar a integração MCP, instale o .deb.';
+  }
+  return undefined;
+}
+
+/**
  * Opções de spawn do backend. Fora do Windows ele nasce num grupo de processos próprio
  * (detached), para o encerramento alcançar também os filhos.
  */

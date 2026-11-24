@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pastaDados, REPO } from './caminhos';
-import { EXECUTAVEL_MCP } from './plataforma';
+import { avisoCaminhoMcp, EXECUTAVEL_MCP } from './plataforma';
 
 const logMcp = log.scope('mcp');
 
@@ -103,6 +103,7 @@ export function status(): {
   ativo: boolean;
   executavel: string;
   instalado: boolean;
+  aviso?: string;
   configuracoes: Record<ClienteMcp, string>;
 } {
   const { command, args } = comando();
@@ -110,6 +111,7 @@ export function status(): {
     ativo: ligado(),
     executavel: [command, ...args].join(' '),
     instalado: !app.isPackaged || fs.existsSync(command),
+    aviso: avisoCaminhoMcp(),
     configuracoes: {
       'claude-desktop': configuracao('claude-desktop'),
       'claude-code': configuracao('claude-code'),

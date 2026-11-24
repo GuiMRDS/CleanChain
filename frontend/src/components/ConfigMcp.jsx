@@ -66,6 +66,7 @@ export default function ConfigMcp({ mcp, onDefinir, onCopiar, onFechar }) {
       </label>
       <input id="config-mcp-exe" name="executavel" className="config-chave__input" readOnly value={mcp?.executavel ?? '…'} title={mcp?.executavel} />
       {mcp && !mcp.instalado && <p className="start-scan__error">O executável não foi encontrado: reinstale o CleanChain.</p>}
+      {mcp?.aviso && <p className="start-scan__error">{mcp.aviso}</p>}
 
       <p className="config-chave__label">Copiar configuração</p>
       <div className="config-mcp__clientes">

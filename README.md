@@ -9,6 +9,7 @@
   Windows · macOS · Linux<br />
   <a href="https://github.com/GuiMRDS/CleanChain/releases/latest">Baixar</a> ·
   <a href="#instalação">Instalação</a> ·
+  <a href="#usando-o-cleanchain-via-mcp">MCP</a> ·
   <a href="#desenvolvimento">Desenvolvimento</a>
 </p>
 
@@ -96,6 +97,130 @@ Desinstalar remove o app e mantém essa pasta; apague-a para limpar tudo.
 **Regras de exclusão de cada sistema** (o que nunca pode ser apagado): veja
 [docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
 
+## Usando o CleanChain via MCP
+
+O CleanChain também funciona como **servidor MCP** ([Model Context Protocol](https://modelcontextprotocol.io)),
+o padrão aberto que assistentes de IA usam para chamar ferramentas. Qualquer cliente MCP
+(Claude Desktop, Claude Code, Cursor, VS Code e outros agentes) pode consultar as suas análises
+e **propor** limpezas. **Nenhum cliente MCP consegue apagar nada**: cada proposta vira um
+cartão de aprovação no app, e só você decide.
+
+### O que dá para fazer
+
+| Ferramenta | O que faz | Somente leitura |
+|---|---|:---:|
+| `get_last_scan_summary` | Resumo da última análise: total, tipos de arquivo, maiores arquivos e pastas | ✓ |
+| `get_folder_details(path)` | Detalhes de uma pasta da análise (subpastas e tamanhos) | ✓ |
+| `get_cleanup_opportunities(kind)` | Caches, duplicados, arquivos esquecidos, extensões e idades | ✓ |
+| `list_folder(path)` | Arquivos de uma pasta da área analisada (para achar caminhos exatos) | ✓ |
+| `propose_cleanup(paths, reason)` | Cria uma **proposta** de limpeza para você aprovar no app | — |
+| `get_proposal_status(id)` | Situação da proposta: pendente, aprovada, recusada ou expirada | ✓ |
+
+Não existe ferramenta MCP para aprovar ou apagar. Os clientes leem as análises que **você**
+rodou no app (o MCP não escaneia o disco).
+
+### Como ligar
+
+1. Abra o CleanChain e vá em **menu do app › Integração MCP**.
+2. Ligue o **Servidor MCP** (ele vem desligado).
+3. Clique em **Copiar configuração** do seu cliente e cole no lugar indicado (veja abaixo).
+4. Reinicie o cliente. Com o CleanChain aberto, ele passa a enxergar as ferramentas.
+
+Com o app fechado ou a integração desligada, as ferramentas respondem *"O CleanChain não está
+aberto. Abra o app e tente de novo."*
+
+### Onde fica o executável
+
+O servidor MCP é o executável `cleanchain-mcp`, instalado junto com o app (transporte stdio):
+
+| Sistema | Caminho |
+|---|---|
+| Windows | `%LOCALAPPDATA%\Programs\CleanChain\resources\mcp\cleanchain-mcp.exe` |
+| macOS | `/Applications/CleanChain.app/Contents/Resources/mcp/cleanchain-mcp` |
+| Linux (`.deb`) | `/opt/CleanChain/resources/mcp/cleanchain-mcp` |
+
+No **AppImage** o caminho muda a cada abertura, então a integração MCP precisa do `.deb`. A tela
+"Integração MCP" mostra o caminho exato da sua instalação.
+
+### Configuração dos clientes
+
+O botão **Copiar configuração** já gera o texto com o caminho certo. Os exemplos abaixo usam o
+caminho do Windows; troque pelo do seu sistema.
+
+**Claude Desktop**: em *Settings › Developer › Edit Config* (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "cleanchain": {
+      "command": "C:\\Users\\<você>\\AppData\\Local\\Programs\\CleanChain\\resources\\mcp\\cleanchain-mcp.exe",
+      "args": []
+    }
+  }
+}
+```
+
+**Claude Code**: no terminal:
+
+```sh
+claude mcp add --scope user cleanchain -- "C:\Users\<você>\AppData\Local\Programs\CleanChain\resources\mcp\cleanchain-mcp.exe"
+```
+
+**Cursor**: em `~/.cursor/mcp.json` (mesmo formato do Claude Desktop):
+
+```json
+{
+  "mcpServers": {
+    "cleanchain": {
+      "command": "/Applications/CleanChain.app/Contents/Resources/mcp/cleanchain-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Outros clientes MCP (VS Code, agentes próprios) usam o mesmo comando com transporte **stdio**.
+
+### Fluxo de aprovação
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente MCP (Claude, Cursor…)
+    participant M as cleanchain-mcp (stdio)
+    participant B as Backend do CleanChain
+    participant U as Você, no app
+    C->>M: propose_cleanup(paths, reason)
+    M->>B: POST /api/mcp/propostas (token MCP)
+    B->>B: mesmas regras do cartão de aprovação
+    alt algum caminho protegido, fora da área ou mais de 100 itens
+        B-->>C: proposta recusada (nada muda)
+    else tudo válido
+        B-->>U: notificação + janela na frente + cartão "Proposta via MCP: <cliente>"
+        B-->>C: id da proposta (pendente)
+        U->>B: Mover para a Lixeira (ou Cancelar)
+        B->>B: revalida cada item e manda para a Lixeira
+        C->>M: get_proposal_status(id)
+        M-->>C: aprovada / recusada / expirada
+    end
+```
+
+- A proposta passa pelas **mesmas regras** do chat (pastas protegidas, área escaneada, até 100
+  itens) e é **recusada inteira** se qualquer caminho for bloqueado.
+- Ao chegar uma proposta, o app mostra uma notificação do sistema e traz a janela para a frente,
+  com o cartão de aprovação e o selo **"Proposta via MCP: <nome do cliente>"** (o nome que o
+  cliente informa ao conectar).
+- **Só o seu clique no app apaga**, com a mesma validação dupla de sempre (no cartão e de novo
+  na hora de mandar para a Lixeira). Propostas sem decisão **expiram em 30 minutos**.
+
+### Segurança da integração
+
+- O app grava `runtime.json` (porta, um token MCP novo a cada abertura e o PID) na pasta de dados,
+  com permissão só para o seu usuário, **apenas com a integração ligada**, e o apaga ao desligar ou
+  ao fechar o app.
+- As rotas `/api/mcp/*` aceitam **só** esse token e só leem ou criam propostas. As rotas de
+  aprovação exigem a sessão da interface do app, e o token MCP não chega nelas.
+- Com a integração desligada, o backend recusa todas as rotas MCP.
+
 ---
 
 ## Funcionalidades
@@ -118,6 +243,8 @@ Desinstalar remove o app e mantém essa pasta; apague-a para limpar tudo.
 - **Limpeza com aprovação humana** — o agente propõe, a tela mostra um cartão com
   cada item e o total, e nada é apagado até você clicar em "Mover para a Lixeira".
 - **Fale com o agente** — botão de microfone com transcrição (Whisper).
+- **Servidor MCP** — outros assistentes de IA (Claude, Cursor, VS Code…) consultam as análises
+  e propõem limpezas que você aprova no app (ver [Usando o CleanChain via MCP](#usando-o-cleanchain-via-mcp)).
 - **Visual** — HUD em tema claro, fundo em grade animada e robô holográfico 3D.
 
 ## Interface
@@ -360,12 +487,17 @@ empacotamento, ele só gera os instaladores como artefatos.
 | `GET` | `/api/folder/files?path=&dirs=` | Arquivos (e subpastas medidas) de uma pasta da área escaneada |
 | `POST` | `/api/chat` | Mensagem ao agente (`{message, thread_id, ui_state?}`) — NDJSON |
 | `POST` | `/api/chat/approval` | Aprova/recusa a ação pausada (`{thread_id, approve}`) — NDJSON |
+| `GET` | `/api/propostas` | Propostas de limpeza via MCP aguardando o usuário |
+| `POST` | `/api/propostas/{id}/decisao` | Decisão do usuário no app (`{aprovar}`); aprovar manda para a Lixeira |
+| `GET` | `/api/mcp/resumo` · `pasta` · `oportunidades` · `arquivos` | Leitura para clientes MCP (token MCP) |
+| `POST` / `GET` | `/api/mcp/propostas` · `/api/mcp/propostas/{id}` | Cria proposta / consulta o estado (token MCP) |
 | `POST` | `/api/transcribe` | Áudio (multipart `audio`) → `{text}` |
 
 Eventos do chat: `action`, `observation`, `answer` (tokens), `ui` (comando de tela),
 `approval` (cartão de confirmação), `error`, `done`.
 
 No app desktop, tudo menos `/health` e `/bootstrap` exige o cookie de sessão (401 sem ele).
+As rotas `/api/mcp/*` exigem, em vez do cookie, o token MCP — e só com a integração ligada.
 O backend também serve a interface buildada em `/`.
 
 ---
@@ -392,6 +524,8 @@ backend/
     tools/            scan_disk, read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files
   chat.py             conversa com o agente pelo terminal
   cleanchain-backend.spec   PyInstaller (onedir) do backend do app desktop
+  cleanchain_mcp/     servidor MCP (stdio): ponte entre clientes MCP e o app
+  cleanchain-mcp.spec PyInstaller do executável cleanchain-mcp
 frontend/
   src/
     App.jsx           montagem da tela e fluxo agente ⇄ tela
