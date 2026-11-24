@@ -164,9 +164,11 @@ test('as travas de segurança estão de pé', async () => {
     expect(erro).toContain('não parece válida');
     expect(fs.existsSync(path.join(perfil, 'segredos.json'))).toBe(false);
 
-    // Navegar para fora do app é bloqueado (a URL continua a do app).
+    // Navegar para fora do app é bloqueado (a URL continua a do app). Usa http (não https):
+    // o app também se recusa a abrir esse link no navegador, então o teste não abre nada de
+    // verdade (no Linux sem navegador, o shell.openExternal de um link https ficava pendurado).
     await page.evaluate(() => {
-      window.location.href = 'https://example.com/';
+      window.location.href = 'http://example.invalid/';
     });
     await page.waitForTimeout(1500);
     expect(new URL(page.url()).origin).toBe(origem);
