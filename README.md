@@ -5,43 +5,61 @@
 <h1 align="center">CleanChain</h1>
 
 <p align="center">
-  Limpeza de disco com um agente de IA que só apaga com a sua aprovação.<br />
-  Windows · macOS · Linux<br />
-  <a href="https://github.com/GuiMRDS/CleanChain/releases/latest">Baixar</a> ·
-  <a href="#instalação">Instalação</a> ·
-  <a href="#usando-o-cleanchain-via-mcp">MCP</a> ·
+  <b>Um agente de IA que mostra o que ocupa o seu disco e limpa com você — e só apaga com a sua aprovação.</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/GuiMRDS/CleanChain/releases/latest"><img alt="Versão" src="https://img.shields.io/github/v/release/GuiMRDS/CleanChain?label=vers%C3%A3o&color=2a78d6"></a>
+  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-1baf7a"></a>
+  <img alt="Windows, macOS e Linux" src="https://img.shields.io/badge/sistemas-Windows%20%7C%20macOS%20%7C%20Linux-6250d6">
+  <a href="https://github.com/GuiMRDS/CleanChain/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/GuiMRDS/CleanChain/actions/workflows/ci.yml/badge.svg"></a>
+</p>
+
+<p align="center">
+  <a href="#download">Download</a> ·
+  <a href="#funcionalidades">Funcionalidades</a> ·
+  <a href="#segurança-e-privacidade">Segurança</a> ·
+  <a href="#usando-via-mcp">MCP</a> ·
+  <a href="#arquitetura">Arquitetura</a> ·
   <a href="#desenvolvimento">Desenvolvimento</a>
 </p>
 
----
-
-**Um "CleanMyMac" com um agente de IA dentro, para Windows, macOS e Linux.** Você escolhe um
-disco, o CleanChain faz um raio-x completo dele e um agente ReAct (LangChain) conversa com
-você sobre o que está ocupando espaço: abre as pastas no mapa enquanto explica, encontra o
-que dá para limpar e, **só com a sua confirmação**, manda os arquivos para a Lixeira.
-
-Roda como **app desktop** (Electron) ou, para desenvolvimento, no navegador.
+<!-- TODO: GIF de demonstração (roteiro em docs/roteiro-demo.md; salvar como docs/images/demo.gif) -->
 
 ![Tela inicial do CleanChain](docs/images/01-inicio.png)
 
 ---
 
-## Instalação
+## Por que o CleanChain
 
-### Sistemas suportados
+- **Seguro por padrão.** Pastas do sistema, programas, a sua pasta de usuário e dados sensíveis
+  nunca são apagados. Cada item é validado duas vezes — ao montar o cartão de aprovação e de novo
+  na hora de apagar — e tudo vai para a **Lixeira**, de onde dá para restaurar.
+- **Você aprova cada limpeza.** O agente propõe; nada sai do lugar até você clicar em
+  *Mover para a Lixeira*, vendo cada item e o total que será liberado.
+- **Um agente que explica.** Converse em português: ele mostra o que ocupa espaço, abre as pastas
+  no mapa enquanto explica e aponta caches, duplicados confirmados e arquivos esquecidos.
+- **Funciona com outros agentes.** Pelo protocolo MCP, assistentes como Claude Desktop, Claude
+  Code e Cursor consultam as suas análises e **propõem** limpezas — que você aprova no app.
 
-| Sistema | Versões | Arquivo em [Releases](https://github.com/GuiMRDS/CleanChain/releases/latest) |
-|---|---|---|
-| **Windows** | 10 e 11 (64 bits) | `CleanChain-Setup-<versão>.exe` |
-| **macOS** | 12 (Monterey) ou mais novo, **Apple Silicon** (M1/M2/M3/M4) | `CleanChain-<versão>-mac-arm64.dmg` |
-| **Linux** | x64; testado no Ubuntu 24.04 | `.deb` (Ubuntu/Debian, recomendado) ou `.AppImage` |
+## Download
 
-Em todos você precisa de uma chave de API da **Groq** (gratuita) ou da **OpenAI**. Na primeira
-abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sistema e dá para
-trocar depois no **menu do app** (botão ao lado do status do agente, no topo), que também
-verifica atualizações e abre a pasta de logs.
+Baixe o instalador do seu sistema no [último Release](https://github.com/GuiMRDS/CleanChain/releases/latest):
 
-### Windows
+| Sistema | Instalador (versão 1.0.0) |
+|---|---|
+| **Windows** 10 e 11 (64 bits) | [CleanChain-Setup-1.0.0.exe](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.0/CleanChain-Setup-1.0.0.exe) |
+| **macOS** 12+ (Apple Silicon) | [CleanChain-1.0.0-mac-arm64.dmg](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.0/CleanChain-1.0.0-mac-arm64.dmg) |
+| **Linux** x64 (Ubuntu/Debian) | [CleanChain-1.0.0-linux-amd64.deb](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.0/CleanChain-1.0.0-linux-amd64.deb) |
+| **Linux** x64 (outras distribuições) | [CleanChain-1.0.0-linux-x86_64.AppImage](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.0/CleanChain-1.0.0-linux-x86_64.AppImage) |
+
+Você vai precisar de uma chave de API da **Groq** (gratuita) ou da **OpenAI**. Na primeira
+abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sistema.
+
+<details>
+<summary><b>Instalação passo a passo e avisos de cada sistema</b> (SmartScreen, Gatekeeper, Linux)</summary>
+
+#### Windows
 
 1. Baixe e execute o `.exe`. Ele instala só para o seu usuário (não pede administrador) e cria
    atalhos na área de trabalho e no menu Iniciar.
@@ -56,7 +74,7 @@ verifica atualizações e abre a pasta de logs.
 >   instalador assinado. O pipeline já está pronto para assinar: veja
 >   [docs/assinatura.md](docs/assinatura.md).
 
-### macOS
+#### macOS
 
 1. Abra o `.dmg` e arraste o **CleanChain** para **Aplicativos**.
 2. **Primeira abertura (Gatekeeper):** o app não tem assinatura nem notarização da Apple, então
@@ -71,7 +89,7 @@ verifica atualizações e abre a pasta de logs.
 4. **Atualizações:** sem a assinatura da Apple, o macOS não deixa o app se atualizar sozinho.
    O menu do app avisa quando há versão nova e abre a página de download.
 
-### Linux
+#### Linux
 
 - **`.deb` (Ubuntu/Debian, recomendado):** `sudo apt install ./CleanChain-<versão>-linux-amd64.deb`.
   Ele instala também o perfil AppArmor que o Ubuntu 24.04+ exige para o sandbox do Chromium.
@@ -84,7 +102,7 @@ verifica atualizações e abre a pasta de logs.
 - **Atualizações:** o AppImage se atualiza sozinho; no `.deb`, o menu do app avisa e abre a
   página de download (instalar pediria senha de administrador).
 
-### Onde ficam os dados
+#### Onde ficam os dados
 
 | Sistema | Pasta (scans, chave cifrada e `logs/`) |
 |---|---|
@@ -94,10 +112,70 @@ verifica atualizações e abre a pasta de logs.
 
 Desinstalar remove o app e mantém essa pasta; apague-a para limpar tudo.
 
-**Regras de exclusão de cada sistema** (o que nunca pode ser apagado): veja
-[docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
+</details>
 
-## Usando o CleanChain via MCP
+## Funcionalidades
+
+| Escolha do disco | Scan em andamento |
+|---|---|
+| ![Escolha do disco](docs/images/01-inicio.png) | ![Scan em andamento](docs/images/02-scan.png) |
+
+| Resultado: oportunidades, mapa e tipos | Agente abrindo pastas no mapa |
+|---|---|
+| ![Resultado do scan](docs/images/03-resultado.png) | ![Agente controlando o mapa](docs/images/04-chat-agente.png) |
+
+- **Scan profundo por disco** — escolha `C:`, `D:`… no Windows, o disco ou volumes no macOS e no Linux (ou só a sua pasta de usuário). O
+  scan percorre o disco inteiro em paralelo, com progresso em %, pode ser cancelado e
+  salva o resultado em JSON.
+- **Oportunidades de limpeza** — o scan encontra caches e temporários conhecidos
+  (navegadores, npm/pip/Gradle/uv, Temp, Lixeira, node_modules…), **duplicados
+  confirmados byte a byte**, arquivos grandes esquecidos há mais de um ano, a idade dos
+  dados e as extensões que mais ocupam. O card mostra "Pode liberar ~X GB" e cada
+  oportunidade abre uma conversa com o agente sobre ela.
+- **Mapa de pastas (sunburst)** — 4 anéis de pastas, navegável por clique, com uma
+  tabela que mostra subpastas **e arquivos** da pasta aberta; desce além dos anéis.
+- **Tipos de arquivo** — rosca com vídeos, instaladores, imagens, documentos e outros.
+- **Agente ReAct no chat** — respostas em streaming, mostrando cada passo
+  (Ação → Observação), com memória por conversa.
+- **O agente controla a tela** — enquanto explica, ele abre as pastas no sunburst
+  (com o selo "aberta pelo agente") e sabe qual pasta você está vendo.
+- **Limpeza com aprovação humana** — o agente propõe, a tela mostra um cartão com
+  cada item e o total, e nada é apagado até você clicar em "Mover para a Lixeira".
+- **Fale com o agente** — botão de microfone com transcrição (Whisper).
+- **Servidor MCP** — outros assistentes de IA (Claude, Cursor, VS Code…) consultam as análises
+  e propõem limpezas que você aprova no app (ver [Usando via MCP](#usando-via-mcp)).
+- **Visual** — HUD em tema claro, fundo em grade animada e robô holográfico 3D.
+
+## Segurança e privacidade
+
+**O que o app acessa.** Só o disco ou a pasta que você escolhe escanear: nomes, caminhos,
+tamanhos e datas dos arquivos. Para confirmar duplicados, ele compara o conteúdo de arquivos
+grandes de mesmo tamanho — localmente, sem enviar nada.
+
+**O que ele nunca faz.**
+- Apagar sem o seu clique, ou apagar de forma permanente (tudo vai para a Lixeira).
+- Mexer em pastas do sistema e de programas, na sua pasta de usuário e nas principais dela, em
+  dados sensíveis (chaves SSH, Keychain, iCloud…), em arquivos de sistema, em atalhos ou fora da
+  área escaneada — com no máximo 100 itens por operação. As regras de cada sistema estão em
+  [docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
+- Enviar telemetria, estatísticas de uso ou relatórios de falha.
+- Aceitar conexões de fora do seu computador: o serviço local escuta só em `127.0.0.1` e exige
+  uma sessão criada pelo próprio app.
+
+**Onde ficam os dados.** Na sua máquina, na pasta de dados do app (`%APPDATA%\CleanChain`,
+`~/Library/Application Support/CleanChain` ou `~/.config/CleanChain`): os resultados dos scans,
+a chave da API **cifrada** pelo cofre do sistema e os logs. As conversas ficam só na memória e
+somem ao fechar o app.
+
+**Para onde vai o conteúdo enviado ao modelo.** Quando você conversa com o agente, a sua
+mensagem e o que ele consulta para responder (resumos da análise: nomes e caminhos de pastas e
+arquivos, tamanhos e datas — incluindo o caminho da sua pasta de usuário) vão para o provedor
+que você configurou, **Groq** ou **OpenAI**. Ao usar o microfone, o áudio vai para o mesmo
+provedor para ser transcrito. O conteúdo dos seus arquivos não é enviado.
+
+Detalhes completos na [Política de privacidade](PRIVACIDADE.md).
+
+## Usando via MCP
 
 O CleanChain também funciona como **servidor MCP** ([Model Context Protocol](https://modelcontextprotocol.io)),
 o padrão aberto que assistentes de IA usam para chamar ferramentas. Qualquer cliente MCP
@@ -221,340 +299,101 @@ sequenceDiagram
   aprovação exigem a sessão da interface do app, e o token MCP não chega nelas.
 - Com a integração desligada, o backend recusa todas as rotas MCP.
 
----
-
-## Funcionalidades
-
-- **Scan profundo por disco** — escolha `C:`, `D:`… no Windows, o disco ou volumes no macOS e no Linux (ou só a sua pasta de usuário). O
-  scan percorre o disco inteiro em paralelo, com progresso em %, pode ser cancelado e
-  salva o resultado em JSON.
-- **Oportunidades de limpeza** — o scan encontra caches e temporários conhecidos
-  (navegadores, npm/pip/Gradle/uv, Temp, Lixeira, node_modules…), **duplicados
-  confirmados byte a byte**, arquivos grandes esquecidos há mais de um ano, a idade dos
-  dados e as extensões que mais ocupam. O card mostra "Pode liberar ~X GB" e cada
-  oportunidade abre uma conversa com o agente sobre ela.
-- **Mapa de pastas (sunburst)** — 4 anéis de pastas, navegável por clique, com uma
-  tabela que mostra subpastas **e arquivos** da pasta aberta; desce além dos anéis.
-- **Tipos de arquivo** — rosca com vídeos, instaladores, imagens, documentos e outros.
-- **Agente ReAct no chat** — respostas em streaming, mostrando cada passo
-  (Ação → Observação), com memória por conversa.
-- **O agente controla a tela** — enquanto explica, ele abre as pastas no sunburst
-  (com o selo "aberta pelo agente") e sabe qual pasta você está vendo.
-- **Limpeza com aprovação humana** — o agente propõe, a tela mostra um cartão com
-  cada item e o total, e nada é apagado até você clicar em "Mover para a Lixeira".
-- **Fale com o agente** — botão de microfone com transcrição (Whisper).
-- **Servidor MCP** — outros assistentes de IA (Claude, Cursor, VS Code…) consultam as análises
-  e propõem limpezas que você aprova no app (ver [Usando o CleanChain via MCP](#usando-o-cleanchain-via-mcp)).
-- **Visual** — HUD em tema claro, fundo em grade animada e robô holográfico 3D.
-
-## Interface
-
-| Escolha do disco | Scan em andamento |
-|---|---|
-| ![Escolha do disco](docs/images/01-inicio.png) | ![Scan em andamento](docs/images/02-scan.png) |
-
-| Resultado: resumo, sunburst e tipos | Agente abrindo pastas no mapa |
-|---|---|
-| ![Resultado do scan](docs/images/03-resultado.png) | ![Agente controlando o sunburst](docs/images/04-chat-agente.png) |
-
-
----
-
-## Como funciona
+## Arquitetura
 
 ```mermaid
 flowchart LR
-    subgraph Front["Frontend · React + Vite"]
-        UI[Start scan / Sunburst / Chat]
+    subgraph App["App desktop · Electron"]
+        MAIN["Processo principal<br/>(TypeScript)"]
+        UI["Interface React<br/>+ Three.js"]
+        MAIN <-- "IPC (lista fechada)" --> UI
     end
-    subgraph Back["Backend · FastAPI"]
-        API[/api/*]
-        AG[Agente ReAct<br/>LangChain create_agent]
-        HITL[HumanInTheLoop<br/>middleware]
-        SC[scan_disk]
-        DB[(data/scans/latest.json)]
+    subgraph Local["Backend local · Python (127.0.0.1)"]
+        API["FastAPI<br/>sessão por cookie"]
+        AG["Agente ReAct<br/>LangChain + human-in-the-loop"]
+        SCAN["Scan em threads<br/>+ regras por sistema"]
+        PROP["Propostas MCP<br/>(pendentes)"]
     end
-    LLM[(Groq / OpenAI)]
+    LLM[("Groq / OpenAI")]
+    CLI["Clientes MCP<br/>Claude, Cursor…"]
+    MCP["cleanchain-mcp<br/>(stdio)"]
+    LIX[("Lixeira")]
 
-    UI -- "POST /api/scan (NDJSON: progresso → resultado)" --> API --> SC --> DB
-    UI -- "POST /api/chat (NDJSON: ação, observação, resposta, ui, approval)" --> API --> AG
+    MAIN -- "inicia (porta e token aleatórios)" --> API
+    UI -- "fetch + streaming NDJSON" --> API
+    API --> AG & SCAN
     AG <--> LLM
-    AG -- "read_last_scan / list_folder" --> DB
-    AG -- "focus_folder → evento ui" --> UI
-    AG -- "delete_files" --> HITL -- "cartão de aprovação" --> UI
-    UI -- "POST /api/chat/approval" --> HITL
+    CLI <-- stdio --> MCP -- "token MCP" --> API --> PROP
+    PROP -. "cartão de aprovação" .-> UI
+    AG -. "só após o seu clique" .-> LIX
+    PROP -. "só após o seu clique" .-> LIX
 ```
 
-- **O scan é do usuário, a análise é do agente.** O botão Start scan chama a ferramenta
-  `scan_disk` no backend, que salva o resultado. O agente **não escaneia**: ele só lê a
-  última análise salva.
-- **Tudo em streaming (NDJSON).** Chat, aprovação e scan respondem uma linha JSON por
-  evento, então a tela mostra o raciocínio e o progresso ao vivo.
-- **Apagar exige aprovação.** O `HumanInTheLoopMiddleware` pausa o loop antes de
-  `delete_files`; o front mostra o cartão e retoma com a decisão.
+- **Electron + backend Python.** O app inicia o backend (empacotado com PyInstaller) como
+  processo filho, numa porta livre com um token de uso único trocado por um cookie de sessão; a
+  interface é servida pelo próprio backend, na mesma origem. Ao sair, nenhum processo sobra.
+- **Agente.** Um agente ReAct do LangChain com ferramentas para ler a análise, listar pastas,
+  controlar o mapa da tela e apagar — esta última pausada pelo `HumanInTheLoopMiddleware` até a
+  sua decisão.
+- **Camada de plataforma.** Tudo o que muda entre Windows, macOS e Linux (pastas protegidas,
+  discos, caches conhecidos, links, Lixeira) fica num lugar só, no backend e no Electron.
+- **MCP.** Um executável separado fala MCP por stdio com qualquer cliente e repassa ao backend
+  só leitura e propostas — nunca aprovação nem exclusão.
 
-### App desktop (Electron)
+Diagramas detalhados, API e estrutura de pastas: [docs/desenvolvimento.md](docs/desenvolvimento.md).
 
-```mermaid
-flowchart LR
-    subgraph Electron["App Electron"]
-        MAIN["Processo principal<br/>(main, TypeScript)"]
-        PRE["Preload<br/>window.cleanchain"]
-        UI2["Interface React<br/>(a mesma do navegador)"]
-        SAFE[("safeStorage<br/>chave do LLM")]
-    end
-    subgraph Local["Backend local · 127.0.0.1:porta aleatória"]
-        BOOT["/bootstrap?t=token"]
-        API2["/api/* (exige cookie)"]
-        DIST["frontend/dist"]
-    end
+## Destaques técnicos
 
-    MAIN -- "1. inicia com porta, token, pasta de dados e chave (variáveis de ambiente)" --> Local
-    MAIN -- "2. espera GET /health" --> Local
-    MAIN -- "3. abre a janela em /bootstrap?t=…" --> BOOT
-    BOOT -- "cookie de sessão (HttpOnly, SameSite=Strict) + redireciona para /" --> UI2
-    UI2 -- "fetch/NDJSON na mesma origem" --> API2
-    DIST --> UI2
-    UI2 <-- "IPC: lista fechada de canais" --> PRE <--> MAIN
-    MAIN <--> SAFE
-    MAIN -. "ao sair: taskkill /T /F" .-> Local
-```
+Para quem quer saber como foi feito:
 
-- **O backend é um processo filho.** O Electron inicia o executável do backend (empacotado
-  com PyInstaller) numa porta livre aleatória, com um token aleatório de uso único, espera o
-  `/health` e abre a janela em `/bootstrap?t=…`. O backend troca o token por um cookie de
-  sessão e serve a interface buildada **na mesma origem** da API: `fetch` e streaming NDJSON
-  funcionam sem CORS e sem `file://`.
-- **Ninguém de fora usa a API.** Sem o cookie, só `/health` e `/bootstrap` respondem (401 no
-  resto); o token vale uma vez; porta e token mudam a cada execução.
-- **Nada fica rodando.** Ao fechar, o app encerra o backend e todos os processos filhos
-  (Windows: `taskkill /T /F`; macOS e Linux: SIGTERM no grupo de processos e, se preciso,
-  SIGKILL). Se o Electron for morto à força, o backend percebe e se encerra sozinho.
-- **Se o backend cair**, o app mostra o aviso e oferece **Reiniciar**, sem fechar.
-- **Janela integrada ao design:** sem a barra de título nativa; a interface vai até o topo,
-  os botões da janela ficam numa sobreposição discreta (à esquerda no macOS) e as ações do
-  app (chave do modelo, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
-  avisos de erro usam o mesmo visual. No macOS o app continua ativo ao fechar a janela e
-  tem o menu do app (Sobre, Ocultar, Encerrar, Editar).
-
-### Ferramentas do agente
-
-| Ferramenta | O que faz |
-|---|---|
-| `read_last_scan(folder?)` | Resumo da última análise ou detalhes de uma pasta dela |
-| `read_scan_insights(kind)` | Oportunidades de limpeza: resumo, caches, duplicados, esquecidos, extensões, idades |
-| `list_folder(path)` | Arquivos de uma pasta (para achar caminhos exatos antes de limpar) |
-| `focus_folder(path?)` | Abre a pasta no sunburst da tela (vira um evento `ui`) |
-| `delete_files(paths, reason)` | Move itens para a Lixeira — **só depois da aprovação** |
-
-### Segurança
-
-- O scan é **somente leitura**; atalhos/junctions são ignorados.
-- `delete_files` usa a **Lixeira** do sistema (dá para restaurar) e o backend recusa:
-  pastas do sistema e de programas, arquivos de sistema (`pagefile.sys`, `sleepimage`,
-  `swapfile`…), raiz de disco, a pasta do usuário e as pastas principais dela, dados
-  pessoais sensíveis (chaves SSH, Keychain, iCloud…), qualquer coisa fora da área escaneada
-  e mais de 100 itens por vez. A validação roda ao montar o cartão **e** de novo na hora de
-  apagar. As listas de cada sistema estão em
-  [docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md).
-- **Uma camada de plataforma** (`backend/app/plataforma/`) concentra o que muda entre
-  Windows, macOS e Linux; as regras do Windows foram mantidas idênticas (teste de retrato
-  com 631 caminhos).
-- O backend escuta só em `127.0.0.1`, recusa *Host* externo e requisições de outras origens
-  (sites abertos no navegador). Os scans salvos (`backend/data/`) ficam fora do git.
-- No app desktop, a API exige o cookie de sessão; a pasta de instalação e a pasta de dados
-  do próprio CleanChain também ficam protegidas contra exclusão.
-- **Electron endurecido:** `contextIsolation`, `sandbox`, sem Node na interface, CSP
-  restrita (no cabeçalho e aplicada pelo Electron), navegação e pop-ups bloqueados (links
-  `https` abrem no navegador padrão), permissões negadas exceto o microfone, IPC só com
-  canais listados e argumentos validados, e Electron Fuses (sem `RunAsNode`, sem
-  `NODE_OPTIONS`/`--inspect`, integridade do ASAR validada).
-- **A chave do LLM** fica cifrada com `safeStorage` (DPAPI no Windows, Keychain no macOS,
-  GNOME Keyring/KWallet no Linux) e só chega ao backend por variável de ambiente; nunca vai
-  para log, disco em texto puro ou interface. No Linux sem cofre de senhas, o app não salva
-  a chave.
-
----
+- **Agente ReAct com LangChain** (`create_agent`) com memória por conversa, streaming de cada
+  passo (ação → observação → resposta) num contrato NDJSON e ferramentas que controlam a tela
+  (o agente abre pastas no mapa enquanto explica). — [`backend/app/agent.py`](backend/app/agent.py), [`stream.py`](backend/app/stream.py)
+- **Human-in-the-loop de verdade.** A exclusão é pausada pelo middleware do LangGraph e só
+  continua com a decisão do usuário; propostas vindas de outros agentes seguem o mesmo caminho.
+  As regras críticas estão no código, não no prompt. — [`tools/cleanup.py`](backend/app/tools/cleanup.py), [`propostas.py`](backend/app/propostas.py)
+- **Regras de segurança com dupla validação e testes.** As regras ficam numa parte pura
+  (testável com caminhos simulados de qualquer sistema) e numa parte que consulta o disco.
+  São 167 casos simulados dos três sistemas e um retrato de 631 caminhos que trava as regras do
+  Windows, além de 356 testes no backend. — [`files.py`](backend/app/files.py), [`plataforma/`](backend/app/plataforma), [`tests/`](backend/tests)
+- **Scan rápido e determinístico.** A varredura usa threads (com o número medido, não chutado),
+  e a detecção de duplicados é feita em duas etapas (hash parcial → hash completo, ignorando
+  hardlinks). — [`tools/disk_scan.py`](backend/app/tools/disk_scan.py), [`scan_insights.py`](backend/app/scan_insights.py)
+- **Electron endurecido com backend Python empacotado.** `contextIsolation`, `sandbox`, CSP
+  restrita, IPC com lista fechada, Electron Fuses, protocolo próprio para as telas locais e
+  sessão por token de uso único. — [`desktop/main/`](desktop/main)
+- **Servidor MCP** com o SDK oficial (stdio), token próprio e propostas que expiram, testado de
+  ponta a ponta com um cliente MCP real. — [`backend/cleanchain_mcp/`](backend/cleanchain_mcp)
+- **CI/CD multiplataforma.** GitHub Actions em matriz (Windows, macOS, Linux): testes, build,
+  teste de fumaça do app de verdade (inclusive do executável final com Fuses), instaladores e
+  publicação por tag; o pipeline já está pronto para assinatura de código. — [`.github/workflows/`](.github/workflows)
 
 ## Desenvolvimento
 
-### Requisitos
-
-- Windows 10/11, macOS 12+ (Apple Silicon) ou Linux x64
-- Node.js 20+ e npm
-- Python 3.12+ e [uv](https://docs.astral.sh/uv/)
-- Uma chave da **Groq** (grátis) ou da **OpenAI**
-
-### 1. Chave do modelo
-
-No modo navegador, crie um `.env` na raiz do projeto (ou em `backend/.env`). No app
-desktop a chave é configurada na própria tela.
-
-```env
-GROQ_API_KEY=gsk_...
-# ou
-OPENAI_API_KEY=sk-...
-```
-
-| Variável | Padrão | Para quê |
-|---|---|---|
-| `GROQ_API_KEY` / `OPENAI_API_KEY` | — | Chave do LLM (OpenAI tem prioridade se as duas existirem) |
-| `LLM_PROVIDER` | automático | Força `groq` ou `openai` |
-| `GROQ_MODEL` | `openai/gpt-oss-20b` | Modelo do agente na Groq |
-| `OPENAI_MODEL` | `gpt-6.2-astra` | Modelo do agente na OpenAI |
-| `GROQ_STT_MODEL` / `OPENAI_STT_MODEL` | `whisper-large-v3-turbo` / `whisper-1` | Transcrição de voz |
-
-### 2. Backend
+Requisitos: Node.js 20+, Python 3.12+ e [uv](https://docs.astral.sh/uv/).
 
 ```sh
-cd backend
-uv sync
-uv run uvicorn app.server:app --reload --port 8000
+# backend: testes
+cd backend && uv sync && uv run python -m pytest
+
+# app desktop em modo de desenvolvimento (Vite + Electron; o Electron inicia o backend)
+cd frontend && npm install
+cd ../desktop && npm install && npm run dev
+
+# teste de fumaça: abre o app de verdade com um perfil temporário
+cd desktop && npm run test:fumaca
+
+# instaladores deste sistema
+cd desktop && npm run dist
 ```
 
-Para conversar com o agente direto no terminal: `uv run python chat.py`.
+O guia completo — variáveis de ambiente, modo navegador, API, estrutura do projeto, ícone e como
+publicar um Release — está em [docs/desenvolvimento.md](docs/desenvolvimento.md). Para agentes
+de código (Claude, Codex, Cursor…), o contexto e as regras do projeto estão em
+[AGENTS.md](AGENTS.md). Mudanças de cada versão: [CHANGELOG.md](CHANGELOG.md).
 
-Testes das regras de segurança (exclusão, aprovação humana, sessão, proteções da API):
+## Licença e créditos
 
-```sh
-uv run python -m pytest
-```
+Distribuído sob a licença [MIT](LICENSE).
 
-### 3. Frontend (navegador)
-
-```sh
-cd frontend
-npm install
-npm run dev
-```
-
-Abra o endereço que o Vite mostrar (ex.: `http://localhost:5173`). O Vite repassa
-`/api` para o backend na porta 8000.
-
-### 4. App desktop em desenvolvimento
-
-```sh
-cd desktop
-npm install
-npm run dev        # Vite com hot reload + Electron; o Electron inicia o backend via uv
-```
-
-Não precisa subir o uvicorn à parte: o Electron inicia o backend (`uv run python -m
-app.desktop`) na porta 8000 com sessão ligada, e o Vite repassa `/api`, `/bootstrap` e
-`/health`. Se o `uv run` falhar na sua máquina, aponte para o Python da venv:
-`CLEANCHAIN_PYTHON=..\backend\.venv\Scripts\python.exe`. Para abrir o Electron com a
-interface buildada (sem Vite): `npm start`.
-
-Teste de fumaça (abre o app de verdade com um perfil temporário):
-
-```sh
-npm run test:fumaca
-```
-
-### 5. Gerar o instalador
-
-```sh
-cd desktop
-npm run dist       # build da interface → PyInstaller → TypeScript → instaladores deste sistema
-```
-
-Cada sistema gera os próprios instaladores (o backend do PyInstaller não é multiplataforma),
-em `desktop/release/`: `.exe` no Windows, `.dmg`/`.zip` no macOS e `.AppImage`/`.deb` no
-Linux. Para publicar, suba a versão em `desktop/package.json` e crie a tag igual (ex.:
-`v0.2.0`): o workflow **Release** roda nos três sistemas (testes, PyInstaller, fumaça com o
-backend empacotado e com o app final) e, só se os três passarem, publica tudo num Release.
-Disparado à mão (Actions › Release › Run workflow) ou em pull requests que mexem no
-empacotamento, ele só gera os instaladores como artefatos.
-
-> Com o **Smart App Control** ligado, o Windows bloqueia o executável que o NSIS gera e
-> roda durante o build (`spawn UNKNOWN`). Gere o instalador pelo workflow, ou use
-> `npx electron-builder --win --dir` para empacotar sem o instalador.
-
----
-
-## API
-
-| Método | Rota | Descrição |
-|---|---|---|
-| `GET` | `/health` | Saúde (sem LLM e sem cookie) — usada pelo Electron para esperar o backend |
-| `GET` | `/bootstrap?t=` | App desktop: troca o token de uso único pelo cookie de sessão |
-| `GET` | `/api/health` | Modelo em uso, se a chave está configurada e pasta do usuário |
-| `GET` | `/api/drives` | Discos locais com espaço total/usado/livre |
-| `GET` | `/api/system` | Disco do sistema, RAM e temporários (rodapé) |
-| `POST` | `/api/scan` | Inicia o scan (`{path?}`) — NDJSON: `start` → `progress`* → `result` \| `cancelled` \| `error` |
-| `POST` | `/api/scan/cancel` | Interrompe o scan em andamento |
-| `GET` | `/api/scan/latest` | Último scan salvo |
-| `GET` | `/api/folder/files?path=&dirs=` | Arquivos (e subpastas medidas) de uma pasta da área escaneada |
-| `POST` | `/api/chat` | Mensagem ao agente (`{message, thread_id, ui_state?}`) — NDJSON |
-| `POST` | `/api/chat/approval` | Aprova/recusa a ação pausada (`{thread_id, approve}`) — NDJSON |
-| `GET` | `/api/propostas` | Propostas de limpeza via MCP aguardando o usuário |
-| `POST` | `/api/propostas/{id}/decisao` | Decisão do usuário no app (`{aprovar}`); aprovar manda para a Lixeira |
-| `GET` | `/api/mcp/resumo` · `pasta` · `oportunidades` · `arquivos` | Leitura para clientes MCP (token MCP) |
-| `POST` / `GET` | `/api/mcp/propostas` · `/api/mcp/propostas/{id}` | Cria proposta / consulta o estado (token MCP) |
-| `POST` | `/api/transcribe` | Áudio (multipart `audio`) → `{text}` |
-
-Eventos do chat: `action`, `observation`, `answer` (tokens), `ui` (comando de tela),
-`approval` (cartão de confirmação), `error`, `done`.
-
-No app desktop, tudo menos `/health` e `/bootstrap` exige o cookie de sessão (401 sem ele).
-As rotas `/api/mcp/*` exigem, em vez do cookie, o token MCP — e só com a integração ligada.
-O backend também serve a interface buildada em `/`.
-
----
-
-## Estrutura
-
-```
-backend/
-  app/
-    agent.py          agente ReAct (create_agent + memória + aprovação humana)
-    server.py         API FastAPI (+ /health, /bootstrap e a interface buildada)
-    config.py         configuração por ambiente (porta, token, pasta de dados…)
-    sessao.py         token de uso único → cookie de sessão (app desktop)
-    interface.py      serve frontend/dist com CSP e tipos MIME corretos
-    desktop.py        ponto de entrada do app desktop (127.0.0.1 + vigia do Electron)
-    stream.py         execução do agente → eventos NDJSON
-    storage.py        scans salvos (pasta de dados/scans/)
-    files.py          listagem de pastas e regras de segurança para apagar
-    units.py          formatação de tamanhos (bytes → "1.2 GB")
-    drives.py         discos, RAM e temporários (via plataforma)
-    plataforma/       o que muda por sistema: windows.py, macos.py, linux.py
-    speech.py         transcrição (Whisper)
-    scan_insights.py  caches conhecidos e duplicados (hash parcial → hash completo)
-    tools/            scan_disk, read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files
-  chat.py             conversa com o agente pelo terminal
-  cleanchain-backend.spec   PyInstaller (onedir) do backend do app desktop
-  cleanchain_mcp/     servidor MCP (stdio): ponte entre clientes MCP e o app
-  cleanchain-mcp.spec PyInstaller do executável cleanchain-mcp
-frontend/
-  src/
-    App.jsx           montagem da tela e fluxo agente ⇄ tela
-    agent/            hooks e clientes da API (chat, scan, discos, voz, ponte desktop…)
-    components/       StartScan, ConfigChave, Sunburst, ScanCard, ChatThread, ChatInput…
-    three/            fundo animado e material holográfico do robô
-desktop/
-  main/               processo principal (backend filho, segurança, IPC, chave, atualização)
-  preload/            ponte window.cleanchain (contextBridge)
-  tests/              teste de fumaça (Playwright)
-  scripts/            modo de desenvolvimento e geração do ícone
-  build/icon.png      ícone do app (instalador, .exe e janela)
-  electron-builder.yml   instalador NSIS, Fuses e publicação
-.github/workflows/    CI (testes) e Release (instalador por tag)
-docs/images/          imagens deste README (inclui logo.png)
-```
-
-### Ícone
-
-O ícone é a marca do cabeçalho da interface (`.brand__mark`: gradiente azul → rosa →
-violeta com o centro claro) e é o mesmo em todo lugar: instalador, executável, janela do
-app, aba do navegador (`frontend/public/favicon.png`) e o topo deste README. Para
-regenerar todos os tamanhos a partir da marca:
-
-```sh
-cd desktop
-npm run icone
-```
-
-## Créditos
-
-O fundo animado e o robô holográfico partem do template **Clarix** (GetLayers).
+O fundo animado e o robô holográfico foram inspirados no template **Clarix** (GetLayers).

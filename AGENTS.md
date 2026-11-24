@@ -5,12 +5,14 @@ repositório. Leia antes de alterar algo. Visão de produto e screenshots: `READ
 
 ## O que é
 
-CleanChain é um app de limpeza de disco para Windows: um frontend React (HUD claro,
+CleanChain é um app de limpeza de disco para Windows, macOS e Linux: um frontend React (HUD claro,
 fundo animado e robô 3D) e um backend FastAPI com um **agente ReAct do LangChain** que
 conversa com o usuário sobre a última análise de disco, controla o mapa de pastas da
 tela e apaga arquivos **apenas com aprovação humana**. É distribuído como **app desktop
 em Electron** (`desktop/`), que inicia o backend como processo filho; no desenvolvimento
-também roda no navegador.
+também roda no navegador. Expõe um servidor MCP (`cleanchain-mcp`) para outros
+assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/app/__init__.py`
+(uma só em todo o projeto; `tests/test_versao.py`).
 
 - Idioma do produto: **português do Brasil** (UI, prompts, mensagens de erro, commits).
 - Plataformas: **Windows, macOS (Apple Silicon) e Linux (x64)**. Tudo o que muda por
@@ -19,17 +21,26 @@ também roda no navegador.
 
 ## Mapa do repositório
 
-| Pasta | Papel | Observação |
-|---|---|---|
-| `backend/` | FastAPI + LangChain (Python ≥ 3.12, `uv`) | código principal do agente |
-| `frontend/` | React 19 + Vite + Three.js | interface (a mesma no navegador e no desktop) |
-| `desktop/` | Electron 45 + TypeScript | processo principal, preload, instalador, fumaça |
-| `.github/workflows/` | CI e Release | testes em push/PR; instalador por tag `v*` |
-| `docs/images/` | screenshots do README | regenerar quando a UI mudar muito |
+| Caminho | Papel |
+|---|---|
+| `backend/app/` | FastAPI + agente LangChain + regras de exclusão + camada de plataforma (Python ≥ 3.12, `uv`) |
+| `backend/cleanchain_mcp/` | servidor MCP (stdio): ponte entre clientes MCP e o app |
+| `backend/tests/` | testes (regras por sistema, retrato do Windows, sessão, MCP, versão…) |
+| `backend/*.spec` | PyInstaller: `cleanchain-backend` e `cleanchain-mcp` |
+| `frontend/` | interface React 19 + Vite + Three.js (a mesma no navegador e no desktop) |
+| `desktop/main/`, `desktop/preload/` | Electron: processo principal e ponte `window.cleanchain` |
+| `desktop/tela/` | telas locais de abertura/erro (`cleanchain://tela`) |
+| `desktop/tests/` | fumaça com Playwright e scripts de captura de tela |
+| `desktop/scripts/`, `desktop/build/` | modo de desenvolvimento, assinatura, geração do ícone e o ícone |
+| `desktop/electron-builder.yml` | instaladores (NSIS, dmg/zip, AppImage/deb), Fuses e publicação |
+| `.github/workflows/` | CI (testes nos três sistemas) e Release (instaladores por tag `v*`) |
+| `docs/desenvolvimento.md` | guia técnico: como rodar, API, estrutura, release |
+| `docs/seguranca-por-sistema.md` | regras de exclusão de cada sistema (manter em dia) |
+| `docs/assinatura.md`, `docs/roteiro-demo.md` | assinatura de código; roteiro do vídeo de demonstração |
+| `docs/images/` | capturas e logo do README (regenerar quando a UI mudar muito) |
+| `README.md`, `CHANGELOG.md`, `PRIVACIDADE.md`, `LICENSE` | produto, mudanças por versão, privacidade e licença MIT |
 
-O template visual (`clarix/`) e os mocks de tela foram removidos do repositório; se
-restar uma pasta `clarix/` local (só `node_modules`), ela é sobra e pode ser apagada.
-`.agents/` é local e fica fora do git.
+Dados locais (scans, `.env`, `runtime.json`, logs) nunca vão para o git (`.gitignore`).
 
 ## Comandos
 
