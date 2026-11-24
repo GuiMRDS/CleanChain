@@ -17,6 +17,7 @@ As funções leem o ambiente a cada chamada, para os testes poderem trocá-lo.
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -28,6 +29,22 @@ PORTA_PADRAO = 8000
 def _env(name: str) -> str | None:
     value = os.environ.get(name, "").strip()
     return value or None
+
+
+# Variáveis cujo valor nunca pode aparecer em mensagens, interface ou log.
+SEGREDOS = ("GROQ_API_KEY", "OPENAI_API_KEY", "CLEANCHAIN_TOKEN", "CLEANCHAIN_MCP_TOKEN")
+# Formatos das chaves dos provedores (Groq: gsk_…, OpenAI: sk-… / sk-proj-…).
+_FORMATO_CHAVE = re.compile(r"\b(?:gsk_|sk-)[A-Za-z0-9_\-]{8,}")
+
+
+def sem_segredos(texto: str) -> str:
+    """Tira de um texto (erro do provedor, por exemplo) as chaves e tokens em uso e qualquer
+    coisa com formato de chave de API, antes de mostrar na interface ou gravar em log."""
+    for nome in SEGREDOS:
+        valor = _env(nome)
+        if valor and len(valor) >= 8:
+            texto = texto.replace(valor, "***")
+    return _FORMATO_CHAVE.sub("***", texto)
 
 
 def empacotado() -> bool:

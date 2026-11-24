@@ -5,6 +5,7 @@ import { EventEmitter } from 'node:events';
 import net from 'node:net';
 import log from 'electron-log/main';
 import { comandoBackend, pastaDados, pastaInstalacao, urlDev } from './caminhos';
+import { criarOcultador } from './ocultar';
 import { encerrarArvore, OPCOES_SPAWN } from './plataforma';
 
 const logBackend = log.scope('backend');
@@ -94,10 +95,12 @@ export class Backend extends EventEmitter {
     this.parando = false;
     const proc = spawn(cmd, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], ...OPCOES_SPAWN });
     this.proc = proc;
+    // A chave e os tokens nunca vão para o log, nem dentro de um erro repetido pelo backend.
+    const ocultar = criarOcultador([...Object.values(envChave), token]);
     const repassar = (nivel: 'info' | 'warn') => (dados: Buffer) => {
       for (const linha of dados.toString('utf8').split(/\r?\n/)) {
         if (!linha.trim()) continue;
-        logBackend[nivel](linha);
+        logBackend[nivel](ocultar(linha));
         if (nivel === 'info' && linha.startsWith(PREFIXO_EVENTO)) this.repassarEvento(linha.slice(PREFIXO_EVENTO.length));
       }
     };

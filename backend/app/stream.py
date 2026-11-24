@@ -18,6 +18,7 @@ from collections.abc import Iterator
 from langchain_core.messages import AIMessage, AIMessageChunk, ToolMessage
 from langgraph.types import Command
 
+from app.config import sem_segredos
 from app.files import preview_deletion
 
 from app.tools.ui_actions import UI_COMMAND_KEY
@@ -174,9 +175,9 @@ def stream_events(
 
 
 def _friendly_error(err: Exception) -> str:
-    """Mensagens de erro curtas para o chat (os detalhes ficam no log do servidor)."""
+    """Mensagens de erro curtas para o chat (os detalhes ficam no log do servidor), sem segredos."""
     name = type(err).__name__
-    text = str(err)
+    text = sem_segredos(str(err))
     if "RateLimit" in name or "rate_limit" in text or "429" in text:
         return "O modelo atingiu o limite de uso por minuto. Espere uns segundos e tente de novo."
     if "GraphRecursion" in name:

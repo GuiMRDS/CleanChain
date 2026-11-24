@@ -133,7 +133,7 @@ def _chat_stream(events) -> StreamingResponse:
 
 
 def _no_agent(err: RuntimeError):
-    yield {"type": "error", "text": str(err)}
+    yield {"type": "error", "text": config.sem_segredos(str(err))}
     yield {"type": "done", "awaiting_approval": False}
 
 
@@ -264,7 +264,7 @@ def run_scan(req: ScanRequest):
                 result["file"] = save_scan(result)
                 events.put({"type": "result", "scan": result})
         except Exception as err:
-            events.put({"type": "error", "text": f"{type(err).__name__}: {err}"})
+            events.put({"type": "error", "text": config.sem_segredos(f"{type(err).__name__}: {err}")})
         finally:
             with _scan_lock:
                 if _scan_stop is stop:
@@ -336,9 +336,9 @@ def transcribe(audio: UploadFile = File(...)):
     try:
         text = transcribe_audio(audio.filename or "fala.webm", data)
     except RuntimeError as err:
-        raise HTTPException(status_code=503, detail=str(err)) from err
+        raise HTTPException(status_code=503, detail=config.sem_segredos(str(err))) from err
     except Exception as err:  # erro do provedor (cota, formato de áudio…)
-        raise HTTPException(status_code=502, detail=f"Falha na transcrição: {str(err)[:200]}") from err
+        raise HTTPException(status_code=502, detail=f"Falha na transcrição: {config.sem_segredos(str(err))[:200]}") from err
     return {"text": text}
 
 
