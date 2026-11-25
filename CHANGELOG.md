@@ -8,7 +8,7 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 
 ### Corrigido
 - O backend não subia no Windows com o **Smart App Control** ligado: a DLL do `ormsgpack` 1.13.1
-  (dependência do agente) ainda não tem reputação e era bloqueada. Fixada a 1.12.x.
+  (dependência do agente) ainda não tem reputação e era bloqueada. No Windows, fixada a 1.12.x.
 - Rodando pelo código, a barra de tarefas do Windows mostrava o ícone do Electron.
 
 ## [1.0.0] - 2026-11-24
