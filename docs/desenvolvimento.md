@@ -101,7 +101,7 @@ flowchart LR
 
 ### 1. Chave do modelo
 
-No modo navegador, crie um `.env` na raiz do projeto (ou em `backend/.env`). No app
+No modo navegador (desenvolvimento), crie um `.env` na raiz do projeto (ou em `backend/.env`). No app
 desktop a chave é configurada na própria tela.
 
 ```env
@@ -134,7 +134,12 @@ Testes das regras de segurança (exclusão, aprovação humana, sessão, proteç
 uv run python -m pytest
 ```
 
-### 3. Frontend (navegador)
+### 3. Frontend no navegador (só para desenvolver a interface)
+
+> O CleanChain é usado como **app desktop**. O modo navegador existe só para desenvolver a
+> interface com hot reload: não tem sessão por cookie nem o cofre da chave, e as garantias de
+> segurança (sessão, CSP do Electron, Fuses, MCP) valem para o app desktop. Não use para analisar
+> e limpar o disco no dia a dia.
 
 ```sh
 cd frontend
