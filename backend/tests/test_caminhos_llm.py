@@ -123,8 +123,11 @@ def agente(monkeypatch, sandbox):
     from app.tools.cleanup import delete_files, list_folder
     from app.tools.ui_actions import focus_folder
 
+    from app.tools import cleanup
+
     home = str(sandbox.home)
     monkeypatch.setattr(caminhos_llm, "_home", lambda: home)
+    monkeypatch.setattr(cleanup, "scan_root", lambda: sandbox.scan_root)  # o cleanup importa direto
     # Último scan com a pasta do usuário no mapa (para o focus_folder).
     no_home = {"name": "fulano", "path": home, "bytes": 10, "size": "10 B", "files": 1, "children": []}
     monkeypatch.setattr(ui_actions, "load_latest", lambda: {"tree": {"name": "disco", "path": str(sandbox.root), "bytes": 10, "size": "10 B", "files": 1, "children": [no_home]}})

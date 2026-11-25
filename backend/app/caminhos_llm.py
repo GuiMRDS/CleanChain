@@ -66,7 +66,9 @@ def expandir(valor: Any) -> Any:
         if valor == TIL:
             return _home()
         if valor.startswith((TIL + "\\", TIL + "/")):
-            return str(Path(_home()) / valor[2:])
+            # O modelo escreve "\" ou "/" em qualquer sistema: as duas separam pastas aqui.
+            partes = [p for p in re.split(r"[\\/]", valor[2:]) if p]
+            return str(Path(_home(), *partes))
         return valor
     if isinstance(valor, list):
         return [expandir(v) for v in valor]
