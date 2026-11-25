@@ -23,6 +23,9 @@ empilhadas).
   instalado no computador na tela *Modelo de IA*, e troca entre nuvem e local quando quiser. Só
   `127.0.0.1`, sem chave e com o microfone desligado (nada sai do PC).
 
+- **Testes da interface (Vitest)**: leitor do stream e contrato de eventos, fluxo de aprovação
+  do `useChat` e a fila de comandos de tela (`useFilaDeTela`, extraída do `App.jsx`). No CI.
+
 ## Fase de portfólio
 
 ### Testes do agente com um modelo de verdade
@@ -40,14 +43,6 @@ Um conjunto pequeno de conversas com verificações sobre o que o agente **faz**
 - Roda à mão e uma vez por noite (workflow próprio, chave num segredo do GitHub); **não** roda
   em cada PR (custo e limite da Groq gratuita).
 - Com os números em mãos, decidir se o modelo padrão (`gpt-oss-20b`) deve mudar.
-
-### Testes da interface (Vitest)
-Foco estreito no que o backend não cobre:
-- leitor do stream (`agent/ndjson.js`) e o contrato de eventos (invariante 5);
-- fluxo de aprovação no `useChat` (bloqueio de mensagem nova, aprovar e recusar);
-- fila de comandos `ui` (`App.jsx`, 900 ms entre eles).
-
-Sem testes de visual.
 
 ### Um executável só para backend e MCP
 `cleanchain-backend --mcp` no lugar do `cleanchain-mcp`: ~45 MB a menos no instalador e um

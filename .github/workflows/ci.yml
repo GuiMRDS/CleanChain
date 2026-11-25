@@ -57,10 +57,11 @@ jobs:
         working-directory: backend
         run: uv run python -m pytest
 
-      - name: Interface — build
+      - name: Interface — testes (Vitest) e build
         working-directory: frontend
         run: |
           npm ci
+          npm test
           npm run build
 
       - name: Desktop — dependências e tipos
