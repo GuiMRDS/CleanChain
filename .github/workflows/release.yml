@@ -9,8 +9,12 @@ name: Release
 # Disparo manual e pull requests que mexem no empacotamento: faz tudo, menos publicar — os
 # instaladores ficam como artefatos (assim o PR prova que os três sistemas empacotam e abrem).
 #
-# Assinatura de código do Windows (Azure Artifact Signing): liga sozinha quando o
-# repositório tem as variáveis AZURE_SIGNING_* e os segredos AZURE_* (docs/assinatura.md).
+# Assinatura de código (docs/assinatura.md), cada uma liga sozinha quando o repositório tem as
+# credenciais; sem elas, nada muda:
+#   Windows  Azure Artifact Signing — variáveis AZURE_SIGNING_* e segredos AZURE_*
+#   macOS    Apple Developer ID + notarização — variável APPLE_SIGNING_IDENTITY e segredos APPLE_*
+# Só o build assinado leva "cleanchainAssinado" no package.json do app: é o que religa a
+# atualização automática (desktop/main/plataforma.ts).
 on:
   push:
     tags: ['v*']
@@ -57,6 +61,13 @@ jobs:
       AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
       AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
       AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+      ASSINAR_MAC: ${{ vars.APPLE_SIGNING_IDENTITY != '' && matrix.os == 'macos-latest' }}
+      APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
+      CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_P12 || '' }} # .p12 em base64
+      CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_SENHA || '' }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -146,6 +157,21 @@ jobs:
               -c.win.azureSignOptions.publisherName="$AZURE_SIGNING_PUBLISHER"
             )
           fi
+          if [ "$ASSINAR_MAC" = "true" ]; then
+            # Developer ID + hardened runtime + notarização (o electron-builder assina também os
+            # binários do backend em Resources e grampeia o ticket da Apple no app).
+            args+=(
+              -c.mac.identity="$APPLE_SIGNING_IDENTITY"
+              -c.mac.hardenedRuntime=true
+              -c.mac.notarize=true
+              -c.mac.entitlements=build/entitlements.mac.plist
+              -c.mac.entitlementsInherit=build/entitlements.mac.plist
+            )
+          fi
+          if [ "$ASSINAR" = "true" ] || [ "$ASSINAR_MAC" = "true" ]; then
+            # Só o build assinado religa a atualização automática (plataforma.ts: buildAssinado).
+            args+=(-c.extraMetadata.cleanchainAssinado=true)
+          fi
           npx electron-builder "${args[@]}"
           ls -la release
 
@@ -158,6 +184,14 @@ jobs:
           $sem = $binarios | Where-Object { (Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid' }
           if ($sem) { $sem.FullName; throw "$($sem.Count) binário(s) sem assinatura válida." }
           "Todos os $($binarios.Count) binários estão assinados."
+
+      - name: Assinatura — conferir o app do macOS (assinatura, Gatekeeper e notarização)
+        if: env.ASSINAR_MAC == 'true'
+        working-directory: desktop/release/mac-arm64
+        run: |
+          codesign --verify --deep --strict --verbose=2 CleanChain.app
+          spctl --assess --type execute --verbose=4 CleanChain.app
+          xcrun stapler validate CleanChain.app
 
       - name: Fumaça — app empacotado com Fuses
         working-directory: desktop
@@ -206,14 +240,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ASSINADO: ${{ vars.AZURE_SIGNING_ACCOUNT != '' }}
+          ASSINADO_MAC: ${{ vars.APPLE_SIGNING_IDENTITY != '' }}
         working-directory: release
         run: |
           ls -la
           if [ "$ASSINADO" = "true" ]; then aviso_win='assinado'; else aviso_win='sem assinatura (veja o aviso do SmartScreen no README)'; fi
+          if [ "$ASSINADO_MAC" = "true" ]; then aviso_mac='assinado e notarizado pela Apple'; else aviso_mac='sem assinatura da Apple; na primeira abertura use *Ajustes do Sistema › Privacidade e Segurança › Abrir mesmo assim* (ver README)'; fi
           notas="Instaladores do CleanChain $GITHUB_REF_NAME.
 
           - **Windows**: CleanChain-Setup-*.exe — $aviso_win.
-          - **macOS (Apple Silicon)**: .dmg — sem assinatura da Apple; na primeira abertura use *Ajustes do Sistema › Privacidade e Segurança › Abrir mesmo assim* (ver README).
+          - **macOS (Apple Silicon)**: .dmg — $aviso_mac.
           - **Linux**: .deb (recomendado no Ubuntu 24.04+) ou .AppImage.
 
           Instruções completas: https://github.com/${GITHUB_REPOSITORY}#instalação"

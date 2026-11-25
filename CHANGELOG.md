@@ -27,6 +27,8 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 ### Projeto
 - Testes da interface com Vitest (contrato do chat, aprovação e fila de comandos de tela).
 - Avaliação do agente com um modelo de verdade (`backend/evals/agente.py`), à mão e todo dia.
+- Assinatura pronta para ativar: o Release assina e notariza no macOS quando houver o
+  certificado da Apple (o do Windows já estava pronto), e só o build assinado se atualiza sozinho.
 
 ## [1.0.1] - 2026-11-25
 

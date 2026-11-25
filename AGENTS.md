@@ -170,7 +170,7 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   (`taskkill /T /F` × SIGTERM/SIGKILL no grupo), nome do executável, opções da janela
   (botões à esquerda no macOS), menu nativo (no macOS: app, Editar, Janela), fechar
   a janela encerra ou não, cofre da chave (no Linux recusa `basic_text`), microfone no
-  macOS e modo de atualização (automática × só avisar).
+  macOS e modo de atualização (automática só no build assinado, `buildAssinado`; senão, só avisa).
 - `main/backend.ts` — porta livre + token aleatório, `spawn` com variáveis de ambiente,
   espera `/health`, logs no `electron-log`, encerra pela `plataforma.ts`.
 - `main/segredos.ts` — chave com `safeStorage` em `userData/segredos.json`.
