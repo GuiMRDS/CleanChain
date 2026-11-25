@@ -12,6 +12,11 @@ dependencies = [
     "langchain-openai>=1.8.2",
     "langgraph>=1.2.22",
     "mcp>=2.3,<3",
+    # Dependência do LangGraph (agente). Só no Windows: a 1.13.1 é bloqueada pelo Smart App Control
+    # (a DLL ainda não tem reputação): o backend não sobe. Tirar o teto quando houver assinatura de
+    # todos os binários (docs/roadmap.md) ou uma versão nova que o Windows aceite.
+    "ormsgpack>=1.9,<1.13 ; sys_platform == 'win32'",
+    "ormsgpack>=1.13 ; sys_platform != 'win32'",  # fora do Windows, a de sempre (tem pacote pronto)
     "pyobjc-framework-cocoa>=11 ; sys_platform == 'darwin'",
     "python-dotenv>=1.2.4",
     "python-multipart>=0.0.34",
