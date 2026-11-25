@@ -17,7 +17,7 @@ empilhadas).
 - Ícone do CleanChain na barra de tarefas ao rodar pelo código.
 - Modo navegador documentado como ferramenta de desenvolvimento.
 
-## Feito depois da v1.0.1
+## Feito na v1.1.0
 
 - **IA local (Ollama e LM Studio)**, antecipada da fase de produto: o usuário escolhe um modelo
   instalado no computador na tela *Modelo de IA*, e troca entre nuvem e local quando quiser. Só

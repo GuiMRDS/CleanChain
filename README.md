@@ -44,12 +44,12 @@
 
 Baixe o instalador do seu sistema no [último Release](https://github.com/GuiMRDS/CleanChain/releases/latest):
 
-| Sistema | Instalador (versão 1.0.1) |
+| Sistema | Instalador (versão 1.1.0) |
 |---|---|
-| **Windows** 10 e 11 (64 bits) | [CleanChain-Setup-1.0.1.exe](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-Setup-1.0.1.exe) |
-| **macOS** 12+ (Apple Silicon) | [CleanChain-1.0.1-mac-arm64.dmg](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-1.0.1-mac-arm64.dmg) |
-| **Linux** x64 (Ubuntu/Debian) | [CleanChain-1.0.1-linux-amd64.deb](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-1.0.1-linux-amd64.deb) |
-| **Linux** x64 (outras distribuições) | [CleanChain-1.0.1-linux-x86_64.AppImage](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-1.0.1-linux-x86_64.AppImage) |
+| **Windows** 10 e 11 (64 bits) | [CleanChain-Setup-1.1.0.exe](https://github.com/GuiMRDS/CleanChain/releases/download/v1.1.0/CleanChain-Setup-1.1.0.exe) |
+| **macOS** 12+ (Apple Silicon) | [CleanChain-1.1.0-mac-arm64.dmg](https://github.com/GuiMRDS/CleanChain/releases/download/v1.1.0/CleanChain-1.1.0-mac-arm64.dmg) |
+| **Linux** x64 (Ubuntu/Debian) | [CleanChain-1.1.0-linux-amd64.deb](https://github.com/GuiMRDS/CleanChain/releases/download/v1.1.0/CleanChain-1.1.0-linux-amd64.deb) |
+| **Linux** x64 (outras distribuições) | [CleanChain-1.1.0-linux-x86_64.AppImage](https://github.com/GuiMRDS/CleanChain/releases/download/v1.1.0/CleanChain-1.1.0-linux-x86_64.AppImage) |
 
 Na primeira abertura, escolha onde o modelo do agente roda:
 - **Na nuvem:** cole uma chave de API da **Groq** (gratuita) ou da **OpenAI**; ela fica no cofre de
