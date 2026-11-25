@@ -154,7 +154,10 @@ registrarEsquema(); // cleanchain://tela (precisa vir antes do app ficar pronto)
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.setAppUserModelId(APP_ID);
+  // No app instalado, o atalho do instalador tem este ID e o ícone do CleanChain. Rodando pelo
+  // código não há atalho: com o ID, a barra de tarefas cairia no ícone do electron.exe; sem ele,
+  // o Windows usa o ícone da própria janela (build/icon.png).
+  if (app.isPackaged) app.setAppUserModelId(APP_ID);
 
   app.on('second-instance', () => {
     if (!janela) return;
