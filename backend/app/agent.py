@@ -18,6 +18,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 
 from app import config, plataforma
+from app.caminhos_llm import PastaDoUsuarioComoTil, ocultar
 from app.tools.last_scan import read_last_scan
 from app.tools.scan_insights_tool import read_scan_insights
 from app.tools.cleanup import delete_files, list_folder
@@ -101,10 +102,14 @@ def system_prompt() -> str:
 
 
 def _machine_context() -> str:
-    """Caminhos reais desta máquina, para o agente não precisar adivinhar."""
+    """Pastas desta máquina, para o agente não precisar adivinhar. A pasta do usuário aparece como
+    "~" (o nome de usuário não vai para o provedor); "~" volta ao caminho real antes do disco."""
     home = Path.home()
-    folders = ", ".join(str(home / n) for n in ("Downloads", "Documents", "Desktop", "Videos", "Pictures") if (home / n).exists())
-    return f"\n\nContexto desta máquina:\n- Pasta do usuário: {home}\n- Pastas comuns: {folders}"
+    folders = ", ".join(ocultar(str(home / n)) for n in ("Downloads", "Documents", "Desktop", "Videos", "Pictures") if (home / n).exists())
+    return (
+        "\n\nContexto desta máquina:\n- Pasta do usuário: ~ (use caminhos começando por ~; eles funcionam em todas as ferramentas)"
+        f"\n- Pastas comuns: {folders}"
+    )
 
 
 def build_llm():
@@ -139,7 +144,11 @@ def build_agent():
         model=llm,
         tools=[read_last_scan, read_scan_insights, list_folder, focus_folder, delete_files],
         # Apagar exige aprovação humana: o loop pausa antes de delete_files rodar.
-        middleware=[HumanInTheLoopMiddleware(interrupt_on={"delete_files": {"allowed_decisions": ["approve", "reject"]}})],
+        middleware=[
+            HumanInTheLoopMiddleware(interrupt_on={"delete_files": {"allowed_decisions": ["approve", "reject"]}}),
+            # A pasta do usuário vai ao modelo como "~" e volta ao caminho real antes do disco.
+            PastaDoUsuarioComoTil(),
+        ],
         system_prompt=system_prompt() + _machine_context(),
         checkpointer=InMemorySaver(),
     )
