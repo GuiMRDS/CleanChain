@@ -14,6 +14,7 @@ import DesktopMenu from './components/DesktopMenu.jsx';
 import ConfigMcp from './components/ConfigMcp.jsx';
 import PropostaMcp from './components/PropostaMcp.jsx';
 import { usePropostasMcp } from './agent/usePropostasMcp.js';
+import { useFilaDeTela } from './agent/useFilaDeTela.js';
 import { useChat } from './agent/useChat.js';
 import { useDesktop } from './agent/useDesktop.js';
 import { useScan } from './agent/useScan.js';
@@ -46,50 +47,21 @@ function buildTargets(drives, home) {
   return list;
 }
 
-const UI_STEP_MS = 900; // gap between agent screen commands, so each transition is visible
-
 export default function App() {
   const scan = useScan();
   const desktop = useDesktop(); // Electron only: LLM key setup (first run / menu), MCP settings
   const propostasMcp = usePropostasMcp(); // Electron only: cleanup proposals from MCP clients
 
   // --- Agent ⇄ screen -------------------------------------------------------
-  // The agent's focus_folder calls arrive as 'ui' events; they're queued and applied
-  // one by one. The open folder goes back to the agent with every message.
-  const [sunburstCommand, setSunburstCommand] = useState(null);
+  // The agent's focus_folder calls are queued and applied one by one (useFilaDeTela).
+  // The open folder goes back to the agent with every message.
+  const { comando: sunburstCommand, receber: handleUi, limpar: limparFila } = useFilaDeTela();
   const openFolderRef = useRef(null);
-  const queueRef = useRef([]);
-  const timerRef = useRef(null);
-
-  const drainQueue = useCallback(() => {
-    const next = queueRef.current.shift();
-    if (!next) {
-      timerRef.current = null;
-      return;
-    }
-    setSunburstCommand({ seq: Date.now() + Math.random(), path: next.args?.path });
-    timerRef.current = setTimeout(drainQueue, UI_STEP_MS);
-  }, []);
-
-  const handleUi = useCallback(
-    (event) => {
-      if (event.command !== 'focus_folder') return;
-      queueRef.current.push(event);
-      if (!timerRef.current) drainQueue();
-    },
-    [drainQueue]
-  );
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   // A new scan starts from a clean map: drop pending/last agent commands.
   useEffect(() => {
-    if (scan.phase !== 'scanning') return;
-    queueRef.current = [];
-    clearTimeout(timerRef.current);
-    timerRef.current = null;
-    setSunburstCommand(null);
-  }, [scan.phase]);
+    if (scan.phase === 'scanning') limparFila();
+  }, [scan.phase, limparFila]);
 
   const handleFolderChange = useCallback((path) => {
     openFolderRef.current = path;

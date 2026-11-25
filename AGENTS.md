@@ -58,6 +58,7 @@ uv run python -m app.tools.disk_scan "C:\\pasta"     # scan sem LLM
 cd frontend
 npm install
 npm run dev      # Vite (proxy /api, /bootstrap, /health → 127.0.0.1:8000)
+npm test         # Vitest: contrato do chat, aprovação e fila de comandos de tela
 npm run build    # checagem de build (e a interface que o backend empacotado serve)
 
 # backend empacotado (precisa do frontend/dist)
@@ -140,7 +141,8 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 ### Frontend (`frontend/src/`)
 
 - `App.jsx` — fases (escolha de disco → scan → resultado), fila de comandos `ui` do
-  agente (900 ms entre eles) e `ui_state` enviado a cada mensagem.
+  agente (`agent/useFilaDeTela.js`, 900 ms entre eles) e `ui_state` enviado a cada mensagem.
+  Testes em `src/**/*.test.js(x)` (Vitest + jsdom): `ndjson`, `useChat` e a fila.
 - `agent/` — hooks/clients: `useChat` (inclui aprovação), `useScan`, `useDrives`,
   `useFolderFiles`, `useVoiceInput`, `useDesktop` (ponte `window.cleanchain`, só no
   Electron), `ndjson.js` (leitor de stream), `format.js`.
