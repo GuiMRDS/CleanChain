@@ -20,6 +20,14 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
   configurou um cliente MCP na 1.0.x precisa copiar a configuração de novo** na tela *Integração
   MCP* (o caminho antigo, `resources/mcp/cleanchain-mcp`, deixa de existir).
 
+### Corrigido
+- Na Groq gratuita, conversas seguidas batiam no limite de uso por minuto e mostravam erro na
+  5ª pergunta; agora o app espera o tempo que a Groq indica e tenta de novo.
+
+### Projeto
+- Testes da interface com Vitest (contrato do chat, aprovação e fila de comandos de tela).
+- Avaliação do agente com um modelo de verdade (`backend/evals/agente.py`), à mão e todo dia.
+
 ## [1.0.1] - 2026-11-25
 
 Melhorias de privacidade e segurança vindas da análise de arquitetura (ver [docs/roadmap.md](docs/roadmap.md)).

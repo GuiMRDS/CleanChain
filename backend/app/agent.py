@@ -130,7 +130,9 @@ def build_llm():
         return ChatOpenAI(model=name, use_responses_api=True), f"openai · {name}"
     if provider == "groq":
         name = os.getenv("GROQ_MODEL", GROQ_DEFAULT)
-        return ChatGroq(model=name, temperature=0.2), f"groq · {name}"
+        # max_retries: no limite por minuto da Groq gratuita (429), espera o tempo que ela indica e
+        # tenta de novo em vez de mostrar erro (achado da avaliação com modelo real: evals/agente.py).
+        return ChatGroq(model=name, temperature=0.2, max_retries=6), f"groq · {name}"
 
     if config.empacotado() or config.token():  # app desktop: a chave é configurada no app
         raise RuntimeError("Nenhuma chave de LLM configurada. Use o menu Arquivo › Configurar chave do LLM.")

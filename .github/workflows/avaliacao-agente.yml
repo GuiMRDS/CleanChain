@@ -1,0 +1,74 @@
+name: Avaliação do agente
+
+# Conversa com um modelo de verdade e confere o que o agente FAZ (backend/evals/agente.py): abre a
+# pasta certa no mapa, não oferece pastas protegidas, consulta as oportunidades, limpa só o que
+# foi pedido e aguenta uma conversa longa. Não roda em PRs (gasta cota e depende de rede).
+#
+# Precisa do segredo GROQ_API_KEY no repositório (Settings › Secrets and variables › Actions).
+# Sem ele, o job avisa e termina sem falhar.
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # todo dia, 03:17 em Brasília
+  workflow_dispatch:
+    inputs:
+      modelo:
+        description: "Modelo da Groq (vazio = o padrão do app)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: avaliacao-agente
+  cancel-in-progress: false
+
+jobs:
+  avaliar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      LLM_PROVIDER: groq
+    steps:
+      - name: Segredo configurado?
+        id: segredo
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::notice::Sem o segredo GROQ_API_KEY: avaliação pulada (veja o topo deste workflow)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.segredo.outputs.ok == 'true'
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.segredo.outputs.ok == 'true'
+        with:
+          python-version: "3.13"
+
+      - name: Dependências
+        if: steps.segredo.outputs.ok == 'true'
+        working-directory: backend
+        run: uv sync --frozen
+
+      - name: Avaliação
+        if: steps.segredo.outputs.ok == 'true'
+        working-directory: backend
+        env:
+          MODELO: ${{ inputs.modelo }}
+        run: |
+          args=(--json relatorio.json)
+          if [ -n "$MODELO" ]; then args+=(--modelo "$MODELO"); fi
+          uv run python -m evals.agente "${args[@]}"
+
+      - name: Relatório
+        if: always() && steps.segredo.outputs.ok == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: avaliacao-agente
+          path: backend/relatorio.json
+          if-no-files-found: ignore

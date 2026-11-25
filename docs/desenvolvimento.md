@@ -136,6 +136,22 @@ Testes das regras de segurança (exclusão, aprovação humana, sessão, proteç
 uv run python -m pytest
 ```
 
+### Avaliação do agente com um modelo de verdade
+
+Os testes do `pytest` não chamam modelo nenhum. Para conferir o que o agente **faz** com um modelo
+real (abre a pasta certa no mapa, não oferece pastas protegidas, consulta as oportunidades, limpa
+só o que foi pedido, aguenta uma conversa longa), numa pasta de usuário fictícia:
+
+```sh
+cd backend
+uv run python -m evals.agente                                  # Groq, modelo padrão
+uv run python -m evals.agente --modelo openai/gpt-oss-120b     # outro modelo da Groq
+uv run python -m evals.agente --local ollama --modelo qwen3:8b # IA local
+```
+
+Gasta cota do provedor. No GitHub roda pelo workflow **Avaliação do agente** (à mão e todo dia),
+que precisa do segredo `GROQ_API_KEY`; sem ele, o job avisa e não falha.
+
 ### 3. Frontend no navegador (só para desenvolver a interface)
 
 > O CleanChain é usado como **app desktop**. O modo navegador existe só para desenvolver a
