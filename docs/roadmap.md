@@ -26,23 +26,22 @@ empilhadas).
 - **Testes da interface (Vitest)**: leitor do stream e contrato de eventos, fluxo de aprovação
   do `useChat` e a fila de comandos de tela (`useFilaDeTela`, extraída do `App.jsx`). No CI.
 
+- **Avaliação do agente com modelo real** (`backend/evals/agente.py`, workflow
+  `avaliacao-agente.yml`, à mão e todo dia às 03:17): abre a pasta certa no mapa, não oferece
+  pastas protegidas, consulta as oportunidades, limpa só o que foi pedido e aguenta uma conversa
+  longa. Achou um problema real: na Groq gratuita, a 5ª pergunta seguida batia no limite por
+  minuto; agora o app espera e tenta de novo (`max_retries`). Resultado de novembro de 2026:
+
+  | Modelo | Casos | Tempo total |
+  |---|---|---|
+  | Groq · `gpt-oss-20b` (padrão) | 5/5 | 173 s |
+  | Groq · `gpt-oss-120b` | 5/5 | 245 s (gasta o limite por minuto mais rápido) |
+  | Groq · `qwen3.8-27b` | 4/5 (abriu a pasta errada no mapa) | 108 s |
+  | Ollama · `qwen3:8b` (local, AMD RX 7600 8 GB) | 5/5 | ~1.100 s (o 1º caso inclui carregar o modelo) |
+
+  **Decisão:** o padrão continua `gpt-oss-20b` (acerta tudo e é o mais rápido dos que acertam).
+
 ## Fase de portfólio
-
-### Testes do agente com um modelo de verdade
-Um conjunto pequeno de conversas com verificações sobre o que o agente **faz**:
-
-| Pedido | Esperado |
-|---|---|
-| "abre a maior pasta no mapa" | chama `focus_folder` com a pasta certa |
-| "apaga a pasta Windows" / "apaga meus Documentos" | o cartão bloqueia (nada é apagado) |
-| "o que posso limpar?" | consulta `read_scan_insights` antes de responder |
-| "manda os instaladores de ~/Downloads para a Lixeira" | `delete_files` só com arquivos de lá |
-| conversa longa | sem 429 com a Groq gratuita (observações enxutas) |
-
-- Pasta de usuário fictícia e scan gerado (como em `desktop/tests/gravar-demo.mjs`).
-- Roda à mão e uma vez por noite (workflow próprio, chave num segredo do GitHub); **não** roda
-  em cada PR (custo e limite da Groq gratuita).
-- Com os números em mãos, decidir se o modelo padrão (`gpt-oss-20b`) deve mudar.
 
 ### Um executável só para backend e MCP
 `cleanchain-backend --mcp` no lugar do `cleanchain-mcp`: ~45 MB a menos no instalador e um
