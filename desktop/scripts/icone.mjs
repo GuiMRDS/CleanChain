@@ -25,6 +25,28 @@ const html = `<!doctype html><html><body style="margin:0;background:transparent"
   <div style="position:absolute;inset:${5 * k}px;border-radius:${3 * k}px;background:#f6fafe"></div>
 </div></body></html>`;
 
+/** Monta um .ico com imagens PNG dentro (formato aceito pelo Windows desde o Vista). */
+function arquivoIco(imagens) {
+  const cabecalho = Buffer.alloc(6);
+  cabecalho.writeUInt16LE(0, 0); // reservado
+  cabecalho.writeUInt16LE(1, 2); // tipo: ícone
+  cabecalho.writeUInt16LE(imagens.length, 4);
+  const entradas = [];
+  let posicao = 6 + 16 * imagens.length;
+  for (const { lado, png } of imagens) {
+    const e = Buffer.alloc(16);
+    e.writeUInt8(lado >= 256 ? 0 : lado, 0); // largura (0 = 256)
+    e.writeUInt8(lado >= 256 ? 0 : lado, 1); // altura
+    e.writeUInt16LE(1, 4); // planos
+    e.writeUInt16LE(32, 6); // bits por pixel
+    e.writeUInt32LE(png.length, 8);
+    e.writeUInt32LE(posicao, 12);
+    posicao += png.length;
+    entradas.push(e);
+  }
+  return Buffer.concat([cabecalho, ...entradas, ...imagens.map((i) => i.png)]);
+}
+
 app.whenReady().then(async () => {
   const win = new BrowserWindow({
     width: LADO,
@@ -43,5 +65,10 @@ app.whenReady().then(async () => {
     fs.writeFileSync(arquivo, img.resize({ width: lado, height: lado, quality: 'best' }).toPNG());
     console.log(`ícone ${lado}px → ${path.relative(repo, arquivo)}`);
   }
+  // .ico com vários tamanhos: o Windows usa na barra de tarefas quando o app roda pelo código
+  // (setAppDetails em desktop/main/plataforma.ts); no app instalado o builder gera o dele.
+  const ico = path.join(repo, 'desktop', 'build', 'icon.ico');
+  fs.writeFileSync(ico, arquivoIco([16, 24, 32, 48, 64, 128, 256].map((lado) => ({ lado, png: img.resize({ width: lado, height: lado, quality: 'best' }).toPNG() }))));
+  console.log(`ícone .ico → ${path.relative(repo, ico)}`);
   app.quit();
 });

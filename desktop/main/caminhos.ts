@@ -25,8 +25,8 @@ export function telaEstado(): string {
 }
 
 /** Ícone da janela (o mesmo do instalador e do site). */
-export function icone(): string {
-  return path.join(__dirname, '..', '..', 'build', 'icon.png');
+export function icone(formato: 'png' | 'ico' = 'png'): string {
+  return path.join(__dirname, '..', '..', 'build', `icon.${formato}`);
 }
 
 /** Pasta dos logs do electron-log (userData/logs). */
