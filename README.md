@@ -385,10 +385,10 @@ cd desktop && npm run test:fumaca
 cd desktop && npm run dist
 ```
 
-O guia completo — variáveis de ambiente, modo navegador, API, estrutura do projeto, ícone e como
+O guia completo — variáveis de ambiente, modo navegador (só para desenvolver a interface), API, estrutura do projeto, ícone e como
 publicar um Release — está em [docs/desenvolvimento.md](docs/desenvolvimento.md). Para agentes
 de código (Claude, Codex, Cursor…), o contexto e as regras do projeto estão em
-[AGENTS.md](AGENTS.md). Mudanças de cada versão: [CHANGELOG.md](CHANGELOG.md).
+[AGENTS.md](AGENTS.md). Mudanças de cada versão: [CHANGELOG.md](CHANGELOG.md). Próximos passos: [docs/roadmap.md](docs/roadmap.md).
 
 ## Licença e créditos
 
