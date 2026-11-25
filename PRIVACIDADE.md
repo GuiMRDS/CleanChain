@@ -48,11 +48,13 @@ aberto e somem ao fechar.
 Só quando você conversa com o agente ou usa o microfone, e só para o provedor cuja chave você
 configurou:
 
-- **Chat:** o texto que você escreve; a pasta aberta no mapa naquele momento; o caminho da sua
-  pasta de usuário e das pastas comuns (Downloads, Documentos…), o que inclui o seu nome de
-  usuário do sistema; e o que o agente consulta para responder, como resumos da análise (nomes
-  e caminhos de pastas e arquivos, tamanhos, datas) e listas de arquivos de pastas da área
-  analisada.
+- **Chat:** o texto que você escreve; a pasta aberta no mapa naquele momento; quais pastas
+  comuns existem (Downloads, Documentos…); e o que o agente consulta para responder, como
+  resumos da análise (nomes e caminhos de pastas e arquivos, tamanhos, datas) e listas de
+  arquivos de pastas da área analisada.
+- **Sem o seu nome de usuário:** em tudo isso, a sua pasta de usuário aparece como `~` (por
+  exemplo, `~\Downloads` em vez de `C:\Users\<seu nome>\Downloads`). O app troca de volta pelo
+  caminho real só no seu computador, antes de qualquer ação.
 - **Voz:** o áudio gravado enquanto você segura o botão de microfone, para ser transcrito.
 
 Esse conteúdo segue a política de privacidade do provedor escolhido:

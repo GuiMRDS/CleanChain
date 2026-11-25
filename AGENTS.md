@@ -37,6 +37,7 @@ assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/
 | `docs/desenvolvimento.md` | guia técnico: como rodar, API, estrutura, release |
 | `docs/seguranca-por-sistema.md` | regras de exclusão de cada sistema (manter em dia) |
 | `docs/assinatura.md`, `docs/roteiro-demo.md` | assinatura de código; roteiro do vídeo de demonstração |
+| `docs/roadmap.md` | decisões de arquitetura e o que vem depois (fases portfólio e produto) |
 | `docs/images/` | capturas e logo do README (regenerar quando a UI mudar muito) |
 | `README.md`, `CHANGELOG.md`, `PRIVACIDADE.md`, `LICENSE` | produto, mudanças por versão, privacidade e licença MIT |
 
@@ -48,7 +49,7 @@ Dados locais (scans, `.env`, `runtime.json`, logs) nunca vão para o git (`.giti
 # backend
 cd backend
 uv sync
-uv run uvicorn app.server:app --reload --port 8000   # API (modo navegador)
+uv run uvicorn app.server:app --reload --port 8000   # API (modo navegador: só para desenvolver a interface)
 uv run python chat.py                                # agente no terminal
 uv run python -m pytest                              # testes (rode antes de commitar)
 uv run python -m app.tools.disk_scan "C:\\pasta"     # scan sem LLM

@@ -19,6 +19,7 @@ from langchain_core.messages import AIMessage, AIMessageChunk, ToolMessage
 from langgraph.types import Command
 
 from app.config import sem_segredos
+from app.caminhos_llm import expandir, ocultar
 from app.files import preview_deletion
 
 from app.tools.ui_actions import UI_COMMAND_KEY
@@ -71,7 +72,8 @@ def summarize_observation(content: str) -> tuple[str, dict | None]:
 def _with_screen_context(text: str, ui_state: dict | None) -> str:
     """Prefixa a mensagem com o que o usuário está vendo (pasta aberta no sunburst)."""
     folder = (ui_state or {}).get("open_folder")
-    return f"[tela: pasta aberta no mapa = {folder}]\n{text}" if folder else text
+    text = f"[tela: pasta aberta no mapa = {folder}]\n{text}" if folder else text
+    return ocultar(text)  # a pasta do usuário vai ao modelo como "~"
 
 
 def _pending_actions(agent, config) -> int:
@@ -102,7 +104,7 @@ def _approval_events(interrupts) -> Iterator[dict]:
             args = action.get("args", {})
             event = {"type": "approval", "interrupt_id": intr.id, "tool": action["name"], "reason": args.get("reason", "")}
             if action["name"] == "delete_files":
-                event.update(preview_deletion(args.get("paths", [])))
+                event.update(preview_deletion(expandir(args.get("paths", []))))
             yield event
 
 
@@ -168,7 +170,7 @@ def stream_events(
                         summary, data = summarize_observation(msg.content)
                         yield {"type": "observation", "text": summary, "tool": msg.name, "data": data}
                         if isinstance(data, dict) and data.get(UI_COMMAND_KEY):
-                            yield {"type": "ui", **data[UI_COMMAND_KEY]}  # o front aplica na tela
+                            yield {"type": "ui", **expandir(data[UI_COMMAND_KEY])}  # o front aplica na tela (caminho real)
     except Exception as err:  # o erro vira evento; quem consome decide como mostrar
         yield {"type": "error", "text": _friendly_error(err)}
     yield {"type": "done", "awaiting_approval": awaiting}
