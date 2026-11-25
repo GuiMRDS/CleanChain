@@ -167,7 +167,7 @@ somem ao fechar o app.
 
 **Para onde vai o conteúdo enviado ao modelo.** Quando você conversa com o agente, a sua
 mensagem e o que ele consulta para responder (resumos da análise: nomes e caminhos de pastas e
-arquivos, tamanhos e datas — incluindo o caminho da sua pasta de usuário) vão para o provedor
+arquivos, tamanhos e datas; a sua pasta de usuário aparece como `~`, sem o seu nome) vão para o provedor
 que você configurou, **Groq** ou **OpenAI**. Ao usar o microfone, o áudio vai para o mesmo
 provedor para ser transcrito. O conteúdo dos seus arquivos não é enviado.
 

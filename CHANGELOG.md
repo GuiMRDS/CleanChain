@@ -4,6 +4,14 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Alterado
+- **Privacidade:** a sua pasta de usuário vai para o provedor do modelo como `~`, sem o seu nome
+  de usuário do sistema (prompt, mensagens, contexto da tela e resultados das ferramentas). O
+  caminho real volta só no computador, antes de qualquer ação, e passa pelas mesmas regras de
+  exclusão.
+
 ## [1.0.0] - 2026-11-24
 
 Primeira versão pública: limpeza de disco com um agente de IA que só apaga com a sua aprovação,
