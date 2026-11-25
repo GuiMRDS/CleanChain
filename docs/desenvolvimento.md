@@ -262,7 +262,6 @@ backend/
   chat.py             conversa com o agente pelo terminal
   cleanchain-backend.spec   PyInstaller (onedir) do backend do app desktop
   cleanchain_mcp/     servidor MCP (stdio): ponte entre clientes MCP e o app
-  cleanchain-mcp.spec PyInstaller do executável cleanchain-mcp
 frontend/
   src/
     App.jsx           montagem da tela e fluxo agente ⇄ tela

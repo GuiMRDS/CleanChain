@@ -19,7 +19,6 @@ on:
     paths:
       - desktop/**
       - backend/cleanchain-backend.spec
-      - backend/cleanchain-mcp.spec
       - backend/cleanchain_mcp/**
       - backend/pyproject.toml
       - backend/app/plataforma/**
@@ -38,15 +37,15 @@ jobs:
           - os: windows-latest
             exe: release/win-unpacked/CleanChain.exe
             backend: ../backend/dist/cleanchain-backend/cleanchain-backend.exe
-            mcp: dist/cleanchain-mcp/cleanchain-mcp.exe
+            mcp: dist/cleanchain-backend/cleanchain-backend.exe
           - os: macos-latest # Apple Silicon (arm64)
             exe: release/mac-arm64/CleanChain.app/Contents/MacOS/CleanChain
             backend: ../backend/dist/cleanchain-backend/cleanchain-backend
-            mcp: dist/cleanchain-mcp/cleanchain-mcp
+            mcp: dist/cleanchain-backend/cleanchain-backend
           - os: ubuntu-latest
             exe: release/linux-unpacked/cleanchain
             backend: ../backend/dist/cleanchain-backend/cleanchain-backend
-            mcp: dist/cleanchain-mcp/cleanchain-mcp
+            mcp: dist/cleanchain-backend/cleanchain-backend
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -107,22 +106,16 @@ jobs:
         working-directory: backend
         run: uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean
 
-      - name: Servidor MCP — PyInstaller (neste sistema)
-        working-directory: backend
-        run: uv run python -m PyInstaller cleanchain-mcp.spec --noconfirm --clean
-
-      - name: Servidor MCP — ponta a ponta com o executável (cliente MCP pelo stdio)
+      - name: Servidor MCP — ponta a ponta com o executável (cleanchain-backend --mcp, cliente MCP pelo stdio)
         working-directory: backend
         env:
           CLEANCHAIN_MCP_EXE: ${{ matrix.mcp }}
         run: uv run python -m pytest tests/test_cleanchain_mcp.py -k ponta
 
-      - name: Assinatura — backend e servidor MCP do Windows (.exe, .pyd e DLLs sem assinatura)
+      - name: Assinatura — backend do Windows, que também é o servidor MCP (.exe, .pyd e DLLs sem assinatura)
         if: env.ASSINAR == 'true'
         shell: pwsh
-        run: |
-          ./desktop/scripts/assinar-backend.ps1
-          ./desktop/scripts/assinar-backend.ps1 -Pasta backend/dist/cleanchain-mcp
+        run: ./desktop/scripts/assinar-backend.ps1
 
       - name: Desktop — compilar
         working-directory: desktop

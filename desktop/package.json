@@ -23,7 +23,7 @@
   "scripts": {
     "build:ts": "tsc -p tsconfig.json",
     "build:frontend": "npm --prefix ../frontend run build",
-    "build:backend": "cd ../backend && uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean && uv run python -m PyInstaller cleanchain-mcp.spec --noconfirm --clean",
+    "build:backend": "cd ../backend && uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean",
     "start": "npm run build:ts && electron .",
     "dev": "npm run build:ts && node scripts/dev.mjs",
     "icone": "electron scripts/icone.mjs",

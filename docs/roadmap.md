@@ -41,12 +41,13 @@ empilhadas).
 
   **Decisão:** o padrão continua `gpt-oss-20b` (acerta tudo e é o mais rápido dos que acertam).
 
+- **Um executável só para backend e MCP**: `cleanchain-backend --mcp` no lugar do
+  `cleanchain-mcp` (~49 MB e um PyInstaller a menos). O modo `--mcp` entra antes de importar o
+  servidor e o agente.
+
 ## Fase de portfólio
 
-### Um executável só para backend e MCP
-`cleanchain-backend --mcp` no lugar do `cleanchain-mcp`: ~45 MB a menos no instalador e um
-PyInstaller a menos no Release. A configuração pronta dos clientes MCP (`mcp.ts`) passa a apontar
-para o modo `--mcp`; o MCP continua carregando só o que usa. Prioridade baixa.
+Concluída.
 
 ## Fase de produto
 

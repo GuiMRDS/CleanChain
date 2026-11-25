@@ -10,7 +10,7 @@ fundo animado e robô 3D) e um backend FastAPI com um **agente ReAct do LangChai
 conversa com o usuário sobre a última análise de disco, controla o mapa de pastas da
 tela e apaga arquivos **apenas com aprovação humana**. É distribuído como **app desktop
 em Electron** (`desktop/`), que inicia o backend como processo filho; no desenvolvimento
-também roda no navegador. Expõe um servidor MCP (`cleanchain-mcp`) para outros
+também roda no navegador. Expõe um servidor MCP (`cleanchain-backend --mcp`) para outros
 assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/app/__init__.py`
 (uma só em todo o projeto; `tests/test_versao.py`).
 
@@ -26,7 +26,7 @@ assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/
 | `backend/app/` | FastAPI + agente LangChain + regras de exclusão + camada de plataforma (Python ≥ 3.12, `uv`) |
 | `backend/cleanchain_mcp/` | servidor MCP (stdio): ponte entre clientes MCP e o app |
 | `backend/tests/` | testes (regras por sistema, retrato do Windows, sessão, MCP, versão…) |
-| `backend/*.spec` | PyInstaller: `cleanchain-backend` e `cleanchain-mcp` |
+| `backend/cleanchain-backend.spec` | PyInstaller: o backend, que também é o servidor MCP (`--mcp`) |
 | `frontend/` | interface React 19 + Vite + Three.js (a mesma no navegador e no desktop) |
 | `desktop/main/`, `desktop/preload/` | Electron: processo principal e ponte `window.cleanchain` |
 | `desktop/tela/` | telas locais de abertura/erro (`cleanchain://tela`) |
@@ -135,7 +135,8 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   `/api/propostas/{id}/decisao` (cookie).
 - `../cleanchain_mcp/` — o servidor MCP (SDK oficial 2.x, `MCPServer`, stdio): só uma
   ponte que lê `runtime.json` e chama `/api/mcp/*`. Ferramentas em inglês, mensagens em
-  português, `read_only_hint` nas de leitura. Executável: `cleanchain-mcp.spec`.
+  português, `read_only_hint` nas de leitura. Empacotado no próprio backend: `cleanchain-backend --mcp` (`app/desktop.py` entra no MCP
+  antes de importar o servidor e o agente; teste em `test_cleanchain_mcp.py`).
 - `storage.py` — `<pasta de dados>/scans/scan-*.json` + `latest.json` (pasta de dados =
   `CLEANCHAIN_DADOS`, ou `backend/data` em desenvolvimento; fora do git).
 

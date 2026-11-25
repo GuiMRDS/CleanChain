@@ -214,13 +214,17 @@ aberto. Abra o app e tente de novo."*
 
 ### Onde fica o executável
 
-O servidor MCP é o executável `cleanchain-mcp`, instalado junto com o app (transporte stdio):
+O servidor MCP é o próprio backend do app no modo `--mcp` (transporte stdio), instalado junto com
+o app:
 
-| Sistema | Caminho |
+| Sistema | Comando |
 |---|---|
-| Windows | `%LOCALAPPDATA%\Programs\CleanChain\resources\mcp\cleanchain-mcp.exe` |
-| macOS | `/Applications/CleanChain.app/Contents/Resources/mcp/cleanchain-mcp` |
-| Linux (`.deb`) | `/opt/CleanChain/resources/mcp/cleanchain-mcp` |
+| Windows | `%LOCALAPPDATA%\Programs\CleanChain\resources\backend\cleanchain-backend.exe --mcp` |
+| macOS | `/Applications/CleanChain.app/Contents/Resources/backend/cleanchain-backend --mcp` |
+| Linux (`.deb`) | `/opt/CleanChain/resources/backend/cleanchain-backend --mcp` |
+
+> Configurou com a versão 1.0.x (o antigo `resources\mcp\cleanchain-mcp`)? Copie a configuração
+> de novo na tela "Integração MCP".
 
 No **AppImage** o caminho muda a cada abertura, então a integração MCP precisa do `.deb`. A tela
 "Integração MCP" mostra o caminho exato da sua instalação.
@@ -236,8 +240,8 @@ caminho do Windows; troque pelo do seu sistema.
 {
   "mcpServers": {
     "cleanchain": {
-      "command": "C:\\Users\\<você>\\AppData\\Local\\Programs\\CleanChain\\resources\\mcp\\cleanchain-mcp.exe",
-      "args": []
+      "command": "C:\\Users\\<você>\\AppData\\Local\\Programs\\CleanChain\\resources\\backend\\cleanchain-backend.exe",
+      "args": ["--mcp"]
     }
   }
 }
@@ -246,7 +250,7 @@ caminho do Windows; troque pelo do seu sistema.
 **Claude Code**: no terminal:
 
 ```sh
-claude mcp add --scope user cleanchain -- "C:\Users\<você>\AppData\Local\Programs\CleanChain\resources\mcp\cleanchain-mcp.exe"
+claude mcp add --scope user cleanchain -- "C:\Users\<você>\AppData\Local\Programs\CleanChain\resources\backend\cleanchain-backend.exe" --mcp
 ```
 
 **Cursor**: em `~/.cursor/mcp.json` (mesmo formato do Claude Desktop):
@@ -255,8 +259,8 @@ claude mcp add --scope user cleanchain -- "C:\Users\<você>\AppData\Local\Progra
 {
   "mcpServers": {
     "cleanchain": {
-      "command": "/Applications/CleanChain.app/Contents/Resources/mcp/cleanchain-mcp",
-      "args": []
+      "command": "/Applications/CleanChain.app/Contents/Resources/backend/cleanchain-backend",
+      "args": ["--mcp"]
     }
   }
 }
@@ -269,7 +273,7 @@ Outros clientes MCP (VS Code, agentes próprios) usam o mesmo comando com transp
 ```mermaid
 sequenceDiagram
     participant C as Cliente MCP (Claude, Cursor…)
-    participant M as cleanchain-mcp (stdio)
+    participant M as cleanchain-backend --mcp (stdio)
     participant B as Backend do CleanChain
     participant U as Você, no app
     C->>M: propose_cleanup(paths, reason)
@@ -321,7 +325,7 @@ flowchart LR
     end
     LLM[("Groq / OpenAI<br/>ou IA local")]
     CLI["Clientes MCP<br/>Claude, Cursor…"]
-    MCP["cleanchain-mcp<br/>(stdio)"]
+    MCP["backend --mcp<br/>(stdio)"]
     LIX[("Lixeira")]
 
     MAIN -- "inicia (porta e token aleatórios)" --> API

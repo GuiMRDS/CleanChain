@@ -24,10 +24,10 @@ TOKEN = "token-mcp-teste"
 
 
 def _comando_mcp() -> tuple[str, list[str]]:
-    """O servidor MCP a testar pelo stdio: o executável do PyInstaller (CLEANCHAIN_MCP_EXE, no
-    CI) ou o módulo Python."""
+    """O servidor MCP a testar pelo stdio, pelo mesmo caminho do app instalado: o executável do
+    backend com --mcp (CLEANCHAIN_MCP_EXE, no Release) ou o ponto de entrada em Python."""
     exe = os.environ.get("CLEANCHAIN_MCP_EXE")
-    return (str(Path(exe).resolve()), []) if exe else (sys.executable, ["-m", "cleanchain_mcp"])
+    return (str(Path(exe).resolve()), ["--mcp"]) if exe else (sys.executable, ["-m", "app.desktop", "--mcp"])
 
 
 def _runtime(pasta: Path, porta: int = 54321, pid: int | None = None, token: str = TOKEN) -> None:
@@ -297,3 +297,21 @@ def test_ponta_a_ponta_com_o_app_fechado(tmp_path):
                 return await s.call_tool("get_last_scan_summary", {})
 
     assert APP_FECHADO in _texto_do_erro(asyncio.run(sessao()))
+
+
+def test_modo_mcp_do_backend_nao_carrega_o_servidor_nem_o_agente():
+    """`cleanchain-backend --mcp` é a ponte MCP do app instalado: entra direto no servidor MCP,
+    sem importar FastAPI, LangChain nem o servidor do app (continua leve e sem o backend)."""
+    codigo = (
+        "import sys; sys.argv = ['cleanchain-backend', '--mcp']\n"
+        "import cleanchain_mcp.__main__ as m\n"
+        "chamado = []\n"
+        "m.main = lambda: chamado.append(True)\n"
+        "import app.desktop\n"
+        "app.desktop.main()\n"
+        "pesados = [n for n in ('app.server', 'app.agent', 'langchain', 'langgraph', 'fastapi', 'uvicorn') if n in sys.modules]\n"
+        "print(chamado == [True], pesados)\n"
+    )
+    saida = subprocess.run([sys.executable, "-c", codigo], cwd=BACKEND, capture_output=True, text=True, timeout=60)
+    assert saida.returncode == 0, saida.stderr
+    assert saida.stdout.strip() == "True []"
