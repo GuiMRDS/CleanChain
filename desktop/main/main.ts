@@ -9,7 +9,7 @@ import { icone, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
 import * as mcp from './mcp';
 import { FECHAR_JANELA_ENCERRA, identificarJanelaNoDesenvolvimento, menuNativo, opcoesDeJanela } from './plataforma';
-import * as segredos from './segredos';
+import * as ia from './ia';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
 import { registrarEsquema, servirTela, urlDaTela } from './tela';
 
@@ -54,7 +54,7 @@ async function iniciarBackend(estado: 'iniciando' | 'reiniciando' = 'iniciando')
   iniciando = true;
   try {
     await mostrarEstado(estado);
-    const conexao = await backend.iniciar({ ...segredos.envDoBackend(), ...mcp.envDoBackend() });
+    const conexao = await backend.iniciar({ ...ia.envDoBackend(), ...mcp.envDoBackend() });
     mcp.atualizarRuntime(conexao.porta); // integração MCP: o cleanchain-mcp acha o app por aqui
     await janela?.loadURL(urlBootstrap(conexao));
   } catch (err) {

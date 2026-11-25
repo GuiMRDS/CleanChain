@@ -7,6 +7,9 @@ const CANAIS = {
   chaveStatus: 'chave:status',
   chaveSalvar: 'chave:salvar',
   chaveRemover: 'chave:remover',
+  chaveModelosLocais: 'chave:modelosLocais',
+  chaveUsarLocal: 'chave:usarLocal',
+  chaveUsarNuvem: 'chave:usarNuvem',
   versao: 'app:versao',
   abrirLogs: 'app:abrirLogs',
   reiniciarServico: 'app:reiniciarServico',
@@ -27,6 +30,12 @@ contextBridge.exposeInMainWorld('cleanchain', {
     status: () => ipcRenderer.invoke(CANAIS.chaveStatus),
     salvar: (provedor: string, chave: string) => ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
     remover: () => ipcRenderer.invoke(CANAIS.chaveRemover),
+    /** IA local (Ollama/LM Studio neste computador): listar modelos, usar um, voltar para a nuvem. */
+    modelosLocais: (provedor: string, porta?: number) =>
+      ipcRenderer.invoke(CANAIS.chaveModelosLocais, { provedor: String(provedor), porta: porta === undefined ? undefined : Number(porta) }),
+    usarLocal: (provedor: string, modelo: string, porta?: number) =>
+      ipcRenderer.invoke(CANAIS.chaveUsarLocal, { provedor: String(provedor), modelo: String(modelo), porta: porta === undefined ? undefined : Number(porta) }),
+    usarNuvem: () => ipcRenderer.invoke(CANAIS.chaveUsarNuvem),
   },
   app: {
     versao: (): Promise<string> => ipcRenderer.invoke(CANAIS.versao),

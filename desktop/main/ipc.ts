@@ -5,6 +5,7 @@ import { app, clipboard, ipcMain, IpcMainInvokeEvent, shell } from 'electron';
 import log from 'electron-log/main';
 import { estadoAtualizacao, instalarAgora, verificarAgora } from './atualizacao';
 import { pastaLogs } from './caminhos';
+import * as ia from './ia';
 import * as mcp from './mcp';
 import { daOrigemDoApp } from './seguranca';
 import * as segredos from './segredos';
@@ -16,6 +17,9 @@ export const CANAIS = {
   chaveStatus: 'chave:status',
   chaveSalvar: 'chave:salvar',
   chaveRemover: 'chave:remover',
+  chaveModelosLocais: 'chave:modelosLocais', // IA local: modelos do Ollama/LM Studio (só 127.0.0.1)
+  chaveUsarLocal: 'chave:usarLocal',
+  chaveUsarNuvem: 'chave:usarNuvem',
   versao: 'app:versao',
   abrirLogs: 'app:abrirLogs',
   reiniciarServico: 'app:reiniciarServico',
@@ -56,7 +60,7 @@ export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Depe
       return fn(event, arg);
     };
 
-  ipcMain.handle(CANAIS.chaveStatus, so(['app'], () => segredos.status()));
+  ipcMain.handle(CANAIS.chaveStatus, so(['app'], () => ia.status()));
 
   ipcMain.handle(
     CANAIS.chaveSalvar,
@@ -64,9 +68,10 @@ export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Depe
       const { provedor, chave } = (arg ?? {}) as { provedor?: unknown; chave?: unknown };
       const valido = segredos.validar(provedor, chave); // lança Error com mensagem para a tela
       segredos.salvar(valido.provedor, valido.chave);
+      ia.usarNuvem(); // colar uma chave = usar a nuvem
       logIpc.info(`chave do provedor ${valido.provedor} salva (cifrada)`); // nunca a chave
       await reiniciarBackend();
-      return segredos.status();
+      return ia.status();
     })
   );
 
@@ -76,7 +81,34 @@ export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Depe
       segredos.remover();
       logIpc.info('chave removida');
       await reiniciarBackend();
-      return segredos.status();
+      return ia.status();
+    })
+  );
+
+  ipcMain.handle(
+    CANAIS.chaveModelosLocais,
+    so(['app'], (_event, arg) => {
+      const { provedor, porta } = (arg ?? {}) as { provedor?: unknown; porta?: unknown };
+      return ia.modelosLocais(provedor, porta); // valida e só consulta 127.0.0.1
+    })
+  );
+
+  ipcMain.handle(
+    CANAIS.chaveUsarLocal,
+    so(['app'], async (_event, arg) => {
+      const { provedor, modelo, porta } = (arg ?? {}) as { provedor?: unknown; modelo?: unknown; porta?: unknown };
+      ia.usarLocal(provedor, modelo, porta); // lança Error com mensagem para a tela
+      await reiniciarBackend();
+      return ia.status();
+    })
+  );
+
+  ipcMain.handle(
+    CANAIS.chaveUsarNuvem,
+    so(['app'], async () => {
+      ia.usarNuvem();
+      await reiniciarBackend();
+      return ia.status();
     })
   );
 

@@ -19,6 +19,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from app import config, plataforma
 from app.caminhos_llm import PastaDoUsuarioComoTil, ocultar
+from app.ia_local import LOCAIS, criar_modelo
 from app.tools.last_scan import read_last_scan
 from app.tools.scan_insights_tool import read_scan_insights
 from app.tools.cleanup import delete_files, list_folder
@@ -118,6 +119,8 @@ def build_llm():
     Retorna (modelo, rótulo para exibir).
     """
     provider = os.getenv("LLM_PROVIDER", "").lower()
+    if provider in LOCAIS:  # Ollama ou LM Studio neste computador (sem chave, nada sai daqui)
+        return criar_modelo(provider)
     if not provider:
         provider = "openai" if os.getenv("OPENAI_API_KEY") else "groq" if os.getenv("GROQ_API_KEY") else ""
 

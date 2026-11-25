@@ -170,7 +170,12 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
 - `main/backend.ts` — porta livre + token aleatório, `spawn` com variáveis de ambiente,
   espera `/health`, logs no `electron-log`, encerra pela `plataforma.ts`.
 - `main/segredos.ts` — chave com `safeStorage` em `userData/segredos.json`.
-- `main/ipc.ts` + `preload/preload.ts` — canais `chave:status|salvar|remover`,
+- `main/ia.ts` + `main/ia-local.ts` — qual IA o agente usa: nuvem (chave de `segredos.ts`) ou
+  local (Ollama/LM Studio), escolha em `userData/ia.json`; lista os modelos do servidor local (só
+  `127.0.0.1`) e monta o ambiente do backend (no modo local, a chave da nuvem não vai junto).
+  Backend: `app/ia_local.py` (`ChatOpenAI` no servidor local; recusa endereço de outra máquina;
+  com IA local a voz fica desligada).
+- `main/ipc.ts` + `preload/preload.ts` — canais `chave:status|salvar|remover|modelosLocais|usarLocal|usarNuvem`,
   `app:versao|abrirLogs|reiniciarServico|atualizacao|verificarAtualizacoes|instalarAtualizacao`
   e o evento `atualizacao:estado`; cada canal diz quem pode chamar (interface do app e/ou
   a tela local) e valida os argumentos.

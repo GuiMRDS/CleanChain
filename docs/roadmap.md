@@ -17,6 +17,12 @@ empilhadas).
 - Ícone do CleanChain na barra de tarefas ao rodar pelo código.
 - Modo navegador documentado como ferramenta de desenvolvimento.
 
+## Feito depois da v1.0.1
+
+- **IA local (Ollama e LM Studio)**, antecipada da fase de produto: o usuário escolhe um modelo
+  instalado no computador na tela *Modelo de IA*, e troca entre nuvem e local quando quiser. Só
+  `127.0.0.1`, sem chave e com o microfone desligado (nada sai do PC).
+
 ## Fase de portfólio
 
 ### Testes do agente com um modelo de verdade
@@ -66,8 +72,3 @@ Ao ativar:
 - religar a atualização automática (`ATUALIZACAO_AUTOMATICA` em `desktop/main/plataforma.ts`
   e o teste `test_sem_assinatura_a_atualizacao_so_avisa`);
 - tirar o teto do `ormsgpack` no `pyproject.toml`.
-
-### Modelo local (Ollama)
-Opção avançada para privacidade total: nada sai do computador. Os modelos locais pequenos seguem
-pior as instruções, mas as regras de segurança estão no código (aprovação, validação dupla,
-Lixeira) e continuam valendo. O padrão continua sendo a Groq.

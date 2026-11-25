@@ -136,7 +136,14 @@ export default function App() {
     // Opened from the menu: shows even before the LLM key is set (MCP doesn't need it).
     <ConfigMcp mcp={desktop.mcp} onDefinir={desktop.definirMcp} onCopiar={desktop.copiarMcp} onFechar={desktop.fecharMcp} />
   ) : desktop.mostrarConfig ? (
-    <ConfigChave atual={desktop.chave} onSalvar={desktop.salvarChave} onCancelar={desktop.fecharConfig} />
+    <ConfigChave
+      atual={desktop.chave}
+      onSalvar={desktop.salvarChave}
+      onUsarLocal={desktop.usarLocal}
+      onUsarNuvem={desktop.usarNuvem}
+      onModelosLocais={desktop.modelosLocais}
+      onCancelar={desktop.fecharConfig}
+    />
   ) : chatting ? (
     <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
   ) : scanned ? (
@@ -190,7 +197,7 @@ export default function App() {
             </div>
           )}
         </div>
-        <ChatInput onSend={send} busy={busy} locked={awaitingApproval} showSuggestions={!chatting} />
+        <ChatInput onSend={send} busy={busy} locked={awaitingApproval} showSuggestions={!chatting} vozDisponivel={!desktop.iaLocal} />
       </section>
 
       <SystemFooter refreshKey={`${scan.result?.file ?? ''}:${busy}`} />
