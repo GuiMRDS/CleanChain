@@ -266,3 +266,14 @@ def test_nenhum_log_do_electron_cita_a_chave():
     assert not achados, achados
     backend_ts = (DESKTOP / "main" / "backend.ts").read_text(encoding="utf-8")
     assert "logBackend[nivel](ocultar(linha))" in backend_ts
+
+
+# ------------------------------------------------------------------ atualização sem assinatura
+
+
+def test_sem_assinatura_a_atualizacao_so_avisa():
+    # Instalar sozinho, sem assinatura de código, confiaria só no hash do próprio Release. Ao ligar
+    # a assinatura de todos os binários (docs/roadmap.md), troque a constante e este teste juntos.
+    texto = (DESKTOP / "main" / "plataforma.ts").read_text(encoding="utf-8")
+    assert "const ATUALIZACAO_AUTOMATICA = false;" in texto
+    assert "if (!ATUALIZACAO_AUTOMATICA) return 'manual';" in texto

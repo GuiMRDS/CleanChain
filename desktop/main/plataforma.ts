@@ -179,12 +179,21 @@ export async function autorizarMicrofone(): Promise<boolean> {
 // ------------------------------------------------------------------ atualização
 
 /**
+ * Atualização automática só com os instaladores assinados. Sem assinatura, o instalador baixado
+ * só é conferido pelo hash publicado no próprio Release: se a conta do GitHub fosse comprometida,
+ * uma versão maliciosa seria instalada sem ninguém ver. Ligar junto com a assinatura de todos os
+ * binários (docs/roadmap.md).
+ */
+const ATUALIZACAO_AUTOMATICA = false;
+
+/**
  * Como atualizar:
- *  - 'automatica': baixa e instala sozinho (Windows, AppImage no Linux);
+ *  - 'automatica': baixa e instala sozinho (Windows, AppImage no Linux) — só com ATUALIZACAO_AUTOMATICA;
  *  - 'manual': só avisa e abre a página de downloads. No macOS, o Squirrel.Mac exige app
  *    assinado pela Apple; no .deb, instalar pediria a senha de administrador.
  */
 export function modoDeAtualizacao(): 'automatica' | 'manual' {
+  if (!ATUALIZACAO_AUTOMATICA) return 'manual';
   if (SISTEMA === 'windows') return 'automatica';
   if (SISTEMA === 'linux' && process.env.APPIMAGE) return 'automatica';
   return 'manual';

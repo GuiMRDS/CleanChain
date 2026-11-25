@@ -4,6 +4,13 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Alterado
+- **Atualizações:** enquanto os instaladores não têm assinatura de código, o app só **avisa** que
+  há versão nova (em todos os sistemas) e abre a página de download. Sem assinatura, instalar
+  sozinho confiaria só no hash publicado no próprio Release.
+
 ## [1.0.0] - 2026-11-24
 
 Primeira versão pública: limpeza de disco com um agente de IA que só apaga com a sua aprovação,

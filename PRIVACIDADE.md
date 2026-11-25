@@ -62,7 +62,8 @@ O CleanChain não envia o conteúdo de arquivos ao modelo.
 ### 2. Para o GitHub (atualizações)
 
 O app instalado consulta os [Releases do CleanChain no GitHub](https://github.com/GuiMRDS/CleanChain/releases)
-para saber se há versão nova e, quando há, baixa o instalador de lá. Como em qualquer acesso a
+para saber se há versão nova e, quando há, avisa no menu do app; o download acontece no seu
+navegador, quando você escolhe. Como em qualquer acesso a
 um site, o GitHub recebe o seu endereço IP e a versão do app. Nenhum dado seu é enviado.
 
 ### 3. Para clientes MCP, se você ligar a integração
