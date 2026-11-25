@@ -28,6 +28,8 @@ empilhadas).
 
 ## Fase de portfólio
 
+Concluída.
+
 ### Testes do agente com um modelo de verdade
 Um conjunto pequeno de conversas com verificações sobre o que o agente **faz**:
 
@@ -43,11 +45,6 @@ Um conjunto pequeno de conversas com verificações sobre o que o agente **faz**
 - Roda à mão e uma vez por noite (workflow próprio, chave num segredo do GitHub); **não** roda
   em cada PR (custo e limite da Groq gratuita).
 - Com os números em mãos, decidir se o modelo padrão (`gpt-oss-20b`) deve mudar.
-
-### Um executável só para backend e MCP
-`cleanchain-backend --mcp` no lugar do `cleanchain-mcp`: ~45 MB a menos no instalador e um
-PyInstaller a menos no Release. A configuração pronta dos clientes MCP (`mcp.ts`) passa a apontar
-para o modo `--mcp`; o MCP continua carregando só o que usa. Prioridade baixa.
 
 ## Fase de produto
 

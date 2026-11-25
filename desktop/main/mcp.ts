@@ -1,6 +1,6 @@
 // Integração MCP: liga/desliga, runtime.json e a configuração pronta para os clientes MCP.
 //
-// O executável cleanchain-mcp (servidor MCP por stdio) encontra o app aberto pelo runtime.json
+// O servidor MCP por stdio (cleanchain-backend --mcp) encontra o app aberto pelo runtime.json
 // (porta do backend, token MCP desta execução e PID do app), que este módulo grava na pasta de
 // dados SÓ com a integração ligada e apaga ao desligar ou ao sair. O backend recebe o token
 // MCP pelo ambiente e só atende /api/mcp/* se o runtime.json existir com esse mesmo token.
@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pastaDados, REPO } from './caminhos';
-import { avisoCaminhoMcp, EXECUTAVEL_MCP } from './plataforma';
+import { avisoCaminhoMcp, EXECUTAVEL_BACKEND } from './plataforma';
 
 const logMcp = log.scope('mcp');
 
@@ -77,7 +77,8 @@ export function definir(ativo: boolean, porta: number | undefined): void {
 
 /** Como um cliente MCP inicia o servidor: o executável instalado ou, em desenvolvimento, o módulo. */
 export function comando(): { command: string; args: string[]; env?: Record<string, string> } {
-  if (app.isPackaged) return { command: path.join(process.resourcesPath, 'mcp', EXECUTAVEL_MCP), args: [] };
+  // O executável do backend no modo --mcp: a mesma ponte, sem um segundo Python no instalador.
+  if (app.isPackaged) return { command: path.join(process.resourcesPath, 'backend', EXECUTAVEL_BACKEND), args: ['--mcp'] };
   return {
     command: 'uv',
     args: ['run', '--directory', path.join(REPO, 'backend'), 'python', '-m', 'cleanchain_mcp'],

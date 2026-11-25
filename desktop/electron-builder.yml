@@ -21,15 +21,11 @@ files:
 
 asar: true
 
-# Backend Python empacotado pelo PyInstaller (backend/dist/cleanchain-backend).
+# Backend Python empacotado pelo PyInstaller (backend/dist/cleanchain-backend). Também é o servidor
+# MCP que Claude Desktop, Claude Code e Cursor iniciam: cleanchain-backend --mcp.
 extraResources:
   - from: ../backend/dist/cleanchain-backend
     to: backend
-    filter:
-      - "**/*"
-  # Servidor MCP (stdio) que clientes como Claude Desktop, Claude Code e Cursor iniciam.
-  - from: ../backend/dist/cleanchain-mcp
-    to: mcp
     filter:
       - "**/*"
 

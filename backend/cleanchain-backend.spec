@@ -5,7 +5,8 @@
     cd backend  && uv run python -m PyInstaller cleanchain-backend.spec --noconfirm --clean
 
 Saída: backend/dist/cleanchain-backend/ (cleanchain-backend.exe + _internal/). O
-electron-builder copia essa pasta para resources/backend do app.
+electron-builder copia essa pasta para resources/backend do app. O mesmo executável é a ponte MCP
+dos clientes (Claude, Cursor…): `cleanchain-backend --mcp` (ver app/desktop.py).
 
 Sem UPX e sem modo onefile: menos falsos positivos de antivírus e início mais rápido
 (o onefile se extrai numa pasta temporária a cada abertura).
@@ -23,6 +24,7 @@ if not (FRONTEND / "index.html").is_file():
 # Módulos importados de forma dinâmica (não aparecem na análise estática).
 hiddenimports = [
     *collect_submodules("app"),
+    *collect_submodules("cleanchain_mcp"),  # modo --mcp
     *collect_submodules("uvicorn"),
     *collect_submodules("langchain_groq"),
     *collect_submodules("langchain_openai"),
@@ -32,7 +34,7 @@ hiddenimports = [
 
 datas = [(str(FRONTEND), "frontend")]
 # Pacotes que leem a própria versão via importlib.metadata.
-for pkg in ("langchain", "langchain-core", "langgraph", "langchain-groq", "langchain-openai", "openai", "groq", "fastapi", "starlette", "pydantic", "uvicorn"):
+for pkg in ("langchain", "langchain-core", "langgraph", "langchain-groq", "langchain-openai", "openai", "groq", "fastapi", "starlette", "pydantic", "uvicorn", "mcp", "httpx"):
     datas += copy_metadata(pkg)
 
 a = Analysis(

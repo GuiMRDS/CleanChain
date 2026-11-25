@@ -15,6 +15,10 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 
 ### Alterado
 - O item *Chave do modelo* do menu do app agora se chama *Modelo de IA*.
+- **Instalador ~49 MB menor:** o servidor MCP agora é o próprio backend no modo `--mcp`
+  (`resources/backend/cleanchain-backend --mcp`), em vez de um segundo executável. **Quem
+  configurou um cliente MCP na 1.0.x precisa copiar a configuração de novo** na tela *Integração
+  MCP* (o caminho antigo, `resources/mcp/cleanchain-mcp`, deixa de existir).
 
 ## [1.0.1] - 2026-11-25
 

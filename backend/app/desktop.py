@@ -1,6 +1,7 @@
 """Ponto de entrada do backend no app desktop (e do executável do PyInstaller).
 
     uv run python -m app.desktop
+    uv run python -m app.desktop --mcp     # ponte MCP (stdio), a mesma do cleanchain_mcp
 
 Escuta só em 127.0.0.1, na porta de CLEANCHAIN_PORTA. Se CLEANCHAIN_PAI vier, vigia o
 processo do Electron e encerra o backend quando ele some — assim nenhum backend fica
@@ -10,6 +11,7 @@ rodando sozinho, nem se o Electron travar ou for morto pelo Gerenciador de Taref
 from __future__ import annotations
 
 import os
+import sys
 import threading
 import time
 
@@ -30,6 +32,14 @@ def _vigiar_pai(pid: int) -> None:
 
 
 def main() -> None:
+    # Modo MCP: o mesmo executável serve de ponte MCP (stdio) para Claude, Cursor etc. Entra
+    # antes de importar o servidor e o agente: a ponte continua leve e não liga o backend.
+    if "--mcp" in sys.argv[1:]:
+        from cleanchain_mcp.__main__ import main as servidor_mcp
+
+        servidor_mcp()
+        return
+
     import uvicorn
 
     from app.server import app
