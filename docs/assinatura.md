@@ -1,4 +1,4 @@
-# Assinatura de código do instalador (Windows)
+# Assinatura de código (Windows e macOS)
 
 ## Por que assinar
 
@@ -68,5 +68,45 @@ autoridade escolhida; o resto (o que assinar e a conferência final) continua ig
    conferir todos os binários" lista o que foi assinado.
 
 Importante: o primeiro release **assinado** muda o publicador esperado pelas atualizações.
-Quem tiver uma versão sem assinatura instalada recebe a assinada normalmente; daí em
-diante, só versões assinadas pelo mesmo publicador são aceitas.
+Quem tiver uma versão sem assinatura instalada é **avisado** da versão nova (builds sem
+assinatura não se atualizam sozinhos) e instala a assinada pelo navegador; daí em diante, a
+atualização é automática e só aceita versões assinadas pelo mesmo publicador.
+
+## Ativar no macOS (Apple Developer ID + notarização)
+
+Sem a assinatura da Apple, o `.dmg` sai com assinatura *ad hoc*: o Gatekeeper pede *Abrir mesmo
+assim* na primeira vez e o app não se atualiza sozinho. Com ela, o app abre direto e se atualiza.
+
+1. Entre no **Apple Developer Program** (US$ 99/ano) e crie um certificado **Developer ID
+   Application** (Xcode › Settings › Accounts › Manage Certificates, ou no site da Apple).
+2. Exporte o certificado com a chave privada como `.p12` (Acesso às Chaves › Exportar) e
+   converta para base64: `base64 -i certificado.p12 | pbcopy`.
+3. Gere uma **senha de app** em appleid.apple.com (Login e segurança › Senhas de app).
+4. No GitHub (*Settings › Secrets and variables › Actions*), cadastre:
+
+   | Tipo | Nome | Valor |
+   |---|---|---|
+   | Variável | `APPLE_SIGNING_IDENTITY` | nome do certificado sem o prefixo, ex.: `Fulano de Tal (ABCDE12345)` |
+   | Segredo | `APPLE_CERTIFICADO_P12` | o `.p12` em base64 |
+   | Segredo | `APPLE_CERTIFICADO_SENHA` | a senha do `.p12` |
+   | Segredo | `APPLE_ID` | o e-mail da conta de desenvolvedor |
+   | Segredo | `APPLE_APP_SPECIFIC_PASSWORD` | a senha de app do passo 3 |
+   | Segredo | `APPLE_TEAM_ID` | o Team ID (10 caracteres) |
+
+5. Rode **Actions › Release › Run workflow**. O electron-builder assina o app **e os binários do
+   backend** em `Resources` com *hardened runtime* (permissões em
+   `desktop/build/entitlements.mac.plist`), envia para a notarização e grampeia o ticket. O
+   passo "Assinatura — conferir o app do macOS" roda `codesign`, `spctl` e `stapler` e falha
+   se algo não estiver certo.
+
+## Atualização automática
+
+Fica ligada **só no build assinado**. O Release grava `"cleanchainAssinado": true` no
+`package.json` do app apenas quando assina todos os binários daquele sistema (e confere antes
+de publicar); `desktop/main/plataforma.ts` (`buildAssinado`) lê essa marca. Sem ela
+(desenvolvimento, builds sem certificado, Linux), o app só avisa que há versão nova. Um teste de
+invariante (`test_so_o_build_assinado_atualiza_sozinho`) impede que a marca vá para outro lugar.
+
+Ao ativar a assinatura do Windows, tire também o teto do `ormsgpack` do
+`backend/pyproject.toml` (ele existe só porque o Smart App Control bloqueia a DLL sem
+assinatura).

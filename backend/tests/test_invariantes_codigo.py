@@ -7,6 +7,7 @@ quebrou uma regra de segurança do projeto: reveja a mudança, não o teste.
 from __future__ import annotations
 
 import ast
+import json
 import re
 from pathlib import Path
 
@@ -271,9 +272,19 @@ def test_nenhum_log_do_electron_cita_a_chave():
 # ------------------------------------------------------------------ atualização sem assinatura
 
 
-def test_sem_assinatura_a_atualizacao_so_avisa():
-    # Instalar sozinho, sem assinatura de código, confiaria só no hash do próprio Release. Ao ligar
-    # a assinatura de todos os binários (docs/roadmap.md), troque a constante e este teste juntos.
+def test_so_o_build_assinado_atualiza_sozinho():
+    # Instalar sozinho, sem assinatura de código, confiaria só no hash do próprio Release. A
+    # atualização automática depende da marca "cleanchainAssinado", que só o Release grava, e só
+    # no caminho em que assina todos os binários (e confere antes de publicar).
     texto = (DESKTOP / "main" / "plataforma.ts").read_text(encoding="utf-8")
-    assert "const ATUALIZACAO_AUTOMATICA = false;" in texto
-    assert "if (!ATUALIZACAO_AUTOMATICA) return 'manual';" in texto
+    assert "if (!buildAssinado()) return 'manual';" in texto
+    assert "pacote?.cleanchainAssinado === true" in texto
+
+    pacote = json.loads((DESKTOP / "package.json").read_text(encoding="utf-8"))
+    assert "cleanchainAssinado" not in pacote  # desenvolvimento e builds sem certificado: só avisa
+
+    release = (RAIZ / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    assert release.count("cleanchainAssinado=true") == 1
+    # As linhas logo antes da marca: ela só é gravada dentro do "se assinou".
+    antes = release.split("cleanchainAssinado=true")[0].splitlines()[-3:]
+    assert any('if [ "$ASSINAR" = "true" ] || [ "$ASSINAR_MAC" = "true" ]; then' in linha for linha in antes)

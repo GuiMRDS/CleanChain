@@ -1,6 +1,8 @@
 // Tudo o que muda por sistema no lado Electron, num lugar só (como backend/app/plataforma).
 // O resto do processo principal não testa process.platform.
 import { ChildProcess, execFile } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { app, BrowserWindow, BrowserWindowConstructorOptions, MenuItemConstructorOptions, safeStorage, systemPreferences } from 'electron';
 import log from 'electron-log/main';
 
@@ -195,21 +197,31 @@ export async function autorizarMicrofone(): Promise<boolean> {
 /**
  * Atualização automática só com os instaladores assinados. Sem assinatura, o instalador baixado
  * só é conferido pelo hash publicado no próprio Release: se a conta do GitHub fosse comprometida,
- * uma versão maliciosa seria instalada sem ninguém ver. Ligar junto com a assinatura de todos os
- * binários (docs/roadmap.md).
+ * uma versão maliciosa seria instalada sem ninguém ver. Com a assinatura, o electron-updater
+ * confere o publicador (Windows) e o macOS exige a assinatura da Apple (docs/assinatura.md).
  */
-const ATUALIZACAO_AUTOMATICA = false;
+function buildAssinado(): boolean {
+  // O workflow Release grava "cleanchainAssinado": true no package.json do app SÓ quando assina
+  // todos os binários daquele sistema (e confere a assinatura antes de publicar). Fora disso
+  // (desenvolvimento, builds sem certificado), o campo não existe.
+  try {
+    const pacote = JSON.parse(fs.readFileSync(path.join(app.getAppPath(), 'package.json'), 'utf8'));
+    return app.isPackaged && pacote?.cleanchainAssinado === true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Como atualizar:
- *  - 'automatica': baixa e instala sozinho (Windows, AppImage no Linux) — só com ATUALIZACAO_AUTOMATICA;
- *  - 'manual': só avisa e abre a página de downloads. No macOS, o Squirrel.Mac exige app
- *    assinado pela Apple; no .deb, instalar pediria a senha de administrador.
+ *  - 'automatica': baixa e instala sozinho — só em build assinado (buildAssinado): Windows e,
+ *    com a assinatura e a notarização da Apple, macOS;
+ *  - 'manual': só avisa e abre a página de downloads (sem assinatura; Linux, que não é assinado;
+ *    no .deb, instalar pediria a senha de administrador).
  */
 export function modoDeAtualizacao(): 'automatica' | 'manual' {
-  if (!ATUALIZACAO_AUTOMATICA) return 'manual';
-  if (SISTEMA === 'windows') return 'automatica';
-  if (SISTEMA === 'linux' && process.env.APPIMAGE) return 'automatica';
+  if (!buildAssinado()) return 'manual';
+  if (SISTEMA === 'windows' || SISTEMA === 'macos') return 'automatica';
   return 'manual';
 }
 

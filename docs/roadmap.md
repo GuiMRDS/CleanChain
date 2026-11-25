@@ -52,18 +52,15 @@ Concluída.
 ## Fase de produto
 
 ### Assinatura de código de todos os binários
-O Smart App Control verifica **cada** `.exe`, `.dll` e `.pyd` carregado, não só o
-`CleanChain.exe`: o pipeline precisa assinar tudo o que o PyInstaller empacota.
 
-| Sistema | Como | Custo estimado |
-|---|---|---|
-| Windows | Azure Artifact Signing (identidade verificada; disponibilidade para pessoa física fora de EUA/Canadá é limitada) | ~US$ 10/mês |
-| macOS | Apple Developer Program (assinar e notarizar) | US$ 99/ano |
+**Preparação: concluída.** O Release assina e confere tudo sozinho assim que as credenciais
+existirem no repositório; sem elas, nada muda. Passo a passo em [assinatura.md](assinatura.md).
 
-Já dá para preparar sem custo: o workflow assina todos os binários do pacote quando o segredo do
-certificado existir (sem ele, nada muda). Ver [assinatura.md](assinatura.md).
+| Sistema | O que o pipeline faz | Falta (só você pode) | Custo estimado |
+|---|---|---|---|
+| Windows | assina `.exe`, `.pyd` e DLLs do backend, o app e o instalador; confere todos | contratar o Azure Artifact Signing (identidade verificada; pessoa física só EUA/Canadá) e cadastrar as credenciais | ~US$ 10/mês |
+| macOS | Developer ID + hardened runtime + notarização; confere com `codesign`, `spctl` e `stapler` | entrar no Apple Developer Program e cadastrar o certificado | US$ 99/ano |
 
-Ao ativar:
-- religar a atualização automática (`ATUALIZACAO_AUTOMATICA` em `desktop/main/plataforma.ts`
-  e o teste `test_sem_assinatura_a_atualizacao_so_avisa`);
-- tirar o teto do `ormsgpack` no `pyproject.toml`.
+Ao ativar, a atualização automática volta sozinha naquele sistema (só o build assinado leva a
+marca `cleanchainAssinado`). Depois da primeira versão assinada do Windows, tire o teto do
+`ormsgpack` no `pyproject.toml`.
