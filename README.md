@@ -24,9 +24,7 @@
   <a href="#desenvolvimento">Desenvolvimento</a>
 </p>
 
-<!-- TODO: GIF de demonstração (roteiro em docs/roteiro-demo.md; salvar como docs/images/demo.gif) -->
-
-![Tela inicial do CleanChain](docs/images/01-inicio.png)
+![Demonstração: scan, o agente abrindo a maior pasta no mapa, limpeza com aprovação e uma proposta via MCP](docs/images/demo.gif)
 
 ---
 

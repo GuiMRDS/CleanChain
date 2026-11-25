@@ -30,6 +30,20 @@ limpeza com aprovação e uma chamada vinda de outro assistente via MCP.
 | 1:02–1:16 | **Chamada via MCP** | Mude para o **Claude Desktop** e escreva: **`Usando o CleanChain, quanto espaço os caches ocupam? Proponha limpar o maior.`** Volte para o CleanChain quando a notificação aparecer. | No Claude, as chamadas `get_cleanup_opportunities` e `propose_cleanup`. No CleanChain: notificação e o cartão com o selo **"Proposta via MCP: Claude"**. Clique em **Cancelar** (ou aprove, se for um cache de verdade). *"Outros assistentes também podem usar o CleanChain, mas a decisão continua sendo sua."* |
 | 1:16–1:22 | **Fechamento** | Abra o menu do app (botão ao lado do status) e feche. | Logo e o link do repositório: `github.com/GuiMRDS/CleanChain`. |
 
+## GIF do README (automático)
+
+O `docs/images/demo.gif` é gravado com o app de verdade, seguindo estas cenas, numa pasta de
+usuário fictícia (nada do seu disco aparece) e com a chave do `.env`:
+
+```sh
+cd desktop
+node tests/gravar-demo.mjs <pasta-de-quadros>
+uv run --no-project --with pillow --with numpy python tests/montar-gif.py <pasta-de-quadros> ../docs/images/demo.gif
+```
+
+A cena do MCP faz o mesmo pedido que o `cleanchain-mcp` faz, identificado como "Claude Code".
+A limpeza aprovada manda arquivos gerados para a Lixeira do sistema.
+
 ## Dicas
 
 - Se a resposta do agente demorar, corte a espera na edição (mantenha o início e o fim da
