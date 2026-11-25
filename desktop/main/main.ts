@@ -8,7 +8,7 @@ import { Backend, Conexao } from './backend';
 import { icone, urlDev } from './caminhos';
 import { CANAIS, registrarIpc } from './ipc';
 import * as mcp from './mcp';
-import { FECHAR_JANELA_ENCERRA, menuNativo, opcoesDeJanela } from './plataforma';
+import { FECHAR_JANELA_ENCERRA, identificarJanelaNoDesenvolvimento, menuNativo, opcoesDeJanela } from './plataforma';
 import * as segredos from './segredos';
 import { preferenciasSeguras, protegerConteudo, protegerSessao } from './seguranca';
 import { registrarEsquema, servirTela, urlDaTela } from './tela';
@@ -126,6 +126,7 @@ function criarJanela(): BrowserWindow {
     show: false,
     webPreferences: { ...preferenciasSeguras(path.join(__dirname, '..', 'preload', 'preload.js')), devTools: !app.isPackaged },
   });
+  identificarJanelaNoDesenvolvimento(win, icone('ico')); // barra de tarefas: CleanChain, não Electron
   win.once('ready-to-show', () => win.show()); // a tela de abertura já pintou: nada de janela vazia
   win.on('page-title-updated', (event) => event.preventDefault()); // o título é do app
   win.webContents.on('render-process-gone', (_e, details) => {

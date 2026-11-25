@@ -1,7 +1,7 @@
 // Tudo o que muda por sistema no lado Electron, num lugar só (como backend/app/plataforma).
 // O resto do processo principal não testa process.platform.
 import { ChildProcess, execFile } from 'node:child_process';
-import { app, BrowserWindowConstructorOptions, MenuItemConstructorOptions, safeStorage, systemPreferences } from 'electron';
+import { app, BrowserWindow, BrowserWindowConstructorOptions, MenuItemConstructorOptions, safeStorage, systemPreferences } from 'electron';
 import log from 'electron-log/main';
 
 const logPlat = log.scope('plataforma');
@@ -82,6 +82,22 @@ export async function encerrarArvore(proc: ChildProcess): Promise<void> {
 // ------------------------------------------------------------------ janela
 
 /** Barra de título integrada ao design (ver frontend/src/components/DesktopMenu.css). */
+/**
+ * Rodando pelo código (sem instalar), a barra de tarefas do Windows mostraria o nome e o ícone do
+ * electron.exe. Dá à janela a identidade do CleanChain: ID próprio (separado do app instalado),
+ * ícone .ico e nome. No app instalado não faz nada: o atalho do instalador já traz tudo isso.
+ */
+export function identificarJanelaNoDesenvolvimento(janela: BrowserWindow, iconeIco: string): void {
+  if (SISTEMA !== 'windows' || app.isPackaged) return;
+  janela.setAppDetails({
+    appId: 'com.guimrds.cleanchain.dev',
+    appIconPath: iconeIco,
+    appIconIndex: 0,
+    relaunchDisplayName: 'CleanChain (desenvolvimento)',
+    relaunchCommand: `"${process.execPath}" "${app.getAppPath()}"`,
+  });
+}
+
 export function opcoesDeJanela(): BrowserWindowConstructorOptions {
   if (SISTEMA === 'macos') {
     // Botões do macOS à esquerda, na mesma linha do cabeçalho; a interface desvia deles.

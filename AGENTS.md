@@ -279,7 +279,7 @@ aqui = a mudança quebrou uma regra: reveja a mudança, não o teste.
 - O Playwright `_electron` não abre o app empacotado: o Fuse desliga o `--inspect` que ele
   usa. Para o executável final o teste usa CDP (`CLEANCHAIN_EXE=…`).
 - **Ícone:** uma fonte só, a marca `.brand__mark`. `desktop/scripts/icone.mjs`
-  (`npm run icone`) gera `desktop/build/icon.png`, `frontend/public/favicon.png` e
+  (`npm run icone`) gera `desktop/build/icon.png`, `desktop/build/icon.ico` (barra de tarefas do Windows ao rodar pelo código), `frontend/public/favicon.png` e
   `docs/images/logo.png`. Se a marca mudar no CSS, mude no script e regenere — não edite
   os PNGs à mão.
 - Com uma exclusão aguardando aprovação, uma mensagem nova recusa a exclusão e entrega o
