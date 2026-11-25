@@ -4,6 +4,18 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+- **IA local:** o agente pode usar um modelo instalado no computador, pelo **Ollama** ou pelo
+  **LM Studio**, em vez da Groq/OpenAI. A tela *Modelo de IA* lista os modelos instalados e mostra
+  quais sabem usar ferramentas; trocar entre nuvem e local é pelo mesmo menu, e a chave da nuvem
+  continua salva. Com a IA local, nada da conversa sai do computador (só `127.0.0.1` é aceito) e
+  o microfone fica desligado.
+
+### Alterado
+- O item *Chave do modelo* do menu do app agora se chama *Modelo de IA*.
+
 ## [1.0.1] - 2026-11-25
 
 Melhorias de privacidade e segurança vindas da análise de arquitetura (ver [docs/roadmap.md](docs/roadmap.md)).

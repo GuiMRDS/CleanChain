@@ -135,7 +135,7 @@ test('o app abre, a interface carrega e a saúde responde', async () => {
     await page.getByRole('button', { name: 'Menu do CleanChain' }).click();
     const menu = page.getByRole('menu', { name: 'CleanChain' });
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: /Chave do modelo/ })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: /Modelo de IA/ })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(menu).toBeHidden();
   } finally {
@@ -306,6 +306,106 @@ test('ao fechar, o backend para de responder', async () => {
     }
     expect(vivo).toBe(false);
   } finally {
+    fs.rmSync(perfil, { recursive: true, force: true });
+  }
+});
+
+/** "Ollama" falso: lista modelos, informa capacidades e responde o chat em streaming (API da OpenAI). */
+async function ollamaFalso(): Promise<{ porta: number; pedidos: Array<{ rota: string; autorizacao?: string; corpo: string }>; fechar: () => void }> {
+  const http = await import('node:http');
+  const pedidos: Array<{ rota: string; autorizacao?: string; corpo: string }> = [];
+  const servidor = http.createServer((req, res) => {
+    let corpo = '';
+    req.on('data', (c) => (corpo += c));
+    req.on('end', () => {
+      pedidos.push({ rota: req.url ?? '', autorizacao: req.headers.authorization, corpo });
+      const json = (dados: unknown) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(dados));
+      };
+      if (req.url === '/api/tags') return json({ models: [{ name: 'modelo-teste:1b' }, { name: 'sem-ferramentas:1b' }, { name: 'nomic-embed-text:latest' }] });
+      if (req.url === '/api/show') {
+        const { model } = JSON.parse(corpo || '{}');
+        const caps = model === 'modelo-teste:1b' ? ['completion', 'tools'] : model.startsWith('nomic') ? ['embedding'] : ['completion'];
+        return json({ capabilities: caps });
+      }
+      if (req.url === '/v1/chat/completions') {
+        res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+        const pedaco = (delta: object, fim: string | null = null) =>
+          `data: ${JSON.stringify({ id: 'x', object: 'chat.completion.chunk', created: 0, model: 'modelo-teste:1b', choices: [{ index: 0, delta, finish_reason: fim }] })}\n\n`;
+        res.write(pedaco({ role: 'assistant', content: 'Olá do modelo ' }));
+        res.write(pedaco({ content: 'local.' }));
+        res.write(pedaco({}, 'stop'));
+        return res.end('data: [DONE]\n\n');
+      }
+      res.writeHead(404);
+      res.end();
+    });
+  });
+  await new Promise<void>((r) => servidor.listen(0, '127.0.0.1', () => r()));
+  return { porta: (servidor.address() as net.AddressInfo).port, pedidos, fechar: () => servidor.close() };
+}
+
+type PonteIa = {
+  cleanchain: {
+    chave: {
+      modelosLocais: (p: string, porta?: number) => Promise<Array<{ nome: string; ferramentas: boolean | null }>>;
+      usarLocal: (p: string, m: string, porta?: number) => Promise<unknown>;
+      usarNuvem: () => Promise<unknown>;
+      status: () => Promise<{ ativo: string; configurada: boolean }>;
+    };
+  };
+};
+
+test('IA local: escolher um modelo do Ollama e conversar sem nada sair do computador', async () => {
+  const ollama = await ollamaFalso();
+  const { page, perfil, fechar } = await abrirApp();
+  try {
+    await expect(page.getByText('Conectar o agente')).toBeVisible({ timeout: 30_000 });
+
+    // A tela lista os modelos instalados e diz quais sabem usar ferramentas.
+    const modelos = await page.evaluate((p) => (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', p), ollama.porta);
+    expect(modelos).toEqual([
+      { nome: 'modelo-teste:1b', ferramentas: true },
+      { nome: 'sem-ferramentas:1b', ferramentas: false },
+    ]);
+
+    // Sem servidor naquela porta: mensagem clara (não trava).
+    const semServidor = await page
+      .evaluate(() => (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', 1).then(() => 'ok', (e: Error) => e.message))
+      .catch((e: Error) => e.message);
+    expect(semServidor).toContain('Não encontrei o Ollama');
+
+    // Escolher o modelo reinicia o agente com a IA local.
+    await page.evaluate(([p, porta]) => (window as unknown as PonteIa).cleanchain.chave.usarLocal(String(p), 'modelo-teste:1b', Number(porta)), ['ollama', ollama.porta]).catch(() => {});
+    await expect
+      .poll(async () => page.evaluate(() => fetch('/api/health').then((r) => r.json()).then((j) => j.model)).catch(() => null), { timeout: 60_000 })
+      .toBe('Ollama · modelo-teste:1b (local)');
+    await page.waitForURL(URL_DO_APP, { timeout: 30_000 });
+
+    // O microfone fica desligado: nada sai do computador, nem o áudio.
+    await expect(page.locator('.capsule__mic')).toBeDisabled({ timeout: 30_000 });
+
+    // Conversa de verdade: o pedido vai ao servidor local, sem chave de nuvem, e a resposta volta.
+    const resposta = await page.evaluate(async () => {
+      const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'oi', thread_id: 'fumaca-local' }) });
+      return r.text();
+    });
+    expect(resposta).toContain('Olá do modelo ');
+    expect(resposta).toContain('local.');
+    const chat = ollama.pedidos.filter((p) => p.rota === '/v1/chat/completions');
+    expect(chat.length).toBeGreaterThan(0);
+    expect(chat.every((p) => p.autorizacao === 'Bearer local')).toBe(true);
+    expect(JSON.parse(chat[0].corpo).model).toBe('modelo-teste:1b');
+
+    // Sem chave da nuvem salva, não dá para "voltar para a nuvem".
+    const voltar = await page
+      .evaluate(() => (window as unknown as PonteIa).cleanchain.chave.usarNuvem().then(() => 'ok', (e: Error) => e.message))
+      .catch((e: Error) => e.message);
+    expect(voltar).toContain('Não há chave da nuvem salva');
+  } finally {
+    await fechar();
+    ollama.fechar();
     fs.rmSync(perfil, { recursive: true, force: true });
   }
 });

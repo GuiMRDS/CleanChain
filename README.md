@@ -51,8 +51,11 @@ Baixe o instalador do seu sistema no [último Release](https://github.com/GuiMRD
 | **Linux** x64 (Ubuntu/Debian) | [CleanChain-1.0.1-linux-amd64.deb](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-1.0.1-linux-amd64.deb) |
 | **Linux** x64 (outras distribuições) | [CleanChain-1.0.1-linux-x86_64.AppImage](https://github.com/GuiMRDS/CleanChain/releases/download/v1.0.1/CleanChain-1.0.1-linux-x86_64.AppImage) |
 
-Você vai precisar de uma chave de API da **Groq** (gratuita) ou da **OpenAI**. Na primeira
-abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sistema.
+Na primeira abertura, escolha onde o modelo do agente roda:
+- **Na nuvem:** cole uma chave de API da **Groq** (gratuita) ou da **OpenAI**; ela fica no cofre de
+  senhas do sistema.
+- **Neste computador:** use uma IA local do **[Ollama](https://ollama.com)** ou do
+  **[LM Studio](https://lmstudio.ai)** e escolha um modelo instalado. Nada da conversa sai do seu PC.
 
 <details>
 <summary><b>Instalação passo a passo e avisos de cada sistema</b> (SmartScreen, Gatekeeper, Linux)</summary>
@@ -140,6 +143,9 @@ Desinstalar remove o app e mantém essa pasta; apague-a para limpar tudo.
 - **Limpeza com aprovação humana** — o agente propõe, a tela mostra um cartão com
   cada item e o total, e nada é apagado até você clicar em "Mover para a Lixeira".
 - **Fale com o agente** — botão de microfone com transcrição (Whisper).
+- **IA na nuvem ou no seu PC** — Groq ou OpenAI com a sua chave, ou um modelo local do Ollama ou do
+  LM Studio (o app lista os modelos instalados e mostra quais sabem usar ferramentas). Dá para
+  trocar a qualquer momento pelo menu do app.
 - **Servidor MCP** — outros assistentes de IA (Claude, Cursor, VS Code…) consultam as análises
   e propõem limpezas que você aprova no app (ver [Usando via MCP](#usando-via-mcp)).
 - **Visual** — HUD em tema claro, fundo em grade animada e robô holográfico 3D.
@@ -169,7 +175,8 @@ somem ao fechar o app.
 mensagem e o que ele consulta para responder (resumos da análise: nomes e caminhos de pastas e
 arquivos, tamanhos e datas; a sua pasta de usuário aparece como `~`, sem o seu nome) vão para o provedor
 que você configurou, **Groq** ou **OpenAI**. Ao usar o microfone, o áudio vai para o mesmo
-provedor para ser transcrito. O conteúdo dos seus arquivos não é enviado.
+provedor para ser transcrito. O conteúdo dos seus arquivos não é enviado. Com uma **IA local**
+(Ollama ou LM Studio), nada disso sai do computador, e o microfone fica desligado.
 
 Detalhes completos na [Política de privacidade](PRIVACIDADE.md).
 
@@ -312,7 +319,7 @@ flowchart LR
         SCAN["Scan em threads<br/>+ regras por sistema"]
         PROP["Propostas MCP<br/>(pendentes)"]
     end
-    LLM[("Groq / OpenAI")]
+    LLM[("Groq / OpenAI<br/>ou IA local")]
     CLI["Clientes MCP<br/>Claude, Cursor…"]
     MCP["cleanchain-mcp<br/>(stdio)"]
     LIX[("Lixeira")]

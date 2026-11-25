@@ -31,6 +31,10 @@ export function useDesktop() {
 
   // The main process encrypts the key and restarts the backend; the window reloads after.
   const salvarChave = useCallback((provedor, valor) => bridge.chave.salvar(provedor, valor), []);
+  // Local AI (Ollama/LM Studio on this computer): list installed models, use one, or go back to the cloud.
+  const modelosLocais = useCallback((provedor, porta) => bridge.chave.modelosLocais(provedor, porta), []);
+  const usarLocal = useCallback((provedor, modelo, porta) => bridge.chave.usarLocal(provedor, modelo, porta), []);
+  const usarNuvem = useCallback(() => bridge.chave.usarNuvem(), []);
   const verificarAtualizacoes = useCallback(async () => {
     setAtualizacao({ estado: 'verificando' });
     setAtualizacao(await bridge.app.verificarAtualizacoes());
@@ -47,6 +51,11 @@ export function useDesktop() {
     mostrarConfig: precisaChave || configAberta,
     precisaChave,
     salvarChave,
+    modelosLocais,
+    usarLocal,
+    usarNuvem,
+    // With a local AI nothing leaves the computer, not even audio: the mic is off.
+    iaLocal: Boolean(chave && chave.ativo && chave.ativo !== 'nuvem'),
     abrirConfig: () => {
       setMcpAberta(false);
       setConfigAberta(true);

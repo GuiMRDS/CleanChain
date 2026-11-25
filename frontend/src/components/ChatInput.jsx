@@ -6,7 +6,7 @@ import './ChatInput.css';
 const BARS = 7;
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
-export default function ChatInput({ onSend, busy, locked = false, showSuggestions = true }) {
+export default function ChatInput({ onSend, busy, locked = false, showSuggestions = true, vozDisponivel = true }) {
   const [text, setText] = useState('');
   const fieldRef = useRef(null);
 
@@ -44,7 +44,9 @@ export default function ChatInput({ onSend, busy, locked = false, showSuggestion
       ? 'Transcrevendo sua fala…'
       : busy
         ? 'O agente está analisando…'
-        : 'Pergunte ao agente… ou fale com ele';
+        : vozDisponivel
+          ? 'Pergunte ao agente… ou fale com ele'
+          : 'Pergunte ao agente…';
 
   return (
     <div className="chat-input">
@@ -86,9 +88,15 @@ export default function ChatInput({ onSend, busy, locked = false, showSuggestion
           type="button"
           className={`capsule__icon capsule__mic${recording ? ' is-on' : ''}`}
           onClick={recording ? voice.stop : voice.start}
-          disabled={transcribing || locked}
-          aria-label={recording ? 'Parar e transcrever' : 'Falar com o agente'}
-          title={recording ? 'Parar e transcrever' : 'Falar com o agente'}
+          disabled={transcribing || locked || !vozDisponivel}
+          aria-label={!vozDisponivel ? 'Voz desligada com a IA local' : recording ? 'Parar e transcrever' : 'Falar com o agente'}
+          title={
+            !vozDisponivel
+              ? 'Com a IA local, a voz fica desligada: nada sai deste computador.'
+              : recording
+                ? 'Parar e transcrever'
+                : 'Falar com o agente'
+          }
           aria-pressed={recording}
         >
           {transcribing ? (

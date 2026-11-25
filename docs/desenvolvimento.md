@@ -97,9 +97,9 @@ flowchart LR
 - Windows 10/11, macOS 12+ (Apple Silicon) ou Linux x64
 - Node.js 20+ e npm
 - Python 3.12+ e [uv](https://docs.astral.sh/uv/)
-- Uma chave da **Groq** (grátis) ou da **OpenAI**
+- Uma chave da **Groq** (grátis) ou da **OpenAI**, ou uma IA local (**Ollama** ou **LM Studio**)
 
-### 1. Chave do modelo
+### 1. Modelo de IA
 
 No modo navegador (desenvolvimento), crie um `.env` na raiz do projeto (ou em `backend/.env`). No app
 desktop a chave é configurada na própria tela.
@@ -113,10 +113,12 @@ OPENAI_API_KEY=sk-...
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `GROQ_API_KEY` / `OPENAI_API_KEY` | — | Chave do LLM (OpenAI tem prioridade se as duas existirem) |
-| `LLM_PROVIDER` | automático | Força `groq` ou `openai` |
+| `LLM_PROVIDER` | automático | Força `groq`, `openai`, ou uma IA local: `ollama` / `lmstudio` |
+| `LOCAL_LLM_URL` | `http://127.0.0.1:11434` (Ollama) / `:1234` (LM Studio) | Servidor da IA local — só `127.0.0.1`/`localhost` é aceito |
+| `LOCAL_LLM_MODEL` | — | Modelo da IA local (ex.: `qwen3:8b`); precisa saber usar ferramentas |
 | `GROQ_MODEL` | `openai/gpt-oss-20b` | Modelo do agente na Groq |
 | `OPENAI_MODEL` | `gpt-6.2-astra` | Modelo do agente na OpenAI |
-| `GROQ_STT_MODEL` / `OPENAI_STT_MODEL` | `whisper-large-v3-turbo` / `whisper-1` | Transcrição de voz |
+| `GROQ_STT_MODEL` / `OPENAI_STT_MODEL` | `whisper-large-v3-turbo` / `whisper-1` | Transcrição de voz (desligada com IA local) |
 
 ### 2. Backend
 

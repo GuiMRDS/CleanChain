@@ -9,7 +9,7 @@ limpeza com aprovação e uma chamada vinda de outro assistente via MCP.
 1. **Prepare uma pasta de exemplo** para a limpeza não mexer em nada seu: dentro de
    `Downloads`, crie `demo-cleanchain/` com 2 ou 3 arquivos grandes e descartáveis (por exemplo,
    copie um instalador antigo e renomeie para `instalador-antigo-2023.exe`).
-2. **Chave do modelo configurada** (menu do app › Chave do modelo). Use a Groq: responde mais
+2. **Chave do modelo configurada** (menu do app › Modelo de IA). Use a Groq: responde mais
    rápido no vídeo.
 3. **Integração MCP ligada** (menu do app › Integração MCP) e o **Claude Desktop** (ou outro
    cliente) já configurado com o botão "Copiar configuração" e reiniciado.

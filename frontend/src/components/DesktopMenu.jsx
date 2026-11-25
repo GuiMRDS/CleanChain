@@ -3,7 +3,7 @@ import './DesktopMenu.css';
 
 // App menu of the desktop build (replaces the native "Arquivo / Exibir / Ajuda" bar): a glass
 // chip next to the agent status that opens a HUD panel with the app actions.
-const PROVEDOR = { groq: 'Groq', openai: 'OpenAI' };
+const PROVEDOR = { groq: 'Groq', openai: 'OpenAI', ollama: 'Ollama (local)', lmstudio: 'LM Studio (local)' };
 
 function textoAtualizacao(a) {
   switch (a?.estado) {
@@ -78,7 +78,7 @@ export default function DesktopMenu({ desktop }) {
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirConfig)}>
             <span className="desktop-menu__icon" aria-hidden="true">⚿</span>
             <span className="desktop-menu__text">
-              <strong>Chave do modelo</strong>
+              <strong>Modelo de IA</strong>
               <small className={desktop.precisaChave ? 'is-warn' : undefined}>
                 {chave?.configurada ? `${PROVEDOR[chave.provedor] ?? chave.provedor} · trocar` : 'não configurada · conectar'}
               </small>

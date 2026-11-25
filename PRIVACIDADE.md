@@ -34,7 +34,7 @@ Tudo fica na pasta de dados do app:
 |---|---|
 | Resultados dos scans (`scans/`) | Caminhos, tamanhos e datas das maiores pastas e arquivos, caches, duplicados e arquivos antigos encontrados. Os 20 mais recentes; os mais antigos são apagados automaticamente. |
 | Chave da API do modelo (`segredos.json`) | **Cifrada** pelo cofre do sistema (DPAPI no Windows, Keychain no macOS, GNOME Keyring/KWallet no Linux). Nunca em texto puro, nunca em log. No Linux sem cofre de senhas, o app não salva a chave. |
-| Preferências (`preferencias.json`) | Se a integração MCP está ligada. |
+| Preferências (`preferencias.json`, `ia.json`) | Se a integração MCP está ligada; se o agente usa a nuvem ou uma IA local (qual programa, modelo e porta). Sem segredo nenhum. |
 | `runtime.json` | Só com a integração MCP ligada e o app aberto: porta local, um token que muda a cada abertura e o número do processo. Permissão só para o seu usuário; apagado ao fechar o app ou desligar a integração. |
 | Logs (`logs/`) | Funcionamento do app e do serviço local: início e encerramento, erros (que podem citar caminhos de pastas) e propostas recebidas via MCP, com o nome do cliente. Não registram a chave da API nem as mensagens do chat. |
 
@@ -44,6 +44,10 @@ aberto e somem ao fechar.
 ## O que sai do seu computador
 
 ### 1. Para o provedor do modelo de linguagem (Groq ou OpenAI)
+
+**Com uma IA local** (Ollama ou LM Studio neste computador), nada desta seção sai do seu PC: o app
+conversa só com o programa local, em `127.0.0.1` (endereços de outras máquinas são recusados), e o
+microfone fica desligado. O resto desta seção vale para a IA na nuvem.
 
 Só quando você conversa com o agente ou usa o microfone, e só para o provedor cuja chave você
 configurou:
@@ -92,7 +96,7 @@ Links como "onde consigo uma chave?" abrem no seu navegador apenas quando você 
 ## Como apagar seus dados
 
 - **Conversas:** feche o app.
-- **Chave da API:** troque em *menu do app › Chave do modelo*; para removê-la, apague o arquivo `segredos.json` da pasta de dados.
+- **Chave da API:** troque em *menu do app › Modelo de IA*; para removê-la, apague o arquivo `segredos.json` da pasta de dados.
 - **Tudo:** desinstale o app e apague a pasta de dados indicada acima.
 
 ## Contato
