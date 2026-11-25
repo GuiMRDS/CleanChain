@@ -228,6 +228,11 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
     const runtime = path.join(perfil, 'runtime.json');
     expect(fs.existsSync(runtime)).toBe(false);
 
+    // Ligar e desligar não reinicia nada: a página não recarrega (a marca continua lá) e o
+    // backend é o mesmo (mesma porta) — a conversa e um scan em andamento não se perdem.
+    await page.evaluate(() => ((window as unknown as { marcaFumaca: number }).marcaFumaca = 42));
+    const portaAntes = Number(new URL(page.url()).port);
+
     // Liga pela tela (ponte) → o app grava o runtime.json com porta, token e PID.
     expect((await definirMcp(page, true)).ativo).toBe(true);
     const rt = JSON.parse(fs.readFileSync(runtime, 'utf8'));
@@ -265,6 +270,8 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
     await definirMcp(page, false);
     expect(fs.existsSync(runtime)).toBe(false);
     expect((await fetch(`${base}/api/mcp/resumo`, { headers: mcpHeaders })).status).toBe(403);
+    expect(await page.evaluate(() => (window as unknown as { marcaFumaca?: number }).marcaFumaca)).toBe(42);
+    expect(Number(new URL(page.url()).port)).toBe(portaAntes);
 
     // Ligado de novo e fechando o app: o runtime.json some junto.
     await definirMcp(page, true);
