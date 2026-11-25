@@ -7,6 +7,9 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 ## [Não lançado]
 
 ### Alterado
+- **Atualizações:** enquanto os instaladores não têm assinatura de código, o app só **avisa** que
+  há versão nova (em todos os sistemas) e abre a página de download. Sem assinatura, instalar
+  sozinho confiaria só no hash publicado no próprio Release.
 - **Privacidade:** a sua pasta de usuário vai para o provedor do modelo como `~`, sem o seu nome
   de usuário do sistema (prompt, mensagens, contexto da tela e resultados das ferramentas). O
   caminho real volta só no computador, antes de qualquer ação, e passa pelas mesmas regras de

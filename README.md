@@ -61,7 +61,8 @@ abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sist
 
 1. Baixe e execute o `.exe`. Ele instala só para o seu usuário (não pede administrador) e cria
    atalhos na área de trabalho e no menu Iniciar.
-2. O app se atualiza sozinho: baixa a versão nova em segundo plano e oferece reiniciar.
+2. Atualizações: o menu do app avisa quando sai uma versão nova e abre a página de download.
+   (A atualização automática volta quando os instaladores tiverem assinatura de código.)
 
 > **Instalador sem assinatura de código.**
 > - **SmartScreen** ("O Windows protegeu o computador"): **Mais informações › Executar assim mesmo**.
@@ -97,8 +98,7 @@ abertura, escolha o provedor e cole a chave; ela fica no cofre de senhas do sist
 - **Cofre de senhas:** a chave do LLM fica no GNOME Keyring ou no KWallet. **Sem um deles, o
   app não salva a chave** (seria texto puro) e explica isso na tela; instale com
   `sudo apt install gnome-keyring` e abra o app de novo.
-- **Atualizações:** o AppImage se atualiza sozinho; no `.deb`, o menu do app avisa e abre a
-  página de download (instalar pediria senha de administrador).
+- **Atualizações:** o menu do app avisa quando sai uma versão nova e abre a página de download.
 
 #### Onde ficam os dados
 
