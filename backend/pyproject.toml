@@ -1,6 +1,6 @@
 [project]
 name = "cleanchain-backend"
-version = "1.0.0"
+version = "1.0.1"
 description = "Backend e servidor MCP do CleanChain: limpeza de disco com um agente de IA que só apaga com a sua aprovação"
 license = "MIT"
 requires-python = ">=3.12"

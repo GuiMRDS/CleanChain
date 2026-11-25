@@ -4,7 +4,9 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [1.0.1] - 2026-11-25
+
+Melhorias de privacidade e segurança vindas da análise de arquitetura (ver [docs/roadmap.md](docs/roadmap.md)).
 
 ### Alterado
 - **Atualizações:** enquanto os instaladores não têm assinatura de código, o app só **avisa** que
@@ -77,4 +79,5 @@ como app desktop para Windows, macOS e Linux, e também acessível por outros as
 - Pipeline pronto para assinatura de código (Azure Artifact Signing) quando houver certificado.
 - Licença MIT.
 
+[1.0.1]: https://github.com/GuiMRDS/CleanChain/releases/tag/v1.0.1
 [1.0.0]: https://github.com/GuiMRDS/CleanChain/releases/tag/v1.0.0
