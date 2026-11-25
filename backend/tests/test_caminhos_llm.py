@@ -62,6 +62,15 @@ def test_ida_e_volta():
     assert Path(expandir(ocultar(real))) == Path(real)
 
 
+def test_forma_resolvida_da_pasta_do_usuario_tambem_vira_til(monkeypatch):
+    # Nome curto do Windows (C:\Users\GUILHE~1), link ou pasta redirecionada: o sistema devolve
+    # outro caminho para a mesma pasta, e as ferramentas usam o caminho resolvido.
+    monkeypatch.setattr(caminhos_llm, "_home", lambda: "C:\\Users\\ANA~1")
+    monkeypatch.setattr(caminhos_llm.os.path, "realpath", lambda p: "C:\\Users\\Ana Souza")
+    assert ocultar("2 arquivos em C:\\Users\\Ana Souza\\Downloads") == "2 arquivos em ~\\Downloads"
+    assert ocultar("C:\\Users\\ANA~1\\Videos") == "~\\Videos"
+
+
 def test_sem_pasta_de_usuario_de_verdade_nao_mexe(monkeypatch):
     monkeypatch.setattr(caminhos_llm, "_home", lambda: "/")
     assert ocultar("/etc/hosts") == "/etc/hosts"

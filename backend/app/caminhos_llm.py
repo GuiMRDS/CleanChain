@@ -13,6 +13,7 @@ e pedir ações. Os pontos de passagem são:
 
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -33,9 +34,19 @@ def _home() -> str:
     return str(Path.home()).rstrip("\\/")
 
 
+def _variantes(home: str) -> set[str]:
+    """A pasta do usuário como está escrita e como o sistema a resolve (nome curto do Windows,
+    links simbólicos e pastas redirecionadas dão caminhos diferentes para a mesma pasta)."""
+    try:
+        resolvida = os.path.realpath(home).rstrip("\\/")
+    except OSError:
+        resolvida = home
+    return {h for h in (home, resolvida) if len(h) >= 4}
+
+
 def _padrao(home: str) -> re.Pattern[str]:
-    # A forma direta, a com barras dobradas (dentro de JSON) e a com barras normais.
-    formas = {home, home.replace("\\", "\\\\"), home.replace("\\", "/")}
+    # Cada variante na forma direta, com barras dobradas (dentro de JSON) e com barras normais.
+    formas = {f for h in _variantes(home) for f in (h, h.replace("\\", "\\\\"), h.replace("\\", "/"))}
     alternativas = "|".join(re.escape(f) for f in sorted(formas, key=len, reverse=True))
     flags = re.IGNORECASE if plataforma.atual().ignora_maiusculas else 0
     return re.compile(f"(?:{alternativas}){_FIM}", flags)
