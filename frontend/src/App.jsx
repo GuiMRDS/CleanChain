@@ -130,25 +130,29 @@ export default function App() {
       <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
     ) : scanned ? (
       <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
-    ) : desktop.convite && scan.phase === 'idle' ? (
-      // Optional license invite: only on the start screen, never during a scan, chat or cleanup.
-      <ConviteLicenca
-        paginaDeCompra={desktop.licenca?.paginaDeCompra}
-        onVerLicenca={desktop.abrirLicenca}
-        onFechar={desktop.adiarConvite}
-      />
     ) : (
-      <StartScan
-        phase={scan.phase}
-        progress={scan.progress}
-        error={scan.error}
-        targets={targets}
-        targetsStatus={drivesStatus}
-        target={chosen?.path}
-        onTarget={setTarget}
-        onStart={scan.start}
-        onCancel={scan.cancel}
-      />
+      <div className="card-pilha">
+        {/* Optional license invite (WinRAR model): a slim strip above the scan card, only on the
+            start screen. It never replaces or blocks anything; scan, chat and agent work the same. */}
+        {desktop.convite && scan.phase === 'idle' && (
+          <ConviteLicenca
+            paginaDeCompra={desktop.licenca?.paginaDeCompra}
+            onVerLicenca={desktop.abrirLicenca}
+            onFechar={desktop.adiarConvite}
+          />
+        )}
+        <StartScan
+          phase={scan.phase}
+          progress={scan.progress}
+          error={scan.error}
+          targets={targets}
+          targetsStatus={drivesStatus}
+          target={chosen?.path}
+          onTarget={setTarget}
+          onStart={scan.start}
+          onCancel={scan.cancel}
+        />
+      </div>
     );
 
   return (

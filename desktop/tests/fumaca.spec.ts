@@ -497,9 +497,20 @@ test('licença opcional: convite discreto depois de 30 dias e licença registrad
       path.join(perfil, 'uso.json'),
       JSON.stringify({ primeiroUso: Date.now() - 31 * 86_400_000, ultimoConvite: null })
     );
+    // Com uma IA escolhida (local, sem servidor: a tela inicial não precisa dele), o app abre na
+    // tela de scan.
+    fs.writeFileSync(
+      path.join(perfil, 'ia.json'),
+      JSON.stringify({ ativo: 'ollama', local: { provedor: 'ollama', modelo: 'modelo-teste:1b', porta: 11434 } })
+    );
     await page.reload();
     const ponte = (codigo: string) => page.evaluate(codigo);
     expect(await ponte('window.cleanchain.licenca.status().then((s) => s.convite)')).toBe(true);
+
+    // O convite é só uma faixa: o scan e o chat continuam ali, sem precisar responder nada.
+    await expect(page.getByRole('complementary', { name: 'Apoie o CleanChain' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Start scan em/ })).toBeVisible();
+    await expect(page.getByLabel('Mensagem para o agente')).toBeEditable();
 
     // "Agora não": o convite some por uma semana.
     await ponte('window.cleanchain.licenca.adiarConvite()');
