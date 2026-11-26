@@ -14,6 +14,8 @@ export function useDesktop() {
   const [atualizacao, setAtualizacao] = useState(null); // see desktop/main/atualizacao.ts
   const [mcp, setMcp] = useState(null); // { ativo, executavel, instalado, configuracoes }
   const [mcpAberta, setMcpAberta] = useState(false);
+  const [licenca, setLicenca] = useState(null); // { licenciado, nome, emitida, convite, paginaDeCompra }
+  const [licencaAberta, setLicencaAberta] = useState(false);
 
   useEffect(() => {
     if (!bridge) return undefined;
@@ -34,6 +36,10 @@ export function useDesktop() {
       ?.status()
       .then((m) => vivo && setMcp(m))
       .catch(() => {});
+    bridge.licenca
+      ?.status()
+      .then((l) => vivo && setLicenca(l))
+      .catch(() => {});
     const parar = bridge.aoAtualizacao((a) => setAtualizacao(a));
     return () => {
       vivo = false;
@@ -53,6 +59,10 @@ export function useDesktop() {
   }, []);
   const definirMcp = useCallback(async (ativo) => setMcp(await bridge.mcp.definir(ativo)), []);
   const copiarMcp = useCallback((cliente) => bridge.mcp.copiar(cliente), []);
+  // Optional license (WinRAR model): the app is the same for everyone; a license only hides the invite.
+  const registrarLicenca = useCallback(async (valor) => setLicenca(await bridge.licenca.registrar(valor)), []);
+  const removerLicenca = useCallback(async () => setLicenca(await bridge.licenca.remover()), []);
+  const adiarConvite = useCallback(async () => setLicenca(await bridge.licenca.adiarConvite()), []);
 
   const precisaChave = Boolean(bridge && chave && !chave.configurada);
   return {
@@ -70,6 +80,7 @@ export function useDesktop() {
     iaLocal: Boolean(chave && chave.ativo && chave.ativo !== 'nuvem'),
     abrirConfig: () => {
       setMcpAberta(false);
+      setLicencaAberta(false);
       setConfigAberta(true);
     },
     fecharConfig: chave?.configurada ? () => setConfigAberta(false) : null,
@@ -81,10 +92,24 @@ export function useDesktop() {
     mcpAberta: Boolean(bridge) && mcpAberta,
     abrirMcp: () => {
       setConfigAberta(false);
+      setLicencaAberta(false);
       setMcpAberta(true);
     },
     fecharMcp: () => setMcpAberta(false),
     definirMcp,
     copiarMcp,
+    // Licença opcional
+    licenca,
+    licencaAberta: Boolean(bridge) && licencaAberta,
+    convite: Boolean(licenca?.convite),
+    abrirLicenca: () => {
+      setConfigAberta(false);
+      setMcpAberta(false);
+      setLicencaAberta(true);
+    },
+    fecharLicenca: () => setLicencaAberta(false),
+    registrarLicenca,
+    removerLicenca,
+    adiarConvite,
   };
 }

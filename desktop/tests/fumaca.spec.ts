@@ -170,7 +170,7 @@ test('as travas de segurança estão de pé', async () => {
     expect(ambiente).toEqual({
       require: 'undefined',
       process: 'undefined',
-      ponte: ['aoAtualizacao', 'aoPropostaMcp', 'app', 'chave', 'mcp', 'sistema'],
+      ponte: ['aoAtualizacao', 'aoPropostaMcp', 'app', 'chave', 'licenca', 'mcp', 'sistema'],
     });
 
     // CSP vem no cabeçalho da página.
@@ -480,5 +480,47 @@ test('IA local: escolher um modelo do Ollama e conversar sem nada sair do comput
     await fechar();
     ollama.fechar();
     fs.rmSync(perfil, { recursive: true, force: true });
+  }
+});
+
+test('licença opcional: convite discreto depois de 30 dias e licença registrada pela tela', async () => {
+  // Par de chaves só deste teste (a variável só vale fora do app instalado).
+  const crypto = await import('node:crypto');
+  const { emitir } = await import('../main/licenca-regras');
+  const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
+  const anterior = process.env.CLEANCHAIN_LICENCA_CHAVE_PUBLICA;
+  process.env.CLEANCHAIN_LICENCA_CHAVE_PUBLICA = publicKey.export({ type: 'spki', format: 'pem' }).toString();
+  const { page, perfil, fechar } = await abrirApp();
+  try {
+    // 31 dias de uso, nenhum convite ainda: ao abrir, o convite aparece na tela inicial.
+    fs.writeFileSync(
+      path.join(perfil, 'uso.json'),
+      JSON.stringify({ primeiroUso: Date.now() - 31 * 86_400_000, ultimoConvite: null })
+    );
+    await page.reload();
+    const ponte = (codigo: string) => page.evaluate(codigo);
+    expect(await ponte('window.cleanchain.licenca.status().then((s) => s.convite)')).toBe(true);
+
+    // "Agora não": o convite some por uma semana.
+    await ponte('window.cleanchain.licenca.adiarConvite()');
+    expect(await ponte('window.cleanchain.licenca.status().then((s) => s.convite)')).toBe(false);
+
+    // Chave inválida é recusada com mensagem; a chave certa registra e mostra o nome.
+    await page.getByRole('button', { name: 'Menu do CleanChain' }).click();
+    await page.getByRole('menuitem', { name: /Licença/ }).click();
+    const campo = page.getByLabel(/Cole a sua chave/);
+    await campo.fill('CC1-chave-inventada.xyz');
+    await page.getByRole('button', { name: 'Registrar licença' }).click();
+    await expect(page.getByRole('alert')).toContainText('Chave');
+    await campo.fill(emitir({ nome: 'Fulana de Tal', emitida: '2026-11-26', id: 't1' }, privateKey));
+    await page.getByRole('button', { name: 'Registrar licença' }).click();
+    await expect(page.getByText('Licenciado para')).toBeVisible();
+    await expect(page.getByText('Fulana de Tal')).toBeVisible();
+    expect(await ponte('window.cleanchain.licenca.status().then((s) => [s.licenciado, s.convite])')).toEqual([true, false]);
+  } finally {
+    await fechar();
+    fs.rmSync(perfil, { recursive: true, force: true });
+    if (anterior === undefined) delete process.env.CLEANCHAIN_LICENCA_CHAVE_PUBLICA;
+    else process.env.CLEANCHAIN_LICENCA_CHAVE_PUBLICA = anterior;
   }
 });

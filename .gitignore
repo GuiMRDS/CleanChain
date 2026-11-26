@@ -8,6 +8,8 @@
 backend/data/
 runtime.json
 segredos.json
+# Chave privada das licenças (fica em ~/.cleanchain; nunca no repositório).
+*.pem
 
 # ------------------------------------------------------------------ dependências
 node_modules/

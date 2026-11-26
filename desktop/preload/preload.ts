@@ -20,6 +20,10 @@ const CANAIS = {
   mcpStatus: 'mcp:status',
   mcpDefinir: 'mcp:definir',
   mcpCopiar: 'mcp:copiar',
+  licencaStatus: 'licenca:status',
+  licencaRegistrar: 'licenca:registrar',
+  licencaRemover: 'licenca:remover',
+  licencaAdiarConvite: 'licenca:adiarConvite',
   eventoPropostaMcp: 'mcp:proposta',
 } as const;
 
@@ -58,6 +62,13 @@ contextBridge.exposeInMainWorld('cleanchain', {
     status: () => ipcRenderer.invoke(CANAIS.mcpStatus),
     definir: (ativo: boolean) => ipcRenderer.invoke(CANAIS.mcpDefinir, Boolean(ativo)),
     copiar: (cliente: string) => ipcRenderer.invoke(CANAIS.mcpCopiar, String(cliente)),
+  },
+  /** Licença opcional (modelo WinRAR): o app é igual para todos; a licença só tira o convite. */
+  licenca: {
+    status: () => ipcRenderer.invoke(CANAIS.licencaStatus),
+    registrar: (chave: string) => ipcRenderer.invoke(CANAIS.licencaRegistrar, String(chave)),
+    remover: () => ipcRenderer.invoke(CANAIS.licencaRemover),
+    adiarConvite: () => ipcRenderer.invoke(CANAIS.licencaAdiarConvite),
   },
   /** Chegou uma proposta de limpeza via MCP. Devolve a função que cancela a inscrição. */
   aoPropostaMcp: (callback: (info: unknown) => void) => {

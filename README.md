@@ -401,6 +401,17 @@ publicar um Release — está em [docs/desenvolvimento.md](docs/desenvolvimento.
 de código (Claude, Codex, Cursor…), o contexto e as regras do projeto estão em
 [AGENTS.md](AGENTS.md). Mudanças de cada versão: [CHANGELOG.md](CHANGELOG.md). Próximos passos: [docs/roadmap.md](docs/roadmap.md).
 
+## Apoie o CleanChain
+
+O CleanChain é **completo e gratuito**, sem prazo e sem recursos bloqueados, como o WinRAR. Se
+ele te ajuda, você pode comprar uma **licença** (pagamento único): o convite ocasional deixa de
+aparecer e o app mostra *Licenciado para <seu nome>*. A chave é conferida no seu computador e não
+é enviada a lugar nenhum.
+
+Para comprar uma licença, abra uma
+[issue no GitHub](https://github.com/GuiMRDS/CleanChain/issues/new?title=Licen%C3%A7a%20do%20CleanChain)
+pedindo a sua; você recebe a chave para colar em *menu do app › Licença*.
+
 ## Licença e créditos
 
 Distribuído sob a licença [MIT](LICENSE).

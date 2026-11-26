@@ -122,6 +122,18 @@ export default function DesktopMenu({ desktop }) {
             </span>
           </button>
 
+          <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirLicenca)}>
+            <span className="desktop-menu__icon" aria-hidden="true">
+              ◈
+            </span>
+            <span className="desktop-menu__text">
+              <strong>Licença</strong>
+              <small>
+                {desktop.licenca?.licenciado ? `licenciado para ${desktop.licenca.nome}` : 'versão gratuita · apoiar o projeto'}
+              </small>
+            </span>
+          </button>
+
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirLogs)}>
             <span className="desktop-menu__icon" aria-hidden="true">
               ▤
