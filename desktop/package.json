@@ -1,7 +1,7 @@
 {
   "name": "cleanchain",
   "productName": "CleanChain",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Limpeza de disco com um agente de IA que só apaga com a sua aprovação (Windows, macOS e Linux).",
   "homepage": "https://github.com/GuiMRDS/CleanChain",
   "desktopName": "cleanchain.desktop",

@@ -1,6 +1,6 @@
 # Política de privacidade do CleanChain
 
-*Versão 1.0.1 · 25 de novembro de 2026*
+*Versão 1.1.0 · 25 de novembro de 2026*
 
 O CleanChain é um app que roda **no seu computador**. Não há conta, servidor do CleanChain,
 telemetria, rastreamento de uso nem relatório de falhas enviado a ninguém. Esta política
