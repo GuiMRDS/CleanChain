@@ -12,7 +12,9 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 10px 30px -18px rgba(0, 145, 255, 0.45), 0 0 0 1px var(--line-soft);
+  box-shadow:
+    0 10px 30px -18px rgba(0, 145, 255, 0.45),
+    0 0 0 1px var(--line-soft);
   backdrop-filter: blur(14px) saturate(150%);
   font-family: var(--mono);
   font-size: 12px;
@@ -30,7 +32,9 @@
   box-shadow: 0 0 0 4px rgba(24, 194, 122, 0.15);
 }
 
-.agent-status__label { color: var(--muted); }
+.agent-status__label {
+  color: var(--muted);
+}
 
 .agent-status__detail {
   overflow: hidden;
@@ -65,10 +69,14 @@
 }
 
 /* states */
-.agent-status.is-scanning .agent-status__dot { animation: status-pulse-green 1.4s ease-out infinite; }
+.agent-status.is-scanning .agent-status__dot {
+  animation: status-pulse-green 1.4s ease-out infinite;
+}
 
 .agent-status.is-thinking {
-  box-shadow: 0 10px 30px -14px rgba(255, 0, 153, 0.45), 0 0 0 1px rgba(0, 112, 243, 0.25);
+  box-shadow:
+    0 10px 30px -14px rgba(255, 0, 153, 0.45),
+    0 0 0 1px rgba(0, 112, 243, 0.25);
 }
 
 .agent-status.is-thinking .agent-status__dot {
@@ -77,22 +85,40 @@
   animation: status-pulse-blue 1s ease-out infinite;
 }
 
-.agent-status.is-thinking .agent-status__detail { color: var(--blue); }
+.agent-status.is-thinking .agent-status__detail {
+  color: var(--blue);
+}
 
-@keyframes status-swap { from { opacity: 0; transform: translateY(4px); } }
+@keyframes status-swap {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
 
 @keyframes status-pulse-green {
-  0% { box-shadow: 0 0 0 0 rgba(24, 194, 122, 0.5); }
-  100% { box-shadow: 0 0 0 8px rgba(24, 194, 122, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 194, 122, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(24, 194, 122, 0);
+  }
 }
 
 @keyframes status-pulse-blue {
-  0% { box-shadow: 0 0 0 0 rgba(0, 112, 243, 0.5); }
-  100% { box-shadow: 0 0 0 8px rgba(0, 112, 243, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 112, 243, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(0, 112, 243, 0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .agent-status__dot, .agent-status__detail { animation: none !important; }
+  .agent-status__dot,
+  .agent-status__detail {
+    animation: none !important;
+  }
 }
 
 /* Scan progress has no known total: sweep instead of fill. */
@@ -103,12 +129,25 @@
   animation: status-sweep 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-.agent-status__detail.is-path { direction: rtl; text-align: left; } /* keep the end of long paths visible */
+.agent-status__detail.is-path {
+  direction: rtl;
+  text-align: left;
+} /* keep the end of long paths visible */
 
-.agent-status.is-ready .agent-status__dot { background: var(--faint); box-shadow: 0 0 0 4px rgba(154, 160, 173, 0.18); }
-.agent-status.is-error .agent-status__dot { background: var(--pink); box-shadow: 0 0 0 4px rgba(255, 0, 153, 0.15); }
+.agent-status.is-ready .agent-status__dot {
+  background: var(--faint);
+  box-shadow: 0 0 0 4px rgba(154, 160, 173, 0.18);
+}
+.agent-status.is-error .agent-status__dot {
+  background: var(--pink);
+  box-shadow: 0 0 0 4px rgba(255, 0, 153, 0.15);
+}
 
 @keyframes status-sweep {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(300%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
 }

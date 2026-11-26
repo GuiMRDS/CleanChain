@@ -26,7 +26,9 @@
   color: var(--blue);
 }
 
-.chat-thread__head button:hover { text-decoration: underline; }
+.chat-thread__head button:hover {
+  text-decoration: underline;
+}
 
 .chat-thread__scroll {
   flex: 1;
@@ -40,7 +42,9 @@
   scrollbar-width: thin;
 }
 
-.msg { animation: fade-in 0.35s ease both; }
+.msg {
+  animation: fade-in 0.35s ease both;
+}
 
 .msg__text {
   margin: 0;
@@ -54,7 +58,9 @@
   overflow-wrap: anywhere;
 }
 
-.msg__text--rich strong { font-weight: 500; }
+.msg__text--rich strong {
+  font-weight: 500;
+}
 
 .msg__text--rich code {
   padding: 1px 5px;
@@ -75,9 +81,15 @@
   color: #a3005f;
 }
 
-.trace__step { overflow-wrap: anywhere; }
+.trace__step {
+  overflow-wrap: anywhere;
+}
 
-.msg__text--dim { color: var(--faint); font-family: var(--mono); font-size: 12.5px; }
+.msg__text--dim {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
 
 .msg--user {
   align-self: flex-end;
@@ -87,7 +99,10 @@
   background: var(--ink);
 }
 
-.msg--user .msg__text { color: #fff; overflow-wrap: anywhere; }
+.msg--user .msg__text {
+  color: #fff;
+  overflow-wrap: anywhere;
+}
 
 .msg--agent {
   display: flex;
@@ -116,7 +131,10 @@
   animation: pulse 1.2s ease-out infinite;
 }
 
-.msg__pulse.is-idle { background: var(--green); animation: none; }
+.msg__pulse.is-idle {
+  background: var(--green);
+  animation: none;
+}
 
 .trace {
   list-style: none;
@@ -131,9 +149,16 @@
   color: var(--faint);
 }
 
-.trace__step { animation: fade-in 0.3s ease both; }
-.trace__step--action { color: var(--ink-2); }
-.trace__step--action b { color: var(--blue); font-weight: 500; }
+.trace__step {
+  animation: fade-in 0.3s ease both;
+}
+.trace__step--action {
+  color: var(--ink-2);
+}
+.trace__step--action b {
+  color: var(--blue);
+  font-weight: 500;
+}
 
 .msg__caret {
   display: inline-block;
@@ -146,13 +171,22 @@
 }
 
 @keyframes pulse {
-  70% { box-shadow: 0 0 0 7px rgba(0, 112, 243, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 112, 243, 0); }
+  70% {
+    box-shadow: 0 0 0 7px rgba(0, 112, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 112, 243, 0);
+  }
 }
 
 /* ---------- long conversations stay inside the card ---------- */
-.chat-thread { position: relative; overflow: hidden; }
-.chat-thread__scroll { overscroll-behavior: contain; }
+.chat-thread {
+  position: relative;
+  overflow: hidden;
+}
+.chat-thread__scroll {
+  overscroll-behavior: contain;
+}
 
 .chat-thread__jump {
   position: absolute;
@@ -169,11 +203,18 @@
   animation: fade-in 0.25s ease both;
 }
 
-.msg__pulse.is-waiting { background: var(--pink); animation: pulse-pink 1.2s ease-out infinite; }
+.msg__pulse.is-waiting {
+  background: var(--pink);
+  animation: pulse-pink 1.2s ease-out infinite;
+}
 
 @keyframes pulse-pink {
-  70% { box-shadow: 0 0 0 7px rgba(255, 0, 153, 0); }
-  0% { box-shadow: 0 0 0 0 rgba(255, 0, 153, 0.45); }
+  70% {
+    box-shadow: 0 0 0 7px rgba(255, 0, 153, 0);
+  }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 153, 0.45);
+  }
 }
 
 /* ---------- approval card (delete files) ---------- */
@@ -188,8 +229,14 @@
   animation: fade-in 0.3s ease both;
 }
 
-.approval.is-approved { border-color: rgba(24, 194, 122, 0.45); background: rgba(24, 194, 122, 0.05); }
-.approval.is-rejected { border-color: var(--line); background: rgba(255, 255, 255, 0.6); }
+.approval.is-approved {
+  border-color: rgba(24, 194, 122, 0.45);
+  background: rgba(24, 194, 122, 0.05);
+}
+.approval.is-rejected {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.6);
+}
 
 .approval__head {
   display: flex;
@@ -201,8 +248,12 @@
   color: #a3005f;
 }
 
-.approval.is-approved .approval__head { color: #0f8a56; }
-.approval.is-rejected .approval__head { color: var(--muted); }
+.approval.is-approved .approval__head {
+  color: #0f8a56;
+}
+.approval.is-rejected .approval__head {
+  color: var(--muted);
+}
 
 .approval__head b {
   margin-left: auto;
@@ -226,10 +277,18 @@
   letter-spacing: 0;
 }
 
-.approval.is-approved .approval__icon { background: var(--green); }
-.approval.is-rejected .approval__icon { background: var(--faint); }
+.approval.is-approved .approval__icon {
+  background: var(--green);
+}
+.approval.is-rejected .approval__icon {
+  background: var(--faint);
+}
 
-.approval__reason { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.approval__reason {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
 
 .approval__list {
   list-style: none;
@@ -251,7 +310,10 @@
   font-size: 12.5px;
 }
 
-.approval__kind { color: var(--faint); font-size: 12px; }
+.approval__kind {
+  color: var(--faint);
+  font-size: 12px;
+}
 
 .approval__name {
   min-width: 0;
@@ -275,7 +337,11 @@
   text-align: left;
 }
 
-.approval__size { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.approval__size {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+}
 
 .approval__blocked summary {
   cursor: pointer;
@@ -293,7 +359,11 @@
   overflow-wrap: anywhere;
 }
 
-.approval__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.approval__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .approval__go,
 .approval__no {
@@ -301,7 +371,10 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  transition: transform 0.15s, opacity 0.2s, background 0.2s;
+  transition:
+    transform 0.15s,
+    opacity 0.2s,
+    background 0.2s;
 }
 
 .approval__go {
@@ -310,7 +383,10 @@
   box-shadow: 0 8px 18px -10px rgba(255, 0, 153, 0.8);
 }
 
-.approval__go:hover:not(:disabled) { background: #e0008a; transform: translateY(-1px); }
+.approval__go:hover:not(:disabled) {
+  background: #e0008a;
+  transform: translateY(-1px);
+}
 
 .approval__no {
   border: 1px solid var(--line);
@@ -318,10 +394,15 @@
   color: var(--ink-2);
 }
 
-.approval__no:hover:not(:disabled) { border-color: var(--ink-2); }
+.approval__no:hover:not(:disabled) {
+  border-color: var(--ink-2);
+}
 
 .approval__go:disabled,
-.approval__no:disabled { opacity: 0.45; cursor: default; }
+.approval__no:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 
 .approval__result,
 .approval__note {
@@ -331,4 +412,6 @@
   color: var(--muted);
 }
 
-.approval.is-approved .approval__result { color: #0f8a56; }
+.approval.is-approved .approval__result {
+  color: #0f8a56;
+}

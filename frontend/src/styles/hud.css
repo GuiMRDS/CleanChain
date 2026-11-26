@@ -19,8 +19,18 @@
   pointer-events: none;
 }
 
-.hud-frame::before { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
-.hud-frame::after { bottom: -5px; right: -5px; border-left: 0; border-top: 0; }
+.hud-frame::before {
+  top: -5px;
+  left: -5px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.hud-frame::after {
+  bottom: -5px;
+  right: -5px;
+  border-left: 0;
+  border-top: 0;
+}
 
 .panel-head {
   display: flex;
@@ -57,8 +67,13 @@
   border-radius: 50%;
 }
 
-.chip strong { font-weight: 500; }
-.chip.is-warn { border-color: rgba(255, 0, 153, 0.35); color: #a3005f; }
+.chip strong {
+  font-weight: 500;
+}
+.chip.is-warn {
+  border-color: rgba(255, 0, 153, 0.35);
+  color: #a3005f;
+}
 
 .link-btn {
   font-family: var(--mono);
@@ -68,9 +83,29 @@
   color: var(--blue);
 }
 
-.link-btn:hover { text-decoration: underline; }
+.link-btn:hover {
+  text-decoration: underline;
+}
 
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
-@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
-@keyframes bar-grow { from { transform: scaleY(0); } }
-@keyframes grow-x { from { transform: scaleX(0); } }
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}

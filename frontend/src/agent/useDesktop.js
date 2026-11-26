@@ -18,10 +18,22 @@ export function useDesktop() {
   useEffect(() => {
     if (!bridge) return undefined;
     let vivo = true;
-    bridge.chave.status().then((s) => vivo && setChave(s)).catch(() => {});
-    bridge.app.versao().then((v) => vivo && setVersao(v)).catch(() => {});
-    bridge.app.atualizacao().then((a) => vivo && setAtualizacao(a)).catch(() => {});
-    bridge.mcp?.status().then((m) => vivo && setMcp(m)).catch(() => {});
+    bridge.chave
+      .status()
+      .then((s) => vivo && setChave(s))
+      .catch(() => {});
+    bridge.app
+      .versao()
+      .then((v) => vivo && setVersao(v))
+      .catch(() => {});
+    bridge.app
+      .atualizacao()
+      .then((a) => vivo && setAtualizacao(a))
+      .catch(() => {});
+    bridge.mcp
+      ?.status()
+      .then((m) => vivo && setMcp(m))
+      .catch(() => {});
     const parar = bridge.aoAtualizacao((a) => setAtualizacao(a));
     return () => {
       vivo = false;

@@ -14,11 +14,16 @@
     "electron-updater": "^6.8.11"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.6",
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0",
-    "typescript": "^7.0.2"
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0"
   },
   "scripts": {
     "build:ts": "tsc -p tsconfig.json",
@@ -29,6 +34,7 @@
     "icone": "electron scripts/icone.mjs",
     "pack": "npm run build:ts && electron-builder --dir",
     "dist": "npm run build:frontend && npm run build:backend && npm run build:ts && electron-builder --publish never",
-    "test:fumaca": "playwright test"
+    "test:fumaca": "playwright test",
+    "lint": "eslint ."
   }
 }

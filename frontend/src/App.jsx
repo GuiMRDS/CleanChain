@@ -91,48 +91,49 @@ export default function App() {
       ? `Pronto! ${formatCount(scan.result.files_scanned)} arquivos analisados (${bytesLabel(scan.result.total_bytes)}).`
       : scan.phase === 'scanning'
         ? `Escaneando ${chosen?.short ?? 'seus arquivos'}… pode levar alguns minutos.`
-        : GREETINGS[scan.phase] ?? GREETINGS.idle;
+        : (GREETINGS[scan.phase] ?? GREETINGS.idle);
 
   // Priority: a cleanup proposal from an MCP client waits for the user's decision above all.
-  const mainCard = propostasMcp.atual || propostasMcp.ultima ? (
-    <PropostaMcp
-      proposta={propostasMcp.atual}
-      ultima={propostasMcp.atual ? null : propostasMcp.ultima}
-      restantes={propostasMcp.restantes}
-      decidindo={propostasMcp.decidindo}
-      onDecide={propostasMcp.decidir}
-      onFechar={propostasMcp.fecharUltima}
-      lixeira={plataforma.lixeira}
-    />
-  ) : desktop.mcpAberta ? (
-    // Opened from the menu: shows even before the LLM key is set (MCP doesn't need it).
-    <ConfigMcp mcp={desktop.mcp} onDefinir={desktop.definirMcp} onCopiar={desktop.copiarMcp} onFechar={desktop.fecharMcp} />
-  ) : desktop.mostrarConfig ? (
-    <ConfigChave
-      atual={desktop.chave}
-      onSalvar={desktop.salvarChave}
-      onUsarLocal={desktop.usarLocal}
-      onUsarNuvem={desktop.usarNuvem}
-      onModelosLocais={desktop.modelosLocais}
-      onCancelar={desktop.fecharConfig}
-    />
-  ) : chatting ? (
-    <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
-  ) : scanned ? (
-    <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
-  ) : (
-    <StartScan
-      phase={scan.phase}
-      progress={scan.progress}
-      error={scan.error}
-      targets={targets}
-      targetsStatus={drivesStatus}
-      target={chosen?.path}
-      onTarget={setTarget}
-      onStart={scan.start}
-      onCancel={scan.cancel}
-    />
-  );
+  const mainCard =
+    propostasMcp.atual || propostasMcp.ultima ? (
+      <PropostaMcp
+        proposta={propostasMcp.atual}
+        ultima={propostasMcp.atual ? null : propostasMcp.ultima}
+        restantes={propostasMcp.restantes}
+        decidindo={propostasMcp.decidindo}
+        onDecide={propostasMcp.decidir}
+        onFechar={propostasMcp.fecharUltima}
+        lixeira={plataforma.lixeira}
+      />
+    ) : desktop.mcpAberta ? (
+      // Opened from the menu: shows even before the LLM key is set (MCP doesn't need it).
+      <ConfigMcp mcp={desktop.mcp} onDefinir={desktop.definirMcp} onCopiar={desktop.copiarMcp} onFechar={desktop.fecharMcp} />
+    ) : desktop.mostrarConfig ? (
+      <ConfigChave
+        atual={desktop.chave}
+        onSalvar={desktop.salvarChave}
+        onUsarLocal={desktop.usarLocal}
+        onUsarNuvem={desktop.usarNuvem}
+        onModelosLocais={desktop.modelosLocais}
+        onCancelar={desktop.fecharConfig}
+      />
+    ) : chatting ? (
+      <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
+    ) : scanned ? (
+      <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
+    ) : (
+      <StartScan
+        phase={scan.phase}
+        progress={scan.progress}
+        error={scan.error}
+        targets={targets}
+        targetsStatus={drivesStatus}
+        target={chosen?.path}
+        onTarget={setTarget}
+        onStart={scan.start}
+        onCancel={scan.cancel}
+      />
+    );
 
   return (
     <main className="app">
@@ -169,7 +170,13 @@ export default function App() {
             </div>
           )}
         </div>
-        <ChatInput onSend={send} busy={busy} locked={awaitingApproval} showSuggestions={!chatting} vozDisponivel={!desktop.iaLocal} />
+        <ChatInput
+          onSend={send}
+          busy={busy}
+          locked={awaitingApproval}
+          showSuggestions={!chatting}
+          vozDisponivel={!desktop.iaLocal}
+        />
       </section>
 
       <SystemFooter refreshKey={`${scan.result?.file ?? ''}:${busy}`} />

@@ -3,8 +3,13 @@ import './HeroIntro.css';
 
 function useTyped(text, speed = 32, delay = 500) {
   const [count, setCount] = useState(0);
+  // Restart when the text changes (adjusted during render, as React recommends).
+  const [textoVisto, setTextoVisto] = useState(text);
+  if (text !== textoVisto) {
+    setTextoVisto(text);
+    setCount(0);
+  }
   useEffect(() => {
-    setCount(0); // restart when the text changes
     let id;
     const start = setTimeout(() => {
       id = setInterval(() => {

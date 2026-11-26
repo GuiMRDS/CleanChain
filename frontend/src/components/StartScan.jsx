@@ -11,18 +11,36 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
 
   return (
     <section className={`start-scan hud-frame${scanning ? ' is-scanning' : ''}`} aria-live="polite">
-      <button type="button" className="orb" onClick={() => onStart(current?.path)} disabled={scanning || !current} aria-label={scanning ? 'Scan em andamento' : `Start scan em ${current?.title ?? ''}`}>
+      <button
+        type="button"
+        className="orb"
+        onClick={() => onStart(current?.path)}
+        disabled={scanning || !current}
+        aria-label={scanning ? 'Scan em andamento' : `Start scan em ${current?.title ?? ''}`}
+      >
         <span className="orb__halo" aria-hidden="true" />
         <span className="orb__ring" aria-hidden="true" />
         <span className="orb__core">
           {scanning ? (
             <>
-              <strong className="orb__time">{pct != null ? `${Math.floor(pct)}%` : `${Math.floor(progress?.seconds ?? 0)}s`}</strong>
+              <strong className="orb__time">
+                {pct != null ? `${Math.floor(pct)}%` : `${Math.floor(progress?.seconds ?? 0)}s`}
+              </strong>
               <small>{pct != null ? `${Math.floor(progress?.seconds ?? 0)}s` : 'analisando'}</small>
             </>
           ) : (
             <>
-              <svg className="orb__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <svg
+                className="orb__icon"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
                 <circle cx="11" cy="11" r="6.5" />
                 <path d="M16 16l4.5 4.5" />
                 <path d="M8.5 11h5M11 8.5v5" opacity="0.55" />
@@ -47,12 +65,12 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
               {formatCount(progress?.files ?? 0)}
               <small>arquivos · {bytesLabel(progress?.bytes ?? 0)}</small>
             </p>
-            <p className="start-scan__path" title={dupPhase ? '' : progress?.current ?? ''}>
+            <p className="start-scan__path" title={dupPhase ? '' : (progress?.current ?? '')}>
               <b>▸</b>
               <span>
                 {dupPhase
                   ? `${progress.stage === 'triagem' ? 'comparando tamanhos e trechos' : 'confirmando conteúdo'} · ${formatCount(progress.done ?? 0)}/${formatCount(progress.total ?? 0)} grupos`
-                  : progress?.current ?? 'iniciando…'}
+                  : (progress?.current ?? 'iniciando…')}
               </span>
             </p>
             <div className={`start-scan__track${pct != null ? ' is-determinate' : ''}`} aria-hidden="true">
@@ -92,7 +110,10 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
                     {t.total ? (
                       <>
                         <span className="target__meter" aria-hidden="true">
-                          <span style={{ width: `${Math.round((t.used / t.total) * 100)}%` }} className={t.used / t.total > 0.9 ? 'is-full' : undefined} />
+                          <span
+                            style={{ width: `${Math.round((t.used / t.total) * 100)}%` }}
+                            className={t.used / t.total > 0.9 ? 'is-full' : undefined}
+                          />
                         </span>
                         <span className="target__meta">
                           {bytesLabel(t.free)} livres de {bytesLabel(t.total)}
@@ -108,7 +129,9 @@ export default function StartScan({ phase, progress, error, targets, targetsStat
             {error ? (
               <p className="start-scan__error">{error}</p>
             ) : (
-              <p className="start-scan__desc">Somente leitura: nada é apagado nem movido. Um disco inteiro pode levar alguns minutos.</p>
+              <p className="start-scan__desc">
+                Somente leitura: nada é apagado nem movido. Um disco inteiro pode levar alguns minutos.
+              </p>
             )}
           </>
         )}

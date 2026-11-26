@@ -26,7 +26,10 @@
   margin: 14px auto 12px;
 }
 
-.filetypes__chart svg { display: block; overflow: visible; }
+.filetypes__chart svg {
+  display: block;
+  overflow: visible;
+}
 
 .filetypes__track {
   fill: none;
@@ -36,12 +39,18 @@
 .filetypes__slice {
   fill: none;
   cursor: pointer;
-  transition: opacity 0.2s, stroke-width 0.2s;
+  transition:
+    opacity 0.2s,
+    stroke-width 0.2s;
   animation: slice-draw 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.filetypes__slice.is-dim { opacity: 0.28; }
-.filetypes__slice.is-active { stroke-width: 28px; }
+.filetypes__slice.is-dim {
+  opacity: 0.28;
+}
+.filetypes__slice.is-active {
+  stroke-width: 28px;
+}
 
 .filetypes__center {
   position: absolute;
@@ -91,11 +100,17 @@
   border-radius: 4px;
   font-size: 12.5px;
   cursor: default;
-  transition: opacity 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
 }
 
-.filetypes__legend li:hover { background: rgba(255, 255, 255, 0.7); }
-.filetypes__legend li.is-dim { opacity: 0.45; }
+.filetypes__legend li:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+.filetypes__legend li.is-dim {
+  opacity: 0.45;
+}
 
 .filetypes__legend i {
   width: 8px;
@@ -103,7 +118,12 @@
   border-radius: 2px;
 }
 
-.filetypes__name { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.filetypes__name {
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .filetypes__gb {
   font-family: var(--mono);
@@ -120,9 +140,14 @@
 }
 
 @keyframes slice-draw {
-  from { stroke-dasharray: 0 var(--c); }
+  from {
+    stroke-dasharray: 0 var(--c);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .filetypes, .filetypes__slice { animation: none; }
+  .filetypes,
+  .filetypes__slice {
+    animation: none;
+  }
 }

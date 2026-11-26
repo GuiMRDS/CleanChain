@@ -10,14 +10,15 @@ export function useFilaDeTela() {
   const filaRef = useRef([]);
   const timerRef = useRef(null);
 
-  const drenar = useCallback(() => {
+  // Named function: it schedules itself for the next command.
+  const drenar = useCallback(function proximoComando() {
     const proximo = filaRef.current.shift();
     if (!proximo) {
       timerRef.current = null;
       return;
     }
     setComando({ seq: Date.now() + Math.random(), path: proximo.args?.path });
-    timerRef.current = setTimeout(drenar, UI_STEP_MS);
+    timerRef.current = setTimeout(proximoComando, UI_STEP_MS);
   }, []);
 
   const receber = useCallback(

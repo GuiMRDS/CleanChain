@@ -9,9 +9,32 @@ import './ConfigChave.css';
 // Either way the main process restarts the backend and the window reloads.
 const PROVEDORES = [
   { id: 'groq', badge: 'GQ', title: 'Groq', tag: 'nuvem · gratuito', prefix: 'gsk_', link: 'https://console.groq.com/keys' },
-  { id: 'openai', badge: 'AI', title: 'OpenAI', tag: 'nuvem · pago', prefix: 'sk-', link: 'https://platform.openai.com/api-keys' },
-  { id: 'ollama', badge: 'OL', title: 'Ollama', tag: 'local · privado', local: true, porta: 11434, link: 'https://ollama.com/download' },
-  { id: 'lmstudio', badge: 'LM', title: 'LM Studio', tag: 'local · privado', local: true, porta: 1234, link: 'https://lmstudio.ai' },
+  {
+    id: 'openai',
+    badge: 'AI',
+    title: 'OpenAI',
+    tag: 'nuvem · pago',
+    prefix: 'sk-',
+    link: 'https://platform.openai.com/api-keys',
+  },
+  {
+    id: 'ollama',
+    badge: 'OL',
+    title: 'Ollama',
+    tag: 'local · privado',
+    local: true,
+    porta: 11434,
+    link: 'https://ollama.com/download',
+  },
+  {
+    id: 'lmstudio',
+    badge: 'LM',
+    title: 'LM Studio',
+    tag: 'local · privado',
+    local: true,
+    porta: 1234,
+    link: 'https://lmstudio.ai',
+  },
 ];
 
 const mensagem = (err, padrao) => err?.message?.replace(/^Error invoking remote method '[^']+': (Error: )?/, '') || padrao;
@@ -29,28 +52,33 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
   const localAtual = atual?.local?.provedor === provedor ? atual.local : null;
   const [porta, setPorta] = useState(localAtual?.porta ?? escolhido.porta ?? '');
   const [modelos, setModelos] = useState(null); // null = not loaded; [] = none installed
-  const [buscando, setBuscando] = useState(false);
+  // Opened on a local provider: it starts already "searching" (the effect below lists the models).
+  const [buscando, setBuscando] = useState(Boolean(escolhido.local));
   const [modelo, setModelo] = useState(localAtual?.modelo ?? '');
 
-  const procurar = useCallback(
-    async (id, p) => {
-      setBuscando(true);
-      setErro('');
-      setEstado('idle');
-      try {
-        const lista = await onModelosLocais(id, Number(p));
-        setModelos(lista);
-        setModelo((m) => (lista.some((x) => x.nome === m) ? m : (lista.find((x) => x.ferramentas !== false)?.nome ?? '')));
-      } catch (err) {
-        setModelos(null);
-        setEstado('erro');
-        setErro(mensagem(err, 'Não consegui falar com o servidor local.'));
-      } finally {
-        setBuscando(false);
-      }
-    },
+  // Asks the local server for its models; the state only changes when the answer arrives.
+  const buscarModelos = useCallback(
+    (id, p) =>
+      onModelosLocais(id, Number(p))
+        .then((lista) => {
+          setModelos(lista);
+          setModelo((m) => (lista.some((x) => x.nome === m) ? m : (lista.find((x) => x.ferramentas !== false)?.nome ?? '')));
+        })
+        .catch((err) => {
+          setModelos(null);
+          setEstado('erro');
+          setErro(mensagem(err, 'Não consegui falar com o servidor local.'));
+        })
+        .finally(() => setBuscando(false)),
     [onModelosLocais]
   );
+
+  const procurar = (id, p) => {
+    setBuscando(true);
+    setErro('');
+    setEstado('idle');
+    return buscarModelos(id, p);
+  };
 
   const escolher = (p) => {
     setProvedor(p.id);
@@ -68,7 +96,7 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
 
   // Opened on a local provider (menu → Modelo de IA): list its models right away.
   useEffect(() => {
-    if (escolhido.local) procurar(escolhido.id, porta);
+    if (escolhido.local) buscarModelos(escolhido.id, porta);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on open
   }, []);
 
@@ -94,7 +122,8 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
   };
 
   // Cloud key already saved for this provider, but a local AI is active: switch back without retyping.
-  const podeVoltarParaNuvem = !escolhido.local && atual?.ativo !== 'nuvem' && atual?.nuvemConfigurada && atual?.provedorNuvem === provedor;
+  const podeVoltarParaNuvem =
+    !escolhido.local && atual?.ativo !== 'nuvem' && atual?.nuvemConfigurada && atual?.provedorNuvem === provedor;
   const modeloEscolhido = modelos?.find((m) => m.nome === modelo);
   const salvando = estado === 'salvando';
 
@@ -105,8 +134,7 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
         <span className="mono">{atual?.configurada ? 'trocar modelo' : 'primeiro uso'}</span>
       </p>
       <p className="start-scan__desc">
-        O agente conversa por um modelo de linguagem: na nuvem, com a sua chave de API, ou numa IA instalada neste
-        computador.
+        O agente conversa por um modelo de linguagem: na nuvem, com a sua chave de API, ou numa IA instalada neste computador.
       </p>
 
       <form className="config-chave__form" onSubmit={salvar}>
@@ -156,13 +184,16 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
               <p className="config-chave__note">Procurando modelos em 127.0.0.1:{porta}…</p>
             ) : modelos?.length === 0 ? (
               <p className="start-scan__error" role="alert">
-                O {escolhido.title} está aberto, mas não tem nenhum modelo. Baixe um que use ferramentas (por exemplo, Qwen 3
-                ou Llama 3.1) e clique em procurar de novo.
+                O {escolhido.title} está aberto, mas não tem nenhum modelo. Baixe um que use ferramentas (por exemplo, Qwen 3 ou
+                Llama 3.1) e clique em procurar de novo.
               </p>
             ) : modelos ? (
               <div className="config-chave__modelos" role="radiogroup" aria-label="Modelo local">
                 {modelos.map((m) => (
-                  <label key={m.nome} className={`config-chave__modelo${m.nome === modelo ? ' is-selected' : ''}${m.ferramentas === false ? ' is-off' : ''}`}>
+                  <label
+                    key={m.nome}
+                    className={`config-chave__modelo${m.nome === modelo ? ' is-selected' : ''}${m.ferramentas === false ? ' is-off' : ''}`}
+                  >
                     <input
                       type="radio"
                       name="modelo-local"
@@ -172,7 +203,9 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
                       disabled={salvando || m.ferramentas === false}
                     />
                     <span className="config-chave__modelo-nome">{m.nome}</span>
-                    <em>{m.ferramentas === true ? 'usa ferramentas' : m.ferramentas === false ? 'sem ferramentas' : 'não informa'}</em>
+                    <em>
+                      {m.ferramentas === true ? 'usa ferramentas' : m.ferramentas === false ? 'sem ferramentas' : 'não informa'}
+                    </em>
                   </label>
                 ))}
               </div>
@@ -180,15 +213,17 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
 
             {modeloEscolhido?.ferramentas === null && (
               <p className="config-chave__note">
-                O {escolhido.title} não informa se este modelo sabe usar ferramentas. Se o agente não conseguir abrir pastas
-                nem propor limpezas, escolha outro.
+                O {escolhido.title} não informa se este modelo sabe usar ferramentas. Se o agente não conseguir abrir pastas nem
+                propor limpezas, escolha outro.
               </p>
             )}
           </>
         ) : (
           <>
             <label className="config-chave__label" htmlFor="config-chave-campo">
-              {podeVoltarParaNuvem ? `Chave de API (${escolhido.prefix}…) — já salva; cole outra só para trocar` : `Chave de API (${escolhido.prefix}…)`}
+              {podeVoltarParaNuvem
+                ? `Chave de API (${escolhido.prefix}…) — já salva; cole outra só para trocar`
+                : `Chave de API (${escolhido.prefix}…)`}
               <a href={escolhido.link} target="_blank" rel="noreferrer">
                 onde consigo uma?
               </a>
@@ -205,11 +240,19 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
               onChange={(e) => setChave(e.target.value)}
               disabled={salvando}
             />
-            {semCofre && <p className="start-scan__error" role="alert">{atual.motivoCofre}</p>}
+            {semCofre && (
+              <p className="start-scan__error" role="alert">
+                {atual.motivoCofre}
+              </p>
+            )}
           </>
         )}
 
-        {estado === 'erro' && <p className="start-scan__error" role="alert">{erro}</p>}
+        {estado === 'erro' && (
+          <p className="start-scan__error" role="alert">
+            {erro}
+          </p>
+        )}
 
         <div className="config-chave__actions">
           {escolhido.local ? (
@@ -217,7 +260,12 @@ export default function ConfigChave({ atual, onSalvar, onUsarLocal, onUsarNuvem,
               <button type="submit" className="config-chave__go" disabled={!modelo || buscando || salvando}>
                 {salvando ? 'Conectando…' : 'Usar este modelo'}
               </button>
-              <button type="button" className="config-chave__no" onClick={() => procurar(provedor, porta)} disabled={buscando || salvando || !porta}>
+              <button
+                type="button"
+                className="config-chave__no"
+                onClick={() => procurar(provedor, porta)}
+                disabled={buscando || salvando || !porta}
+              >
                 Procurar de novo
               </button>
             </>

@@ -46,8 +46,13 @@
   text-overflow: ellipsis;
 }
 
-.react-log b { color: var(--blue); font-weight: 500; }
-.react-log__dim { color: var(--faint); }
+.react-log b {
+  color: var(--blue);
+  font-weight: 500;
+}
+.react-log__dim {
+  color: var(--faint);
+}
 
 .scan-card__bars {
   display: flex;
@@ -66,7 +71,9 @@
   animation: bar-grow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) both;
 }
 
-.scan-card__bars i.is-blue { background: var(--blue); }
+.scan-card__bars i.is-blue {
+  background: var(--blue);
+}
 
 .scan-card__chips {
   display: flex;
@@ -78,7 +85,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .scan-card, .react-log, .scan-card__bars i { animation: none; }
+  .scan-card,
+  .react-log,
+  .scan-card__bars i {
+    animation: none;
+  }
 }
 
 /* ---------- cleanup opportunities ---------- */
@@ -96,17 +107,33 @@
   color: var(--ink-2);
 }
 
-.scan-card__savings > p b { color: var(--ink); font-weight: 500; }
-.scan-card__savings .scan-card__chips { margin: 0; }
+.scan-card__savings > p b {
+  color: var(--ink);
+  font-weight: 500;
+}
+.scan-card__savings .scan-card__chips {
+  margin: 0;
+}
 
 .chip--action {
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
 }
 
-.chip--action span { color: var(--faint); }
-.chip--action:hover { border-color: var(--blue); color: var(--blue); background: #fff; }
-.chip--action:hover span { color: var(--blue); }
+.chip--action span {
+  color: var(--faint);
+}
+.chip--action:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: #fff;
+}
+.chip--action:hover span {
+  color: var(--blue);
+}
 
 .scan-card__meta {
   margin: 10px 0 0;
@@ -115,5 +142,9 @@
   color: var(--faint);
 }
 
-.scan-card__meta .is-ok { color: var(--green); }
-.scan-card__meta .is-warn { color: #a3005f; }
+.scan-card__meta .is-ok {
+  color: var(--green);
+}
+.scan-card__meta .is-warn {
+  color: #a3005f;
+}

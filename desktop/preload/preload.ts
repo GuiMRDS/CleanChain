@@ -28,13 +28,21 @@ contextBridge.exposeInMainWorld('cleanchain', {
   sistema: process.platform,
   chave: {
     status: () => ipcRenderer.invoke(CANAIS.chaveStatus),
-    salvar: (provedor: string, chave: string) => ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
+    salvar: (provedor: string, chave: string) =>
+      ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
     remover: () => ipcRenderer.invoke(CANAIS.chaveRemover),
     /** IA local (Ollama/LM Studio neste computador): listar modelos, usar um, voltar para a nuvem. */
     modelosLocais: (provedor: string, porta?: number) =>
-      ipcRenderer.invoke(CANAIS.chaveModelosLocais, { provedor: String(provedor), porta: porta === undefined ? undefined : Number(porta) }),
+      ipcRenderer.invoke(CANAIS.chaveModelosLocais, {
+        provedor: String(provedor),
+        porta: porta === undefined ? undefined : Number(porta),
+      }),
     usarLocal: (provedor: string, modelo: string, porta?: number) =>
-      ipcRenderer.invoke(CANAIS.chaveUsarLocal, { provedor: String(provedor), modelo: String(modelo), porta: porta === undefined ? undefined : Number(porta) }),
+      ipcRenderer.invoke(CANAIS.chaveUsarLocal, {
+        provedor: String(provedor),
+        modelo: String(modelo),
+        porta: porta === undefined ? undefined : Number(porta),
+      }),
     usarNuvem: () => ipcRenderer.invoke(CANAIS.chaveUsarNuvem),
   },
   app: {

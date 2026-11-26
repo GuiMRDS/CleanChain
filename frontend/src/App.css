@@ -70,13 +70,19 @@
   align-items: stretch;
 }
 
-.left.is-chatting .insights-side { align-self: center; }
+.left.is-chatting .insights-side {
+  align-self: center;
+}
 
 /* Not enough room next to the robot on narrower screens. */
 @media (max-width: 1599px) {
-  .insights-side .filetypes { display: none; }
+  .insights-side .filetypes {
+    display: none;
+  }
 }
 
 @media (max-width: 1365px) {
-  .insights-side { display: none; }
+  .insights-side {
+    display: none;
+  }
 }

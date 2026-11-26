@@ -43,13 +43,14 @@ export default function FileTypesChart({ byType, totalBytes }) {
     const items = toItems(byType);
     const total = items.reduce((a, b) => a + b.bytes, 0) || 1;
     const pcts = percentages(items.map((i) => i.bytes));
+    const slices = [];
     let offset = 0;
-    return items.map((item, i) => {
+    for (const [i, item] of items.entries()) {
       const len = (item.bytes / total) * C;
-      const slice = { ...item, size: bytesLabel(item.bytes), pct: pcts[i], dash: Math.max(0, len - GAP), offset, delay: i * 90 };
+      slices.push({ ...item, size: bytesLabel(item.bytes), pct: pcts[i], dash: Math.max(0, len - GAP), offset, delay: i * 90 });
       offset += len;
-      return slice;
-    });
+    }
+    return slices;
   }, [byType]);
 
   const focus = slices.find((s) => s.id === active);

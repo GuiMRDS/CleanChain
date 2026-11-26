@@ -48,7 +48,10 @@ function matarQuemEscuta(porta: string): void {
     execFileSync('taskkill', ['/PID', pid, '/F']);
     return;
   }
-  const pid = execFileSync('lsof', ['-t', `-iTCP:${porta}`, '-sTCP:LISTEN']).toString().trim().split('\n')[0];
+  const pid = execFileSync('lsof', ['-t', `-iTCP:${porta}`, '-sTCP:LISTEN'])
+    .toString()
+    .trim()
+    .split('\n')[0];
   process.kill(Number(pid), 'SIGKILL');
 }
 
@@ -69,7 +72,10 @@ function portaLivre(): Promise<number> {
 
 async function primeiraPaginaDoApp(browser: Browser): Promise<Page> {
   for (let i = 0; i < 240; i++) {
-    const page = browser.contexts().flatMap((c) => c.pages()).find((p) => URL_DO_APP.test(p.url()));
+    const page = browser
+      .contexts()
+      .flatMap((c) => c.pages())
+      .find((p) => URL_DO_APP.test(p.url()));
     if (page) return page;
     await new Promise((r) => setTimeout(r, 250));
   }
@@ -161,7 +167,11 @@ test('as travas de segurança estão de pé', async () => {
       process: typeof (window as unknown as { process?: unknown }).process,
       ponte: Object.keys((window as unknown as { cleanchain: object }).cleanchain).sort(),
     }));
-    expect(ambiente).toEqual({ require: 'undefined', process: 'undefined', ponte: ['aoAtualizacao', 'aoPropostaMcp', 'app', 'chave', 'mcp', 'sistema'] });
+    expect(ambiente).toEqual({
+      require: 'undefined',
+      process: 'undefined',
+      ponte: ['aoAtualizacao', 'aoPropostaMcp', 'app', 'chave', 'mcp', 'sistema'],
+    });
 
     // CSP vem no cabeçalho da página.
     const csp = await page.evaluate(() => fetch('/').then((r) => r.headers.get('content-security-policy')));
@@ -171,7 +181,10 @@ test('as travas de segurança estão de pé', async () => {
     const erro = await page.evaluate(() =>
       (window as unknown as { cleanchain: { chave: { salvar: (p: string, c: string) => Promise<unknown> } } }).cleanchain.chave
         .salvar('groq', 'curta')
-        .then(() => 'aceitou', (e: Error) => e.message)
+        .then(
+          () => 'aceitou',
+          (e: Error) => e.message
+        )
     );
     expect(erro).toContain('não parece válida');
     expect(fs.existsSync(path.join(perfil, 'segredos.json'))).toBe(false);
@@ -241,22 +254,42 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
 
     // O scan desta área (o que o botão Start scan gravaria).
     fs.mkdirSync(path.join(perfil, 'scans'), { recursive: true });
-    fs.writeFileSync(path.join(perfil, 'scans', 'latest.json'), JSON.stringify({
-      root: area, total: '4.0 KB', total_bytes: 4096, files_scanned: 1,
-      tree: { name: 'area', path: area, bytes: 4096, size: '4.0 KB', files: 1, children: [] },
-    }));
+    fs.writeFileSync(
+      path.join(perfil, 'scans', 'latest.json'),
+      JSON.stringify({
+        root: area,
+        total: '4.0 KB',
+        total_bytes: 4096,
+        files_scanned: 1,
+        tree: { name: 'area', path: area, bytes: 4096, size: '4.0 KB', files: 1, children: [] },
+      })
+    );
 
     // Como a ponte MCP faria: token MCP do runtime.json, nome do cliente no cabeçalho.
     const base = `http://127.0.0.1:${rt.porta}`;
-    const mcpHeaders = { Authorization: `Bearer ${rt.token}`, 'X-MCP-Client': 'Cliente de Fumaça', 'Content-Type': 'application/json' };
-    const criada = await (await fetch(`${base}/api/mcp/propostas`, { method: 'POST', headers: mcpHeaders, body: JSON.stringify({ paths: [alvo], reason: 'instalador antigo' }) })).json();
+    const mcpHeaders = {
+      Authorization: `Bearer ${rt.token}`,
+      'X-MCP-Client': 'Cliente de Fumaça',
+      'Content-Type': 'application/json',
+    };
+    const criada = await (
+      await fetch(`${base}/api/mcp/propostas`, {
+        method: 'POST',
+        headers: mcpHeaders,
+        body: JSON.stringify({ paths: [alvo], reason: 'instalador antigo' }),
+      })
+    ).json();
     expect(criada.ok).toBe(true);
 
     // O app mostra o cartão com o selo do cliente.
     await expect(page.getByText('Proposta via MCP: Cliente de Fumaça')).toBeVisible({ timeout: 20_000 });
 
     // O token MCP não aprova (rota da interface exige o cookie).
-    const tentativa = await fetch(`${base}/api/propostas/${criada.id}/decisao`, { method: 'POST', headers: mcpHeaders, body: JSON.stringify({ aprovar: true }) });
+    const tentativa = await fetch(`${base}/api/propostas/${criada.id}/decisao`, {
+      method: 'POST',
+      headers: mcpHeaders,
+      body: JSON.stringify({ aprovar: true }),
+    });
     expect(tentativa.status).toBe(401);
 
     // O usuário recusa no app: nada é apagado.
@@ -311,7 +344,11 @@ test('ao fechar, o backend para de responder', async () => {
 });
 
 /** "Ollama" falso: lista modelos, informa capacidades e responde o chat em streaming (API da OpenAI). */
-async function ollamaFalso(): Promise<{ porta: number; pedidos: Array<{ rota: string; autorizacao?: string; corpo: string }>; fechar: () => void }> {
+async function ollamaFalso(): Promise<{
+  porta: number;
+  pedidos: Array<{ rota: string; autorizacao?: string; corpo: string }>;
+  fechar: () => void;
+}> {
   const http = await import('node:http');
   const pedidos: Array<{ rota: string; autorizacao?: string; corpo: string }> = [];
   const servidor = http.createServer((req, res) => {
@@ -323,10 +360,14 @@ async function ollamaFalso(): Promise<{ porta: number; pedidos: Array<{ rota: st
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(dados));
       };
-      if (req.url === '/api/tags') return json({ models: [{ name: 'modelo-teste:1b' }, { name: 'sem-ferramentas:1b' }, { name: 'nomic-embed-text:latest' }] });
+      if (req.url === '/api/tags')
+        return json({
+          models: [{ name: 'modelo-teste:1b' }, { name: 'sem-ferramentas:1b' }, { name: 'nomic-embed-text:latest' }],
+        });
       if (req.url === '/api/show') {
         const { model } = JSON.parse(corpo || '{}');
-        const caps = model === 'modelo-teste:1b' ? ['completion', 'tools'] : model.startsWith('nomic') ? ['embedding'] : ['completion'];
+        const caps =
+          model === 'modelo-teste:1b' ? ['completion', 'tools'] : model.startsWith('nomic') ? ['embedding'] : ['completion'];
         return json({ capabilities: caps });
       }
       if (req.url === '/v1/chat/completions') {
@@ -364,7 +405,10 @@ test('IA local: escolher um modelo do Ollama e conversar sem nada sair do comput
     await expect(page.getByText('Conectar o agente')).toBeVisible({ timeout: 30_000 });
 
     // A tela lista os modelos instalados e diz quais sabem usar ferramentas.
-    const modelos = await page.evaluate((p) => (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', p), ollama.porta);
+    const modelos = await page.evaluate(
+      (p) => (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', p),
+      ollama.porta
+    );
     expect(modelos).toEqual([
       { nome: 'modelo-teste:1b', ferramentas: true },
       { nome: 'sem-ferramentas:1b', ferramentas: false },
@@ -372,14 +416,34 @@ test('IA local: escolher um modelo do Ollama e conversar sem nada sair do comput
 
     // Sem servidor naquela porta: mensagem clara (não trava).
     const semServidor = await page
-      .evaluate(() => (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', 1).then(() => 'ok', (e: Error) => e.message))
+      .evaluate(() =>
+        (window as unknown as PonteIa).cleanchain.chave.modelosLocais('ollama', 1).then(
+          () => 'ok',
+          (e: Error) => e.message
+        )
+      )
       .catch((e: Error) => e.message);
     expect(semServidor).toContain('Não encontrei o Ollama');
 
     // Escolher o modelo reinicia o agente com a IA local.
-    await page.evaluate(([p, porta]) => (window as unknown as PonteIa).cleanchain.chave.usarLocal(String(p), 'modelo-teste:1b', Number(porta)), ['ollama', ollama.porta]).catch(() => {});
+    await page
+      .evaluate(
+        ([p, porta]) => (window as unknown as PonteIa).cleanchain.chave.usarLocal(String(p), 'modelo-teste:1b', Number(porta)),
+        ['ollama', ollama.porta]
+      )
+      .catch(() => {});
     await expect
-      .poll(async () => page.evaluate(() => fetch('/api/health').then((r) => r.json()).then((j) => j.model)).catch(() => null), { timeout: 60_000 })
+      .poll(
+        async () =>
+          page
+            .evaluate(() =>
+              fetch('/api/health')
+                .then((r) => r.json())
+                .then((j) => j.model)
+            )
+            .catch(() => null),
+        { timeout: 60_000 }
+      )
       .toBe('Ollama · modelo-teste:1b (local)');
     await page.waitForURL(URL_DO_APP, { timeout: 30_000 });
 
@@ -388,7 +452,11 @@ test('IA local: escolher um modelo do Ollama e conversar sem nada sair do comput
 
     // Conversa de verdade: o pedido vai ao servidor local, sem chave de nuvem, e a resposta volta.
     const resposta = await page.evaluate(async () => {
-      const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: 'oi', thread_id: 'fumaca-local' }) });
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'oi', thread_id: 'fumaca-local' }),
+      });
       return r.text();
     });
     expect(resposta).toContain('Olá do modelo ');
@@ -400,7 +468,12 @@ test('IA local: escolher um modelo do Ollama e conversar sem nada sair do comput
 
     // Sem chave da nuvem salva, não dá para "voltar para a nuvem".
     const voltar = await page
-      .evaluate(() => (window as unknown as PonteIa).cleanchain.chave.usarNuvem().then(() => 'ok', (e: Error) => e.message))
+      .evaluate(() =>
+        (window as unknown as PonteIa).cleanchain.chave.usarNuvem().then(
+          () => 'ok',
+          (e: Error) => e.message
+        )
+      )
       .catch((e: Error) => e.message);
     expect(voltar).toContain('Não há chave da nuvem salva');
   } finally {

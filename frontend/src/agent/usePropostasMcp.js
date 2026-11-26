@@ -12,14 +12,17 @@ export function usePropostasMcp() {
   const [decidindo, setDecidindo] = useState(null); // id being decided
   const [ultima, setUltima] = useState(null); // last decided proposal (result card)
 
-  const carregar = useCallback(async () => {
-    try {
-      const r = await fetch('/api/propostas');
-      if (r.ok) setPropostas((await r.json()).propostas ?? []);
-    } catch {
-      /* backend restarting: try again on the next tick */
-    }
-  }, []);
+  // The state only changes when the answer arrives (a callback), never during the effect itself.
+  const carregar = useCallback(
+    () =>
+      fetch('/api/propostas')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((corpo) => corpo && setPropostas(corpo.propostas ?? []))
+        .catch(() => {
+          /* backend restarting: try again on the next tick */
+        }),
+    []
+  );
 
   useEffect(() => {
     if (!bridge) return undefined; // MCP only exists in the desktop app
@@ -51,5 +54,12 @@ export function usePropostasMcp() {
     [carregar]
   );
 
-  return { atual: propostas[0] ?? null, restantes: Math.max(0, propostas.length - 1), decidindo, decidir, ultima, fecharUltima: () => setUltima(null) };
+  return {
+    atual: propostas[0] ?? null,
+    restantes: Math.max(0, propostas.length - 1),
+    decidindo,
+    decidir,
+    ultima,
+    fecharUltima: () => setUltima(null),
+  };
 }
