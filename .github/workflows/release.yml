@@ -63,8 +63,11 @@ jobs:
       AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
       ASSINAR_MAC: ${{ vars.APPLE_SIGNING_IDENTITY != '' && matrix.os == 'macos-latest' }}
       APPLE_SIGNING_IDENTITY: ${{ vars.APPLE_SIGNING_IDENTITY }}
-      CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_P12 || '' }} # .p12 em base64
-      CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_SENHA || '' }}
+      # NÃO viram CSC_LINK/CSC_KEY_PASSWORD aqui: com o valor vazio, o electron-builder tenta usar a
+      # pasta atual como certificado no build da tag ("desktop not a file"). Só no passo dos
+      # instaladores, e só quando há assinatura (ASSINAR_MAC).
+      APPLE_CERTIFICADO_P12: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_P12 || '' }} # .p12 em base64
+      APPLE_CERTIFICADO_SENHA: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICADO_SENHA || '' }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -157,7 +160,9 @@ jobs:
               -c.win.azureSignOptions.publisherName="$AZURE_SIGNING_PUBLISHER"
             )
           fi
+          unset CSC_LINK CSC_KEY_PASSWORD # sem certificado, o macOS usa a assinatura ad hoc do electron-builder.yml
           if [ "$ASSINAR_MAC" = "true" ]; then
+            export CSC_LINK="$APPLE_CERTIFICADO_P12" CSC_KEY_PASSWORD="$APPLE_CERTIFICADO_SENHA"
             # Developer ID + hardened runtime + notarização (o electron-builder assina também os
             # binários do backend em Resources e grampeia o ticket da Apple no app).
             args+=(
