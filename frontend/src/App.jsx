@@ -11,7 +11,9 @@ import AgentStatus from './components/AgentStatus.jsx';
 import CenaSegura from './components/CenaSegura.jsx';
 import ConfigChave from './components/ConfigChave.jsx';
 import DesktopMenu from './components/DesktopMenu.jsx';
+import ConfigLicenca from './components/ConfigLicenca.jsx';
 import ConfigMcp from './components/ConfigMcp.jsx';
+import ConviteLicenca from './components/ConviteLicenca.jsx';
 import PropostaMcp from './components/PropostaMcp.jsx';
 import { usePropostasMcp } from './agent/usePropostasMcp.js';
 import { useFilaDeTela } from './agent/useFilaDeTela.js';
@@ -108,6 +110,13 @@ export default function App() {
     ) : desktop.mcpAberta ? (
       // Opened from the menu: shows even before the LLM key is set (MCP doesn't need it).
       <ConfigMcp mcp={desktop.mcp} onDefinir={desktop.definirMcp} onCopiar={desktop.copiarMcp} onFechar={desktop.fecharMcp} />
+    ) : desktop.licencaAberta ? (
+      <ConfigLicenca
+        licenca={desktop.licenca}
+        onRegistrar={desktop.registrarLicenca}
+        onRemover={desktop.removerLicenca}
+        onFechar={desktop.fecharLicenca}
+      />
     ) : desktop.mostrarConfig ? (
       <ConfigChave
         atual={desktop.chave}
@@ -121,6 +130,13 @@ export default function App() {
       <ChatThread messages={messages} onReset={reset} onDecide={decide} busy={busy} lixeira={plataforma.lixeira} />
     ) : scanned ? (
       <ScanCard scan={scan.result} onRescan={scan.choose} onAsk={send} />
+    ) : desktop.convite && scan.phase === 'idle' ? (
+      // Optional license invite: only on the start screen, never during a scan, chat or cleanup.
+      <ConviteLicenca
+        paginaDeCompra={desktop.licenca?.paginaDeCompra}
+        onVerLicenca={desktop.abrirLicenca}
+        onFechar={desktop.adiarConvite}
+      />
     ) : (
       <StartScan
         phase={scan.phase}

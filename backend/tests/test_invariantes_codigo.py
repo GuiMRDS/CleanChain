@@ -301,3 +301,13 @@ def test_certificado_da_apple_so_existe_quando_ha_assinatura():
     for i in definicoes:
         assert "export" in linhas[i], f"CSC_LINK definido fora do passo dos instaladores: {linhas[i].strip()}"
         assert 'if [ "$ASSINAR_MAC" = "true" ]; then' in linhas[i - 1], linhas[i].strip()
+
+
+def test_chave_publica_de_teste_so_fora_do_app_instalado():
+    # Licença opcional: a chave pública pode ser trocada por variável de ambiente só em
+    # desenvolvimento e nos testes. No app instalado, sempre a embutida (senão qualquer um
+    # registraria licenças com a própria chave). A chave privada nunca entra no repositório.
+    texto = (DESKTOP / "main" / "licenca.ts").read_text(encoding="utf-8")
+    assert "return !app.isPackaged && outra ? outra : CHAVE_PUBLICA;" in texto
+    publica = (DESKTOP / "main" / "licenca-chave-publica.ts").read_text(encoding="utf-8")
+    assert "BEGIN PUBLIC KEY" in publica and "PRIVATE" not in publica

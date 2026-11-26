@@ -4,6 +4,19 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+- **Licença opcional, no modelo WinRAR:** o app continua completo e gratuito; uma licença de
+  pagamento único tira o convite ocasional (depois de 30 dias de uso, no máximo 1 vez por semana,
+  só na tela inicial) e mostra *Licenciado para <nome>* no menu. A chave é conferida offline
+  (assinatura Ed25519), sem servidor e sem enviar nada.
+
+### Projeto
+- Prettier e ESLint (configuração oficial do Vite para a interface; typescript-eslint para o
+  Electron), `ruff` no Python, e pre-commit com Husky + lint-staged. O CI confere os três.
+- Testes novos: mapa de pastas, voz, oportunidades e discos (cobertura do backend: 80% → 82%).
+
 ## [1.1.0] - 2026-11-25
 
 IA local (Ollama e LM Studio), instalador menor e o agente avaliado com modelos reais.

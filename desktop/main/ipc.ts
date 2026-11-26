@@ -6,6 +6,7 @@ import log from 'electron-log/main';
 import { estadoAtualizacao, instalarAgora, verificarAgora } from './atualizacao';
 import { pastaLogs } from './caminhos';
 import * as ia from './ia';
+import * as licenca from './licenca';
 import * as mcp from './mcp';
 import { daOrigemDoApp } from './seguranca';
 import * as segredos from './segredos';
@@ -31,6 +32,10 @@ export const CANAIS = {
   mcpDefinir: 'mcp:definir',
   mcpCopiar: 'mcp:copiar',
   eventoPropostaMcp: 'mcp:proposta', // main → interface: chegou uma proposta de limpeza via MCP
+  licencaStatus: 'licenca:status', // licença opcional (modelo WinRAR): só tira o convite
+  licencaRegistrar: 'licenca:registrar',
+  licencaRemover: 'licenca:remover',
+  licencaAdiarConvite: 'licenca:adiarConvite',
 } as const;
 
 interface Dependencias {
@@ -160,5 +165,25 @@ export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Depe
       clipboard.writeText(mcp.configuracao(arg as mcp.ClienteMcp));
       return true;
     })
+  );
+
+  ipcMain.handle(
+    CANAIS.licencaStatus,
+    so(['app'], () => licenca.status())
+  );
+  ipcMain.handle(
+    CANAIS.licencaRegistrar,
+    so(['app'], (_event, arg) => {
+      if (typeof arg !== 'string' || arg.length > 2000) throw new Error('Chave inválida.');
+      return licenca.registrar(arg); // confere a assinatura; lança Error com mensagem para a tela
+    })
+  );
+  ipcMain.handle(
+    CANAIS.licencaRemover,
+    so(['app'], () => licenca.remover())
+  );
+  ipcMain.handle(
+    CANAIS.licencaAdiarConvite,
+    so(['app'], () => licenca.adiarConvite())
   );
 }

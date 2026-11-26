@@ -38,6 +38,7 @@ assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/
 | `docs/seguranca-por-sistema.md` | regras de exclusão de cada sistema (manter em dia) |
 | `docs/assinatura.md`, `docs/roteiro-demo.md` | assinatura de código; roteiro do vídeo de demonstração |
 | `docs/roadmap.md` | decisões de arquitetura e o que vem depois (fases portfólio e produto) |
+| `docs/licencas.md` | licença opcional (modelo WinRAR): como emitir chaves e guardar a chave privada |
 | `docs/images/` | capturas e logo do README (regenerar quando a UI mudar muito) |
 | `README.md`, `CHANGELOG.md`, `PRIVACIDADE.md`, `LICENSE` | produto, mudanças por versão, privacidade e licença MIT |
 
@@ -190,6 +191,10 @@ Chaves no `.env` da raiz ou `backend/.env`: `GROQ_API_KEY` ou `OPENAI_API_KEY`
   e o evento `atualizacao:estado`; cada canal diz quem pode chamar (interface do app e/ou
   a tela local) e valida os argumentos.
 - `main/atualizacao.ts` — estado da atualização automática, mostrado no menu do app.
+- `main/licenca.ts` + `main/licenca-regras.ts` — licença opcional (modelo WinRAR): o app é igual
+  para todos; a licença só tira o convite. Chave `CC1-…` assinada com Ed25519, conferida offline
+  com `licenca-chave-publica.ts`; a chave privada fica fora do repositório (`docs/licencas.md`).
+  Canais `licenca:status|registrar|remover|adiarConvite`.
 - `main/mcp.ts` — integração MCP: preferência (desligada por padrão), token MCP por
   execução, `runtime.json` (0600, só com a integração ligada, apagado ao sair) e a
   configuração pronta para Claude Desktop/Claude Code/Cursor. Proposta nova (evento do
