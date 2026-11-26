@@ -35,6 +35,7 @@ assistentes lerem as análises e proporem limpezas. Versão atual: ver `backend/
 | `desktop/electron-builder.yml` | instaladores (NSIS, dmg/zip, AppImage/deb), Fuses e publicação |
 | `.github/workflows/` | CI (testes nos três sistemas) e Release (instaladores por tag `v*`) |
 | `docs/desenvolvimento.md` | guia técnico: como rodar, API, estrutura, release |
+| `docs/mcp.md` | integração MCP: configuração dos clientes, fluxo de aprovação e segurança |
 | `docs/seguranca-por-sistema.md` | regras de exclusão de cada sistema (manter em dia) |
 | `docs/assinatura.md`, `docs/roteiro-demo.md` | assinatura de código; roteiro do vídeo de demonstração |
 | `docs/roadmap.md` | decisões de arquitetura e o que vem depois (fases portfólio e produto) |

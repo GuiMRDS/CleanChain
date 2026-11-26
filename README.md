@@ -21,7 +21,8 @@
   <a href="#segurança-e-privacidade">Segurança</a> ·
   <a href="#usando-via-mcp">MCP</a> ·
   <a href="#arquitetura">Arquitetura</a> ·
-  <a href="#desenvolvimento">Desenvolvimento</a>
+  <a href="#desenvolvimento">Desenvolvimento</a> ·
+  <a href="#apoie-o-cleanchain">Apoie</a>
 </p>
 
 ![Demonstração: scan, o agente abrindo a maior pasta no mapa, limpeza com aprovação e uma proposta via MCP](docs/images/demo.gif)
@@ -212,101 +213,8 @@ rodou no app (o MCP não escaneia o disco).
 Com o app fechado ou a integração desligada, as ferramentas respondem *"O CleanChain não está
 aberto. Abra o app e tente de novo."*
 
-### Onde fica o executável
-
-O servidor MCP é o próprio backend do app no modo `--mcp` (transporte stdio), instalado junto com
-o app:
-
-| Sistema | Comando |
-|---|---|
-| Windows | `%LOCALAPPDATA%\Programs\CleanChain\resources\backend\cleanchain-backend.exe --mcp` |
-| macOS | `/Applications/CleanChain.app/Contents/Resources/backend/cleanchain-backend --mcp` |
-| Linux (`.deb`) | `/opt/CleanChain/resources/backend/cleanchain-backend --mcp` |
-
-> Configurou com a versão 1.0.x (o antigo `resources\mcp\cleanchain-mcp`)? Copie a configuração
-> de novo na tela "Integração MCP".
-
-No **AppImage** o caminho muda a cada abertura, então a integração MCP precisa do `.deb`. A tela
-"Integração MCP" mostra o caminho exato da sua instalação.
-
-### Configuração dos clientes
-
-O botão **Copiar configuração** já gera o texto com o caminho certo. Os exemplos abaixo usam o
-caminho do Windows; troque pelo do seu sistema.
-
-**Claude Desktop**: em *Settings › Developer › Edit Config* (`claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "cleanchain": {
-      "command": "C:\\Users\\<você>\\AppData\\Local\\Programs\\CleanChain\\resources\\backend\\cleanchain-backend.exe",
-      "args": ["--mcp"]
-    }
-  }
-}
-```
-
-**Claude Code**: no terminal:
-
-```sh
-claude mcp add --scope user cleanchain -- "C:\Users\<você>\AppData\Local\Programs\CleanChain\resources\backend\cleanchain-backend.exe" --mcp
-```
-
-**Cursor**: em `~/.cursor/mcp.json` (mesmo formato do Claude Desktop):
-
-```json
-{
-  "mcpServers": {
-    "cleanchain": {
-      "command": "/Applications/CleanChain.app/Contents/Resources/backend/cleanchain-backend",
-      "args": ["--mcp"]
-    }
-  }
-}
-```
-
-Outros clientes MCP (VS Code, agentes próprios) usam o mesmo comando com transporte **stdio**.
-
-### Fluxo de aprovação
-
-```mermaid
-sequenceDiagram
-    participant C as Cliente MCP (Claude, Cursor…)
-    participant M as cleanchain-backend --mcp (stdio)
-    participant B as Backend do CleanChain
-    participant U as Você, no app
-    C->>M: propose_cleanup(paths, reason)
-    M->>B: POST /api/mcp/propostas (token MCP)
-    B->>B: mesmas regras do cartão de aprovação
-    alt algum caminho protegido, fora da área ou mais de 100 itens
-        B-->>C: proposta recusada (nada muda)
-    else tudo válido
-        B-->>U: notificação + janela na frente + cartão "Proposta via MCP: <cliente>"
-        B-->>C: id da proposta (pendente)
-        U->>B: Mover para a Lixeira (ou Cancelar)
-        B->>B: revalida cada item e manda para a Lixeira
-        C->>M: get_proposal_status(id)
-        M-->>C: aprovada / recusada / expirada
-    end
-```
-
-- A proposta passa pelas **mesmas regras** do chat (pastas protegidas, área escaneada, até 100
-  itens) e é **recusada inteira** se qualquer caminho for bloqueado.
-- Ao chegar uma proposta, o app mostra uma notificação do sistema e traz a janela para a frente,
-  com o cartão de aprovação e o selo **"Proposta via MCP: <nome do cliente>"** (o nome que o
-  cliente informa ao conectar).
-- **Só o seu clique no app apaga**, com a mesma validação dupla de sempre (no cartão e de novo
-  na hora de mandar para a Lixeira). Propostas sem decisão **expiram em 30 minutos**.
-
-### Segurança da integração
-
-- O app grava `runtime.json` (porta, um token MCP novo a cada abertura e o PID) na pasta de dados,
-  com permissão só para o seu usuário, **apenas com a integração ligada**, e o apaga ao desligar ou
-  ao fechar o app.
-- As rotas `/api/mcp/*` aceitam **só** esse token e só leem ou criam propostas. As rotas de
-  aprovação exigem a sessão da interface do app, e o token MCP não chega nelas.
-- Com a integração desligada, o backend recusa todas as rotas MCP.
+Configuração manual de cada cliente, onde fica o executável, o fluxo de aprovação e a segurança
+da integração: [docs/mcp.md](docs/mcp.md).
 
 ## Arquitetura
 
@@ -396,10 +304,22 @@ cd desktop && npm run test:fumaca
 cd desktop && npm run dist
 ```
 
-O guia completo — variáveis de ambiente, modo navegador (só para desenvolver a interface), API, estrutura do projeto, ícone e como
-publicar um Release — está em [docs/desenvolvimento.md](docs/desenvolvimento.md). Para agentes
-de código (Claude, Codex, Cursor…), o contexto e as regras do projeto estão em
-[AGENTS.md](AGENTS.md). Mudanças de cada versão: [CHANGELOG.md](CHANGELOG.md). Próximos passos: [docs/roadmap.md](docs/roadmap.md).
+Na raiz, `npm install` ativa o pre-commit (ESLint, Prettier e `ruff` nos arquivos do commit).
+
+## Documentação
+
+| Guia | Para quê |
+|---|---|
+| [docs/desenvolvimento.md](docs/desenvolvimento.md) | rodar, testar, empacotar e publicar; API, estrutura e variáveis de ambiente |
+| [docs/mcp.md](docs/mcp.md) | conectar Claude, Cursor e outros clientes MCP; fluxo de aprovação e segurança |
+| [docs/seguranca-por-sistema.md](docs/seguranca-por-sistema.md) | o que o app nunca apaga em cada sistema |
+| [PRIVACIDADE.md](PRIVACIDADE.md) | o que o app lê, grava e envia |
+| [docs/assinatura.md](docs/assinatura.md) | ativar a assinatura de código (Windows e macOS) |
+| [docs/licencas.md](docs/licencas.md) | licença opcional: emitir chaves e guardar a chave privada |
+| [docs/roadmap.md](docs/roadmap.md) | decisões de arquitetura e próximos passos |
+| [docs/roteiro-demo.md](docs/roteiro-demo.md) | roteiro do vídeo e como regenerar o GIF |
+| [CHANGELOG.md](CHANGELOG.md) | mudanças de cada versão |
+| [AGENTS.md](AGENTS.md) | contexto e regras do projeto para agentes de código (Claude, Codex, Cursor…) |
 
 ## Apoie o CleanChain
 
