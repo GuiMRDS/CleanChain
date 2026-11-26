@@ -514,9 +514,16 @@ test('licença opcional: convite discreto depois de 30 dias e licença registrad
     await expect(page.getByRole('alert')).toContainText('Chave');
     await campo.fill(emitir({ nome: 'Fulana de Tal', emitida: '2026-11-26', id: 't1' }, privateKey));
     await page.getByRole('button', { name: 'Registrar licença' }).click();
-    await expect(page.getByText('Licenciado para')).toBeVisible();
-    await expect(page.getByText('Fulana de Tal')).toBeVisible();
-    expect(await ponte('window.cleanchain.licenca.status().then((s) => [s.licenciado, s.convite])')).toEqual([true, false]);
+    if (process.env.CLEANCHAIN_EXE) {
+      // App instalado: a chave pública de teste é ignorada (só vale a embutida). Uma licença
+      // assinada por outra chave privada é recusada — ninguém troca a chave por variável de ambiente.
+      await expect(page.getByRole('alert')).toContainText('Chave inválida');
+      expect(await ponte('window.cleanchain.licenca.status().then((s) => s.licenciado)')).toBe(false);
+    } else {
+      await expect(page.getByText('Licenciado para')).toBeVisible();
+      await expect(page.getByText('Fulana de Tal')).toBeVisible();
+      expect(await ponte('window.cleanchain.licenca.status().then((s) => [s.licenciado, s.convite])')).toEqual([true, false]);
+    }
   } finally {
     await fechar();
     fs.rmSync(perfil, { recursive: true, force: true });
