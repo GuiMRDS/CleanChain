@@ -288,3 +288,16 @@ def test_so_o_build_assinado_atualiza_sozinho():
     # As linhas logo antes da marca: ela só é gravada dentro do "se assinou".
     antes = release.split("cleanchainAssinado=true")[0].splitlines()[-3:]
     assert any('if [ "$ASSINAR" = "true" ] || [ "$ASSINAR_MAC" = "true" ]; then' in linha for linha in antes)
+
+
+def test_certificado_da_apple_so_existe_quando_ha_assinatura():
+    # CSC_LINK vazio faz o electron-builder tentar usar a pasta atual como certificado no build da
+    # tag (falhou o Release da v1.1.0; nos PRs ele pula a assinatura e o erro não aparece). A
+    # variável só pode ser definida dentro do "se assina o macOS".
+    release = (RAIZ / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    linhas = release.splitlines()
+    definicoes = [i for i, linha in enumerate(linhas) if "CSC_LINK" in linha and ("export" in linha or linha.strip().startswith("CSC_LINK:"))]
+    assert definicoes, "o Release precisa exportar CSC_LINK no caminho assinado"
+    for i in definicoes:
+        assert "export" in linhas[i], f"CSC_LINK definido fora do passo dos instaladores: {linhas[i].strip()}"
+        assert 'if [ "$ASSINAR_MAC" = "true" ]; then' in linhas[i - 1], linhas[i].strip()
