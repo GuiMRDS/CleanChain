@@ -57,17 +57,24 @@ jobs:
         working-directory: backend
         run: uv run python -m pytest
 
-      - name: Interface — testes (Vitest) e build
+      - name: Formatação (Prettier)
+        run: |
+          npm ci
+          npm run format:check
+
+      - name: Interface — lint (ESLint), testes (Vitest) e build
         working-directory: frontend
         run: |
           npm ci
+          npm run lint
           npm test
           npm run build
 
-      - name: Desktop — dependências e tipos
+      - name: Desktop — dependências, lint (ESLint) e tipos
         working-directory: desktop
         run: |
           npm ci
+          npm run lint
           npm run build:ts
 
       - name: Desktop — teste de fumaça (Electron + backend via uv)

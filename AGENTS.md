@@ -46,6 +46,11 @@ Dados locais (scans, `.env`, `runtime.json`, logs) nunca vão para o git (`.giti
 ## Comandos
 
 ```sh
+# raiz: ativa o pre-commit (Husky + lint-staged: ESLint e Prettier nos arquivos do commit)
+npm install
+npm run format        # Prettier em todo o código JS/TS/CSS (format:check no CI)
+npm run lint          # ESLint da interface e do Electron
+
 # backend
 cd backend
 uv sync
@@ -312,4 +317,8 @@ aqui = a mudança quebrou uma regra: reveja a mudança, não o teste.
 
 - Python: type hints, docstrings curtas em português, funções pequenas.
 - JS/React: componentes funcionais + hooks; CSS por componente; sem bibliotecas de UI.
+- Formatação: Prettier (`.prettierrc.json`); lint: ESLint (interface: config oficial do Vite
+  com `react-hooks` 7 — nada de `setState` síncrono em efeito nem `ref` lida/escrita na
+  renderização; Electron: typescript-eslint). O pre-commit (Husky) e o CI conferem os dois.
+  O desktop usa TypeScript 6.0 até o typescript-eslint suportar o 7.
 - Commits em português, no imperativo, descrevendo o que mudou e por quê.
