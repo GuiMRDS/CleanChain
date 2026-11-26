@@ -114,7 +114,7 @@ class Acc:
         heapq.heapify(self.old)
         self.old_total += o.old_total
         self.old_count += o.old_count
-        self.ages = [a + b for a, b in zip(self.ages, o.ages)]
+        self.ages = [a + b for a, b in zip(self.ages, o.ages, strict=True)]
         for k, v in o.dups.items():
             self.dups.setdefault(k, []).extend(v)
         self.caches.extend(o.caches)
@@ -373,7 +373,7 @@ def _insights(acc: Acc, ctx: Ctx, total: int, stop: threading.Event | None, dup_
             "total_bytes": acc.old_total,
             "files": [{"path": p, "bytes": s, "modified": m} for s, p, m in old],
         },
-        "ages": [{"label": label, "bytes": b, "pct": round(b * 100 / total, 1)} for (_, label), b in zip(AGE_BUCKETS, acc.ages)],
+        "ages": [{"label": label, "bytes": b, "pct": round(b * 100 / total, 1)} for (_, label), b in zip(AGE_BUCKETS, acc.ages, strict=True)],
         "extensions": [{"ext": e or "(sem extensão)", "bytes": b, "count": c, "pct": round(b * 100 / total, 1)} for e, (b, c) in exts],
         "estimated_savings": reclaimable + dups["wasted_total"],
     }

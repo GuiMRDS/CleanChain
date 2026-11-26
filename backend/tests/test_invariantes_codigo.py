@@ -122,7 +122,7 @@ def test_preload_expoe_so_a_ponte_e_nao_o_ipc_cru():
     texto = (DESKTOP / "preload" / "preload.ts").read_text(encoding="utf-8")
     assert re.findall(r"exposeInMainWorld\(\s*'([^']+)'", texto) == ["cleanchain"]
     # ipcRenderer só pode aparecer chamando invoke/on/removeListener, nunca entregue inteiro.
-    codigo = "\n".join(l for l in texto.splitlines() if not l.lstrip().startswith("import "))
+    codigo = "\n".join(lin for lin in texto.splitlines() if not lin.lstrip().startswith("import "))
     assert not re.search(r"[:{,(]\s*ipcRenderer\s*[,})]", codigo)
 
 

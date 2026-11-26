@@ -135,7 +135,8 @@ def _find_duplicates(candidates, budget_s, stop, max_groups, pool, on_progress) 
             continue
         members = list(unique.values())
         by_partial: dict[bytes, list[str]] = {}
-        for p, digest in zip(members, pool.map(lambda q: _safe(_partial_hash, q, size), members)):
+        # size=size: cada tarefa usa o tamanho deste grupo (não o da variável do laço depois).
+        for p, digest in zip(members, pool.map(lambda q, size=size: _safe(_partial_hash, q, size), members), strict=True):
             if digest is not None:
                 by_partial.setdefault(digest, []).append(p)
         suspects.extend((size, same) for same in by_partial.values() if len(same) > 1)
@@ -151,7 +152,7 @@ def _find_duplicates(candidates, budget_s, stop, max_groups, pool, on_progress) 
             out.append({"bytes": size, "count": len(same), "wasted": size * (len(same) - 1), "confirmed": False, "paths": same[:8]})
             continue
         by_full: dict[bytes, list[str]] = {}
-        for p, digest in zip(same, pool.map(lambda q: _safe(_full_hash, q, deadline), same)):
+        for p, digest in zip(same, pool.map(lambda q: _safe(_full_hash, q, deadline), same), strict=True):
             if digest is not None:
                 by_full.setdefault(digest, []).append(p)
         if time.monotonic() > deadline and sum(len(v) for v in by_full.values()) < len(same):

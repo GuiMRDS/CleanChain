@@ -53,6 +53,10 @@ jobs:
         working-directory: backend
         run: uv sync --frozen
 
+      - name: Backend — lint (ruff)
+        working-directory: backend
+        run: uv run ruff check .
+
       - name: Backend — testes de segurança
         working-directory: backend
         run: uv run python -m pytest
