@@ -246,7 +246,7 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
       tree: { name: 'area', path: area, bytes: 4096, size: '4.0 KB', files: 1, children: [] },
     }));
 
-    // Como o cleanchain-mcp faria: token MCP do runtime.json, nome do cliente no cabeçalho.
+    // Como a ponte MCP faria: token MCP do runtime.json, nome do cliente no cabeçalho.
     const base = `http://127.0.0.1:${rt.porta}`;
     const mcpHeaders = { Authorization: `Bearer ${rt.token}`, 'X-MCP-Client': 'Cliente de Fumaça', 'Content-Type': 'application/json' };
     const criada = await (await fetch(`${base}/api/mcp/propostas`, { method: 'POST', headers: mcpHeaders, body: JSON.stringify({ paths: [alvo], reason: 'instalador antigo' }) })).json();
@@ -277,10 +277,10 @@ test('integração MCP: proposta chega ao app e só o usuário decide', async ()
     await definirMcp(page, true);
     expect(fs.existsSync(runtime)).toBe(true);
     await fechar();
-    // App fechado = o cleanchain-mcp passa a responder "abra o app". Na saída normal o arquivo
+    // App fechado = a ponte MCP passa a responder "abra o app". Na saída normal o arquivo
     // some; se o processo foi encerrado à força (no macOS fechar a janela não encerra o app, então
     // o teste do app empacotado mata o processo), sobra o arquivo com um PID que já não existe —
-    // e o cleanchain-mcp confere o PID (test_app_fechado_com_pid_morto).
+    // e a ponte MCP confere o PID (test_app_fechado_com_pid_morto).
     const sobrou = fs.existsSync(runtime) ? Number(JSON.parse(fs.readFileSync(runtime, 'utf8')).pid) : null;
     expect(sobrou === null || !processoVivo(sobrou)).toBe(true);
   } finally {

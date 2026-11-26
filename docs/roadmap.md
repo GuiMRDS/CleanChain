@@ -12,7 +12,8 @@ empilhadas).
 
 - `ormsgpack` 1.12.x no Windows: a 1.13.1 é bloqueada pelo Smart App Control.
 - A pasta do usuário vai ao modelo como `~` (o nome de usuário não sai do computador).
-- Atualização só **avisa** enquanto não houver assinatura (`ATUALIZACAO_AUTOMATICA = false`).
+- Atualização só **avisa** enquanto não houver assinatura (na v1.1.0, isso passou a seguir o build
+  assinado: `buildAssinado`).
 - Teste garantindo que ligar e desligar o MCP não reinicia o backend.
 - Ícone do CleanChain na barra de tarefas ao rodar pelo código.
 - Modo navegador documentado como ferramenta de desenvolvimento.

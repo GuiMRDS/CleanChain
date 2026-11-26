@@ -76,7 +76,7 @@ flowchart LR
 - **Se o backend cair**, o app mostra o aviso e oferece **Reiniciar**, sem fechar.
 - **Janela integrada ao design:** sem a barra de título nativa; a interface vai até o topo,
   os botões da janela ficam numa sobreposição discreta (à esquerda no macOS) e as ações do
-  app (chave do modelo, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
+  app (modelo de IA, atualizações, logs) ficam num menu próprio no estilo HUD. Abertura e
   avisos de erro usam o mesmo visual. No macOS o app continua ativo ao fechar a janela e
   tem o menu do app (Sobre, Ocultar, Encerrar, Editar).
 

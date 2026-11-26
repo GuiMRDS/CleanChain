@@ -55,7 +55,7 @@ async function iniciarBackend(estado: 'iniciando' | 'reiniciando' = 'iniciando')
   try {
     await mostrarEstado(estado);
     const conexao = await backend.iniciar({ ...ia.envDoBackend(), ...mcp.envDoBackend() });
-    mcp.atualizarRuntime(conexao.porta); // integração MCP: o cleanchain-mcp acha o app por aqui
+    mcp.atualizarRuntime(conexao.porta); // integração MCP: a ponte MCP acha o app por aqui
     await janela?.loadURL(urlBootstrap(conexao));
   } catch (err) {
     logMain.error('não consegui iniciar o backend:', (err as Error).message);
@@ -198,7 +198,7 @@ if (!app.requestSingleInstanceLock()) {
     if (saindo) return;
     saindo = true;
     event.preventDefault();
-    mcp.apagarRuntime(); // app fechado: o cleanchain-mcp passa a responder "abra o app"
+    mcp.apagarRuntime(); // app fechado: a ponte MCP passa a responder "abra o app"
     backend
       .parar()
       .catch((err) => logMain.error('falha ao encerrar o backend:', err))

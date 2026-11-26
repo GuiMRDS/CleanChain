@@ -47,7 +47,6 @@ class Proposta:
     criada: float = field(default_factory=time.time)
     estado: str = PENDENTE
     resultado: dict | None = None
-    decidida: float | None = None
 
     def expira_em(self, agora: float | None = None) -> int:
         return max(0, int(self.criada + VALIDADE_S - (agora or time.time())))
@@ -128,7 +127,6 @@ class Propostas:
             if proposta.estado != PENDENTE:
                 raise ValueError(f"Esta proposta já está {proposta.estado}.")
             proposta.estado = APROVADA if aprovar else RECUSADA
-            proposta.decidida = time.time()
         if aprovar:
             # Só os itens que o cartão mostrou; executar_exclusao revalida cada um agora.
             proposta.resultado = executar_exclusao([i["path"] for i in proposta.previa["items"]])

@@ -1,4 +1,4 @@
-"""Ponto de entrada: `python -m cleanchain_mcp` (e o executável cleanchain-mcp do PyInstaller).
+"""Ponto de entrada: `python -m cleanchain_mcp` (no app instalado: `cleanchain-backend --mcp`).
 
 Fala MCP pelo stdio: stdout é só do protocolo (nada de print aqui).
 """
