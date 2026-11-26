@@ -10,7 +10,14 @@ Todas as mudanças relevantes do CleanChain ficam aqui. O formato segue o
 - **Licença opcional, no modelo WinRAR:** o app continua completo e gratuito; uma licença de
   pagamento único tira o convite ocasional (depois de 30 dias de uso, no máximo 1 vez por semana,
   só na tela inicial) e mostra *Licenciado para <nome>* no menu. A chave é conferida offline
-  (assinatura Ed25519), sem servidor e sem enviar nada.
+  (assinatura Ed25519), sem servidor e sem enviar nada. O convite é uma faixa fina acima do
+  card de scan: não substitui a tela nem pede resposta, e o scan, o chat e o agente funcionam
+  igual com ou sem licença.
+
+### Corrigido
+- "Error occurred in handler for 'chave:modelosLocais'" no log quando o Ollama/LM Studio está
+  desligado: erros de uso (servidor local fora do ar, chave colada errada) voltam do IPC como
+  resposta e aparecem só na tela, sem parecer defeito no log.
 
 ### Projeto
 - Prettier e ESLint (configuração oficial do Vite para a interface; typescript-eslint para o

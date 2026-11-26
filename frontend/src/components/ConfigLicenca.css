@@ -21,3 +21,33 @@
   line-height: 1.45;
   word-break: break-all;
 }
+
+/* Convite: faixa fina acima do card de scan (não substitui nada nem pede resposta). */
+.convite-licenca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.convite-licenca__texto {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.convite-licenca__acoes {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+
+.convite-licenca a.link-btn {
+  text-decoration: none;
+}
+
+.convite-licenca a.link-btn:hover {
+  text-decoration: underline;
+}

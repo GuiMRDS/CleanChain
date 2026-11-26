@@ -58,6 +58,12 @@
   width: var(--col-w);
 }
 
+.card-pilha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .insights-side {
   display: flex;
   align-items: stretch;

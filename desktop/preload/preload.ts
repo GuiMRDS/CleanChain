@@ -27,48 +27,54 @@ const CANAIS = {
   eventoPropostaMcp: 'mcp:proposta',
 } as const;
 
+/** Chama um canal e desembrulha a resposta: erro de uso vira um Error comum para a tela. */
+async function chamar<T = unknown>(canal: string, arg?: unknown): Promise<T> {
+  const r = await ipcRenderer.invoke(canal, arg);
+  if (r && typeof r === 'object' && r.ok === false) throw new Error(String(r.erro));
+  return (r && typeof r === 'object' && r.ok === true ? r.valor : undefined) as T;
+}
+
 contextBridge.exposeInMainWorld('cleanchain', {
   /** 'win32' | 'darwin' | 'linux': só para a interface ajustar a barra de título. */
   sistema: process.platform,
   chave: {
-    status: () => ipcRenderer.invoke(CANAIS.chaveStatus),
-    salvar: (provedor: string, chave: string) =>
-      ipcRenderer.invoke(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
-    remover: () => ipcRenderer.invoke(CANAIS.chaveRemover),
+    status: () => chamar(CANAIS.chaveStatus),
+    salvar: (provedor: string, chave: string) => chamar(CANAIS.chaveSalvar, { provedor: String(provedor), chave: String(chave) }),
+    remover: () => chamar(CANAIS.chaveRemover),
     /** IA local (Ollama/LM Studio neste computador): listar modelos, usar um, voltar para a nuvem. */
     modelosLocais: (provedor: string, porta?: number) =>
-      ipcRenderer.invoke(CANAIS.chaveModelosLocais, {
+      chamar(CANAIS.chaveModelosLocais, {
         provedor: String(provedor),
         porta: porta === undefined ? undefined : Number(porta),
       }),
     usarLocal: (provedor: string, modelo: string, porta?: number) =>
-      ipcRenderer.invoke(CANAIS.chaveUsarLocal, {
+      chamar(CANAIS.chaveUsarLocal, {
         provedor: String(provedor),
         modelo: String(modelo),
         porta: porta === undefined ? undefined : Number(porta),
       }),
-    usarNuvem: () => ipcRenderer.invoke(CANAIS.chaveUsarNuvem),
+    usarNuvem: () => chamar(CANAIS.chaveUsarNuvem),
   },
   app: {
-    versao: (): Promise<string> => ipcRenderer.invoke(CANAIS.versao),
-    abrirLogs: () => ipcRenderer.invoke(CANAIS.abrirLogs),
-    reiniciarServico: () => ipcRenderer.invoke(CANAIS.reiniciarServico),
-    atualizacao: () => ipcRenderer.invoke(CANAIS.atualizacao),
-    verificarAtualizacoes: () => ipcRenderer.invoke(CANAIS.verificarAtualizacoes),
-    instalarAtualizacao: () => ipcRenderer.invoke(CANAIS.instalarAtualizacao),
+    versao: (): Promise<string> => chamar(CANAIS.versao),
+    abrirLogs: () => chamar(CANAIS.abrirLogs),
+    reiniciarServico: () => chamar(CANAIS.reiniciarServico),
+    atualizacao: () => chamar(CANAIS.atualizacao),
+    verificarAtualizacoes: () => chamar(CANAIS.verificarAtualizacoes),
+    instalarAtualizacao: () => chamar(CANAIS.instalarAtualizacao),
   },
   /** Integração MCP: status, ligar/desligar e copiar a configuração de um cliente. */
   mcp: {
-    status: () => ipcRenderer.invoke(CANAIS.mcpStatus),
-    definir: (ativo: boolean) => ipcRenderer.invoke(CANAIS.mcpDefinir, Boolean(ativo)),
-    copiar: (cliente: string) => ipcRenderer.invoke(CANAIS.mcpCopiar, String(cliente)),
+    status: () => chamar(CANAIS.mcpStatus),
+    definir: (ativo: boolean) => chamar(CANAIS.mcpDefinir, Boolean(ativo)),
+    copiar: (cliente: string) => chamar(CANAIS.mcpCopiar, String(cliente)),
   },
   /** Licença opcional (modelo WinRAR): o app é igual para todos; a licença só tira o convite. */
   licenca: {
-    status: () => ipcRenderer.invoke(CANAIS.licencaStatus),
-    registrar: (chave: string) => ipcRenderer.invoke(CANAIS.licencaRegistrar, String(chave)),
-    remover: () => ipcRenderer.invoke(CANAIS.licencaRemover),
-    adiarConvite: () => ipcRenderer.invoke(CANAIS.licencaAdiarConvite),
+    status: () => chamar(CANAIS.licencaStatus),
+    registrar: (chave: string) => chamar(CANAIS.licencaRegistrar, String(chave)),
+    remover: () => chamar(CANAIS.licencaRemover),
+    adiarConvite: () => chamar(CANAIS.licencaAdiarConvite),
   },
   /** Chegou uma proposta de limpeza via MCP. Devolve a função que cancela a inscrição. */
   aoPropostaMcp: (callback: (info: unknown) => void) => {

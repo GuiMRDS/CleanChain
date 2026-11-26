@@ -1,36 +1,27 @@
-import './ConfigChave.css';
 import './ConfigLicenca.css';
 
-// Occasional invite (WinRAR model): after 30 days of use, at most once a week, when the app
-// opens — never during a scan, a chat or a cleanup. One click closes it for a week; nothing is
-// blocked either way.
+// Optional license invite (WinRAR model): after 30 days of use, at most once a week, a slim strip
+// above the scan card on the start screen. It never replaces a screen nor waits for an answer:
+// scan, chat and the agent work exactly the same with or without a license. "agora não" hides it
+// for a week.
 export default function ConviteLicenca({ paginaDeCompra, onVerLicenca, onFechar }) {
   return (
-    <section className="config-chave config-licenca hud-frame" aria-labelledby="convite-licenca-titulo">
-      <p className="panel-head">
-        <span id="convite-licenca-titulo">Apoie o CleanChain</span>
+    <aside className="convite-licenca hud-frame" aria-label="Apoie o CleanChain">
+      <p className="convite-licenca__texto">
+        <strong>Gostando do CleanChain?</strong> Ele continua completo e gratuito. Se quiser apoiar, a licença é opcional
+        (pagamento único).
+      </p>
+      <div className="convite-licenca__acoes">
+        <a className="link-btn" href={paginaDeCompra} target="_blank" rel="noreferrer" onClick={onFechar}>
+          apoiar
+        </a>
+        <button type="button" className="link-btn" onClick={onVerLicenca}>
+          tenho uma chave
+        </button>
         <button type="button" className="link-btn" onClick={onFechar} aria-label="Fechar o convite">
           agora não
         </button>
-      </p>
-      <p className="start-scan__desc">
-        Você usa o CleanChain há mais de um mês. Ele continua <strong>completo e gratuito</strong>; se ele te ajuda a manter o
-        computador leve, considere comprar uma licença (pagamento único). Com ela, este convite não aparece mais.
-      </p>
-      <div className="config-chave__actions">
-        <a
-          className="config-chave__go config-licenca__comprar"
-          href={paginaDeCompra}
-          target="_blank"
-          rel="noreferrer"
-          onClick={onFechar}
-        >
-          Comprar uma licença
-        </a>
-        <button type="button" className="config-chave__no" onClick={onVerLicenca}>
-          Já tenho uma chave
-        </button>
       </div>
-    </section>
+    </aside>
   );
 }

@@ -48,6 +48,9 @@ interface Dependencias {
 
 type Quem = 'app' | 'tela';
 
+/** O que todo canal devolve; o preload desembrulha (e lança `erro` como Error). */
+export type RespostaIpc = { ok: true; valor: unknown } | { ok: false; erro: string };
+
 /** Quem chamou: a interface do app, a tela local de estado, ou ninguém confiável (lança). */
 function exigirOrigem(event: IpcMainInvokeEvent, origemApp: () => string | undefined, aceita: Quem[]): void {
   const url = event.senderFrame?.url ?? '';
@@ -59,10 +62,20 @@ function exigirOrigem(event: IpcMainInvokeEvent, origemApp: () => string | undef
 }
 
 export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Dependencias): void {
+  // Erro de uso (servidor local desligado, chave colada errada…) volta como resposta, não como
+  // exceção: senão o Electron registra "Error occurred in handler" como se fosse um defeito. O
+  // preload devolve a mensagem para a tela como um Error comum. Origem recusada continua lançando.
   const so =
-    (aceita: Quem[], fn: (event: IpcMainInvokeEvent, arg: unknown) => unknown) => (event: IpcMainInvokeEvent, arg: unknown) => {
+    (aceita: Quem[], fn: (event: IpcMainInvokeEvent, arg: unknown) => unknown) =>
+    async (event: IpcMainInvokeEvent, arg: unknown): Promise<RespostaIpc> => {
       exigirOrigem(event, origemApp, aceita);
-      return fn(event, arg);
+      try {
+        return { ok: true, valor: await fn(event, arg) };
+      } catch (e) {
+        const erro = e instanceof Error && e.message ? e.message : 'Algo deu errado.';
+        logIpc.info('pedido recusado:', erro); // mensagens feitas para a tela: nunca levam a chave
+        return { ok: false, erro };
+      }
     };
 
   ipcMain.handle(
