@@ -1,0 +1,15 @@
+# O Prettier formata só o código JS/TS/CSS/HTML da interface e do Electron.
+# Documentação (Markdown), workflows, Python e arquivos gerados ficam de fora.
+*.md
+*.yml
+*.yaml
+backend/
+docs/
+**/dist/
+**/release/
+**/node_modules/
+**/test-results/
+**/playwright-report/
+**/package-lock.json
+frontend/public/
+desktop/build/

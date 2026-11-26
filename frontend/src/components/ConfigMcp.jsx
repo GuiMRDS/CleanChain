@@ -43,8 +43,8 @@ export default function ConfigMcp({ mcp, onDefinir, onCopiar, onFechar }) {
         )}
       </p>
       <p className="start-scan__desc">
-        Outros assistentes (Claude, Cursor, VS Code…) consultam suas análises e <b>propõem</b> limpezas. Eles nunca
-        apagam nada: cada proposta aparece aqui e só você aprova.
+        Outros assistentes (Claude, Cursor, VS Code…) consultam suas análises e <b>propõem</b> limpezas. Eles nunca apagam nada:
+        cada proposta aparece aqui e só você aprova.
       </p>
 
       <button
@@ -64,21 +64,39 @@ export default function ConfigMcp({ mcp, onDefinir, onCopiar, onFechar }) {
       <label className="config-chave__label" htmlFor="config-mcp-exe">
         Executável (stdio)
       </label>
-      <input id="config-mcp-exe" name="executavel" className="config-chave__input" readOnly value={mcp?.executavel ?? '…'} title={mcp?.executavel} />
+      <input
+        id="config-mcp-exe"
+        name="executavel"
+        className="config-chave__input"
+        readOnly
+        value={mcp?.executavel ?? '…'}
+        title={mcp?.executavel}
+      />
       {mcp && !mcp.instalado && <p className="start-scan__error">O executável não foi encontrado: reinstale o CleanChain.</p>}
       {mcp?.aviso && <p className="start-scan__error">{mcp.aviso}</p>}
 
       <p className="config-chave__label">Copiar configuração</p>
       <div className="config-mcp__clientes">
         {CLIENTES.map((c) => (
-          <button key={c.id} type="button" className="config-chave__no" onClick={() => copiar(c.id)} disabled={!mcp} title={c.dica}>
+          <button
+            key={c.id}
+            type="button"
+            className="config-chave__no"
+            onClick={() => copiar(c.id)}
+            disabled={!mcp}
+            title={c.dica}
+          >
             {copiado === c.id ? '✓ copiado' : `⧉ ${c.nome}`}
           </button>
         ))}
       </div>
 
       <p className="config-chave__note">
-        {dica ? `${dica} e reinicie o cliente.` : ativo ? 'Com o app aberto, os clientes configurados já enxergam o CleanChain.' : 'Desligado: o CleanChain recusa qualquer conexão MCP.'}
+        {dica
+          ? `${dica} e reinicie o cliente.`
+          : ativo
+            ? 'Com o app aberto, os clientes configurados já enxergam o CleanChain.'
+            : 'Desligado: o CleanChain recusa qualquer conexão MCP.'}
       </p>
     </section>
   );

@@ -10,7 +10,10 @@ export function formatBytes(bytes) {
   for (const [unit, size] of units) {
     if (bytes >= size) {
       const v = bytes / size;
-      return { value: v.toLocaleString('pt-BR', { maximumFractionDigits: v < 10 ? 1 : 0, minimumFractionDigits: v < 10 ? 1 : 0 }), unit };
+      return {
+        value: v.toLocaleString('pt-BR', { maximumFractionDigits: v < 10 ? 1 : 0, minimumFractionDigits: v < 10 ? 1 : 0 }),
+        unit,
+      };
     }
   }
   return { value: String(bytes), unit: 'B' };

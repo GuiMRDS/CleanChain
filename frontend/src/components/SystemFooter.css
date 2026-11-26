@@ -14,7 +14,9 @@
   pointer-events: none;
 }
 
-.system-footer__spacer { flex: 1; }
+.system-footer__spacer {
+  flex: 1;
+}
 
 .system-footer__tag {
   padding: 3px 8px;
@@ -47,7 +49,9 @@
   overflow: hidden;
 }
 
-.stat__meter > div.is-warn { background: var(--pink); }
+.stat__meter > div.is-warn {
+  background: var(--pink);
+}
 
 .stat__meter > div {
   height: 100%;

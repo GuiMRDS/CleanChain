@@ -54,9 +54,23 @@ function layout(tree) {
       const end = start + span;
       if (span >= MIN_ANGLE) {
         const id = `${ancestry}/${child.name}`;
-        const hue = d === 1 ? (arcs.filter((a) => a.depth === 1).length < PALETTE.length && child.name !== 'outros' ? PALETTE[arcs.filter((a) => a.depth === 1).length] : GRAY) : color;
+        const hue =
+          d === 1
+            ? arcs.filter((a) => a.depth === 1).length < PALETTE.length && child.name !== 'outros'
+              ? PALETTE[arcs.filter((a) => a.depth === 1).length]
+              : GRAY
+            : color;
         const fill = child.name === 'outros' && d > 1 ? mix(GRAY, TINT[d]) : mix(hue, TINT[d] ?? 0.7);
-        arcs.push({ id, node: child, depth: d, a0: start, a1: end, hue, fill, d: arcPath(start + 0.002, end - 0.002, HOLE + (d - 1) * ring + 1, HOLE + d * ring - 1) });
+        arcs.push({
+          id,
+          node: child,
+          depth: d,
+          a0: start,
+          a1: end,
+          hue,
+          fill,
+          d: arcPath(start + 0.002, end - 0.002, HOLE + (d - 1) * ring + 1, HOLE + d * ring - 1),
+        });
         walk(child, start, end, d + 1, hue, id);
       }
       start = end;
@@ -88,13 +102,16 @@ export default function Sunburst({ scan, command, onFolderChange, ignoraMaiuscul
   const arcById = useMemo(() => new Map(arcs.map((a) => [a.id, a])), [arcs]);
   const arcByNode = useMemo(() => new Map(arcs.map((a) => [a.node, a])), [arcs]);
 
-  // New scan → start from the root with fresh file listings.
-  useEffect(() => {
-    clearFolderFilesCache();
+  // New scan → start from the root (state adjusted during render, as React recommends for
+  // "reset when a prop changes") with fresh file listings (the cache is an outside system: effect).
+  const [scanVisto, setScanVisto] = useState(scan);
+  if (scan !== scanVisto) {
+    setScanVisto(scan);
     setSelected(null);
     setDeeper([]);
     setHovered(null);
-  }, [scan]);
+  }
+  useEffect(() => clearFolderFilesCache(), [scan]);
 
   const openArc = selected ? arcById.get(selected) : null;
   const folder = deeper.at(-1) ?? (openArc ? openArc.node : tree); // folder shown in the table
@@ -112,29 +129,35 @@ export default function Sunburst({ scan, command, onFolderChange, ignoraMaiuscul
     setAgentMark(null);
   };
 
-  // Agent command → open the folder (root or any drawn arc) and flag it for a moment.
-  useEffect(() => {
-    if (!command?.path) return;
-    const chain = chainTo(tree, command.path, ignoraMaiusculas);
-    if (!chain) return;
-    // Deepest drawn ancestor becomes the selected arc; the rest opens "beyond the rings".
-    let cut = 0;
-    let arc = null;
-    chain.forEach((n, i) => {
-      const a = arcByNode.get(n);
-      if (a) {
-        arc = a;
-        cut = i + 1;
+  // Agent command → open the folder (root or any drawn arc) and flag it for a moment. Each
+  // command is a new object (useFilaDeTela), applied once, during render.
+  const [comandoVisto, setComandoVisto] = useState(null);
+  if (command !== comandoVisto) {
+    setComandoVisto(command);
+    const chain = command?.path ? chainTo(tree, command.path, ignoraMaiusculas) : null;
+    if (chain) {
+      // Deepest drawn ancestor becomes the selected arc; the rest opens "beyond the rings".
+      let cut = 0;
+      let arc = null;
+      for (const [i, n] of chain.entries()) {
+        const a = arcByNode.get(n);
+        if (a) {
+          arc = a;
+          cut = i + 1;
+        }
       }
-    });
-    const beyond = chain.slice(Math.max(1, cut));
-    setSelected(arc ? arc.id : null);
-    setDeeper(beyond);
-    setHovered(null);
-    setAgentMark({ id: arc ? arc.id : 'root', name: chain.at(-1).name });
+      setSelected(arc ? arc.id : null);
+      setDeeper(chain.slice(Math.max(1, cut)));
+      setHovered(null);
+      setAgentMark({ id: arc ? arc.id : 'root', name: chain.at(-1).name });
+    }
+  }
+  // The "opened by the agent" mark goes away after a moment (timer: effect).
+  useEffect(() => {
+    if (!agentMark) return undefined;
     const t = setTimeout(() => setAgentMark(null), 3800);
     return () => clearTimeout(t);
-  }, [command, arcByNode, tree]);
+  }, [agentMark]);
   const parentId = selected ? selected.slice(0, selected.lastIndexOf('/')) || null : null;
   const back = deeper.length ? () => setDeeper((d) => d.slice(0, -1)) : selected ? () => open(parentId) : null;
   const crumbs = [...(selected ? selected.split('/').filter(Boolean) : []), ...deeper.map((d) => d.name)];
@@ -149,10 +172,14 @@ export default function Sunburst({ scan, command, onFolderChange, ignoraMaiuscul
         <span id="sunburst-title">Mapa de pastas</span>
         <nav className="sunburst__crumbs mono" aria-label="Pasta aberta" title={folder.path ?? ''}>
           {crumbs.length === 0 ? (
-            <button type="button" onClick={() => open(null)}>{tree.name}</button>
+            <button type="button" onClick={() => open(null)}>
+              {tree.name}
+            </button>
           ) : (
             <>
-              <button type="button" onClick={() => open(null)} title={`Voltar para ${tree.name}`}>…</button>
+              <button type="button" onClick={() => open(null)} title={`Voltar para ${tree.name}`}>
+                …
+              </button>
               <span>
                 {' › '}
                 <span className="sunburst__here">{crumbs.at(-1)}</span>
@@ -186,7 +213,13 @@ export default function Sunburst({ scan, command, onFolderChange, ignoraMaiuscul
           </span>
         )}
 
-        <button type="button" className={`sunburst__center${agentMark?.id === 'root' ? ' is-agent' : ''}`} onClick={() => back?.()} disabled={!back} title={back ? 'Voltar um nível' : undefined}>
+        <button
+          type="button"
+          className={`sunburst__center${agentMark?.id === 'root' ? ' is-agent' : ''}`}
+          onClick={() => back?.()}
+          disabled={!back}
+          title={back ? 'Voltar um nível' : undefined}
+        >
           <strong>{bytesLabel(centerNode.bytes)}</strong>
           <span>{centerNode === tree ? 'total' : centerNode.name}</span>
           {centerNode !== tree && <span>{pctLabel(centerNode.bytes, tree.bytes)} do total</span>}
@@ -237,7 +270,8 @@ function FolderTable({ folder, arcByNode, onOpen, onOpenDeeper, onHover, onBack 
             deeper: d.path ? { name: d.name, path: d.path, bytes: d.bytes, files: d.files } : null,
           }))
         : [];
-    const own = files.status === 'ok' ? files.files.map((f) => ({ key: `f:${f.name}`, kind: 'file', name: f.name, bytes: f.bytes })) : [];
+    const own =
+      files.status === 'ok' ? files.files.map((f) => ({ key: `f:${f.name}`, kind: 'file', name: f.name, bytes: f.bytes })) : [];
     return [...dirs, ...measured, ...own].sort((a, b) => b.bytes - a.bytes);
   }, [folder, files, arcByNode, needsDirs]);
 
@@ -265,10 +299,21 @@ function FolderTable({ folder, arcByNode, onOpen, onOpenDeeper, onHover, onBack 
               disabled={!r.arc && !r.deeper}
               onClick={() => (r.arc ? onOpen(r.arc) : r.deeper && onOpenDeeper(r.deeper))}
               onPointerEnter={() => onHover(r.arc ? r.arc.id : null)}
-              title={r.kind === 'dir' ? (r.arc || r.deeper ? `Abrir ${r.name}` : `${r.name} (pequena demais para o mapa)`) : r.name}
+              title={
+                r.kind === 'dir' ? (r.arc || r.deeper ? `Abrir ${r.name}` : `${r.name} (pequena demais para o mapa)`) : r.name
+              }
             >
               {r.kind === 'file' ? (
-                <svg className="ftable__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <svg
+                  className="ftable__icon"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  aria-hidden="true"
+                >
                   <path d="M6 3h8l4 4v14H6z" />
                   <path d="M14 3v4h4" />
                 </svg>
@@ -281,7 +326,9 @@ function FolderTable({ folder, arcByNode, onOpen, onOpenDeeper, onHover, onBack 
             </button>
           </li>
         ))}
-        {files.status === 'loading' && <li className="ftable__note">{needsDirs ? 'medindo subpastas…' : 'carregando arquivos…'}</li>}
+        {files.status === 'loading' && (
+          <li className="ftable__note">{needsDirs ? 'medindo subpastas…' : 'carregando arquivos…'}</li>
+        )}
         {files.status === 'ok' && files.partial && <li className="ftable__note">tamanhos parciais (pasta muito grande)</li>}
         {files.status === 'error' && <li className="ftable__note is-error">{files.error}</li>}
         {!folder.path && <li className="ftable__note">pastas agrupadas — abra uma pasta do mapa</li>}

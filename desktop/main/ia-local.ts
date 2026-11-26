@@ -19,7 +19,11 @@ export function ehLocal(provedor: unknown): provedor is ProvedorLocal {
 }
 
 /** Valida o que vem da interface; lança Error com mensagem para o usuário. */
-export function validarLocal(provedor: unknown, modelo: unknown, porta: unknown): { provedor: ProvedorLocal; modelo: string; porta: number } {
+export function validarLocal(
+  provedor: unknown,
+  modelo: unknown,
+  porta: unknown
+): { provedor: ProvedorLocal; modelo: string; porta: number } {
   if (!ehLocal(provedor)) throw new Error('Provedor local inválido.');
   const p = validarPorta(porta ?? LOCAIS[provedor].porta);
   if (typeof modelo !== 'string' || !modelo.trim() || modelo.length > 200 || /[\r\n\0]/.test(modelo)) {

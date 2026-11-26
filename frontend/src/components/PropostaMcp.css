@@ -8,7 +8,9 @@
   animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.proposta-mcp .panel-head { margin: 0; }
+.proposta-mcp .panel-head {
+  margin: 0;
+}
 
 .proposta-mcp__corpo {
   min-height: 0;
@@ -41,4 +43,6 @@
   color: var(--muted);
 }
 
-.proposta-mcp .link-btn { align-self: flex-start; }
+.proposta-mcp .link-btn {
+  align-self: flex-start;
+}

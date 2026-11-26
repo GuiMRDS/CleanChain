@@ -12,7 +12,10 @@ export async function postNdjson(url, body, onEvent, { signal } = {}) {
     });
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    throw new Error('Não consegui conectar ao backend. Ele está rodando? (cd backend · uv run uvicorn app.server:app --port 8000)');
+    throw new Error(
+      'Não consegui conectar ao backend. Ele está rodando? (cd backend · uv run uvicorn app.server:app --port 8000)',
+      { cause: err }
+    );
   }
   if (!res.ok || !res.body) throw new Error(`O backend respondeu com erro ${res.status}.`);
 

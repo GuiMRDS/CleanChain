@@ -1,7 +1,11 @@
 /* "Integração MCP" panel: reuses ConfigChave.css (.config-chave__*). Compact on purpose: the
    page never scrolls, so the panel must fit the cards row. */
-.config-mcp { gap: 10px; }
-.config-mcp .config-chave__label { margin-top: 0; }
+.config-mcp {
+  gap: 10px;
+}
+.config-mcp .config-chave__label {
+  margin-top: 0;
+}
 
 .config-mcp__switch {
   display: flex;
@@ -14,7 +18,10 @@
   color: var(--ink);
 }
 
-.config-mcp__switch:disabled { opacity: 0.55; cursor: default; }
+.config-mcp__switch:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 
 .config-mcp__trilho {
   position: relative;
@@ -37,9 +44,17 @@
   transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.config-mcp__switch.is-on .config-mcp__trilho { background: linear-gradient(135deg, #0091ff, #8000ff 70%); }
-.config-mcp__switch.is-on .config-mcp__trilho span { transform: translateX(18px); }
-.config-mcp__switch:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+.config-mcp__switch.is-on .config-mcp__trilho {
+  background: linear-gradient(135deg, #0091ff, #8000ff 70%);
+}
+.config-mcp__switch.is-on .config-mcp__trilho span {
+  transform: translateX(18px);
+}
+.config-mcp__switch:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
 .config-mcp__clientes {
   display: flex;
@@ -47,4 +62,7 @@
   gap: 6px;
 }
 
-.config-mcp__clientes button { padding: 7px 11px; font-size: 12.5px; }
+.config-mcp__clientes button {
+  padding: 7px 11px;
+  font-size: 12.5px;
+}

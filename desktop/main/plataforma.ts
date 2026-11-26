@@ -3,7 +3,14 @@
 import { ChildProcess, execFile } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { app, BrowserWindow, BrowserWindowConstructorOptions, MenuItemConstructorOptions, safeStorage, systemPreferences } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  MenuItemConstructorOptions,
+  safeStorage,
+  systemPreferences,
+} from 'electron';
 import log from 'electron-log/main';
 
 const logPlat = log.scope('plataforma');
@@ -67,7 +74,9 @@ export async function encerrarArvore(proc: ChildProcess): Promise<void> {
   const pid = proc.pid;
   if (pid === undefined) return;
   if (SISTEMA === 'windows') {
-    await new Promise<void>((resolve) => execFile('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => resolve()));
+    await new Promise<void>((resolve) =>
+      execFile('taskkill', ['/PID', String(pid), '/T', '/F'], { windowsHide: true }, () => resolve())
+    );
     await saiu(proc, ESPERA_SIGTERM_MS);
     return;
   }
@@ -123,7 +132,9 @@ export function menuNativo(): MenuItemConstructorOptions[] {
       { role: 'zoomOut', label: 'Diminuir' },
       { type: 'separator' },
       { role: 'togglefullscreen', label: 'Tela cheia' },
-      ...(app.isPackaged ? [] : ([{ type: 'separator' }, { role: 'reload' }, { role: 'toggleDevTools' }] as MenuItemConstructorOptions[])),
+      ...(app.isPackaged
+        ? []
+        : ([{ type: 'separator' }, { role: 'reload' }, { role: 'toggleDevTools' }] as MenuItemConstructorOptions[])),
     ],
   };
   if (SISTEMA !== 'macos') return [exibir];
@@ -173,7 +184,8 @@ export function cofreSeguro(): { ok: boolean; motivo?: string } {
     if (backend === 'basic_text' || backend === 'unknown') {
       return {
         ok: false,
-        motivo: 'Nenhum cofre de senhas encontrado (GNOME Keyring ou KWallet). Instale um e abra o CleanChain de novo para guardar a chave com segurança.',
+        motivo:
+          'Nenhum cofre de senhas encontrado (GNOME Keyring ou KWallet). Instale um e abra o CleanChain de novo para guardar a chave com segurança.',
       };
     }
   }

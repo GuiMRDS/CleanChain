@@ -25,7 +25,9 @@ export function ApprovalCard({ approval, onDecide, disabled, lixeira, selo }) {
     <div className={`approval is-${status}`} role="group" aria-label="Confirmar exclusão">
       {selo && <p className="approval__selo">{selo}</p>}
       <header className="approval__head">
-        <span className="approval__icon" aria-hidden="true">!</span>
+        <span className="approval__icon" aria-hidden="true">
+          !
+        </span>
         <span>Confirmar limpeza</span>
         <b>{bytesLabel(total)}</b>
       </header>
@@ -35,7 +37,9 @@ export function ApprovalCard({ approval, onDecide, disabled, lixeira, selo }) {
         <ul className="approval__list">
           {items.map((it) => (
             <li key={it.path} title={it.path}>
-              <span className="approval__kind" aria-hidden="true">{it.is_dir ? '▣' : '▤'}</span>
+              <span className="approval__kind" aria-hidden="true">
+                {it.is_dir ? '▣' : '▤'}
+              </span>
               <span className="approval__name">
                 {it.name}
                 <small>{it.path}</small>
@@ -69,7 +73,9 @@ export function ApprovalCard({ approval, onDecide, disabled, lixeira, selo }) {
           </button>
         </div>
       ) : (
-        <p className="approval__result">{status === 'approved' ? '✓ Aprovado — itens enviados para a Lixeira.' : '✕ Cancelado — nada foi apagado.'}</p>
+        <p className="approval__result">
+          {status === 'approved' ? '✓ Aprovado — itens enviados para a Lixeira.' : '✕ Cancelado — nada foi apagado.'}
+        </p>
       )}
       {pending && <p className="approval__note">Dá para restaurar pela {lixeira}.</p>}
     </div>
@@ -81,7 +87,9 @@ function AgentMessage({ message, onDecide, busy, lixeira }) {
   return (
     <div className="msg msg--agent">
       <div className="msg__tag">
-        <span className={`msg__pulse${status === 'done' || status === 'error' ? ' is-idle' : ''}${status === 'waiting' ? ' is-waiting' : ''}`} />
+        <span
+          className={`msg__pulse${status === 'done' || status === 'error' ? ' is-idle' : ''}${status === 'waiting' ? ' is-waiting' : ''}`}
+        />
         {status === 'waiting' ? 'agente · aguardando sua confirmação' : 'agente'}
       </div>
 

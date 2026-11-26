@@ -64,7 +64,15 @@ export function status() {
   const escolha = ler();
   const local = escolha.local ? { ...escolha.local, nome: LOCAIS[escolha.local.provedor].nome } : null;
   if (escolha.ativo !== 'nuvem') {
-    return { ...nuvem, configurada: true, provedor: escolha.ativo, ativo: escolha.ativo, local, nuvemConfigurada: nuvem.configurada, provedorNuvem: nuvem.provedor };
+    return {
+      ...nuvem,
+      configurada: true,
+      provedor: escolha.ativo,
+      ativo: escolha.ativo,
+      local,
+      nuvemConfigurada: nuvem.configurada,
+      provedorNuvem: nuvem.provedor,
+    };
   }
   return { ...nuvem, ativo: 'nuvem' as const, local, nuvemConfigurada: nuvem.configurada, provedorNuvem: nuvem.provedor };
 }
@@ -118,7 +126,9 @@ export async function modelosLocais(provedor: unknown, porta: unknown): Promise<
           show: await pedir(`${base}/api/show`, { method: 'POST', body: JSON.stringify({ model: modelo }) }).catch(() => null),
         }))
       );
-      return detalhes.filter((d) => ollamaConversa(d.show)).map((d) => ({ nome: d.modelo, ferramentas: ollamaUsaFerramentas(d.show) }));
+      return detalhes
+        .filter((d) => ollamaConversa(d.show))
+        .map((d) => ({ nome: d.modelo, ferramentas: ollamaUsaFerramentas(d.show) }));
     }
     // LM Studio: /api/v0/models informa se o modelo usa ferramentas; versões antigas só têm /v1/models.
     return modelosDoLmStudio(await pedir(`${base}/api/v0/models`).catch(() => pedir(`${base}/v1/models`)));

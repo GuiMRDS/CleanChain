@@ -35,7 +35,10 @@ describe('useChat', () => {
     const { result } = renderHook(() => useChat({ getUiState: () => ({ open_folder: 'C:\\Videos' }) }));
     await act(() => result.current.send('onde foi meu espaço?'));
 
-    expect(pedidos[0]).toEqual({ url: '/api/chat', corpo: { message: 'onde foi meu espaço?', thread_id: 'conversa-1', ui_state: { open_folder: 'C:\\Videos' } } });
+    expect(pedidos[0]).toEqual({
+      url: '/api/chat',
+      corpo: { message: 'onde foi meu espaço?', thread_id: 'conversa-1', ui_state: { open_folder: 'C:\\Videos' } },
+    });
     const msg = agente(result);
     expect(msg.steps.map((s) => s.type)).toEqual(['action', 'observation']);
     expect(msg.text).toBe('Seus vídeos ocupam 6 GB.');
@@ -53,7 +56,11 @@ describe('useChat', () => {
 
   it('com uma exclusão aguardando aprovação, não aceita mensagem nova', async () => {
     const pedidos = backend(
-      linhas({ type: 'action', id: 'c2', text: 'delete_files(...)' }, { type: 'approval', items: [{ path: 'a.iso' }] }, { type: 'done', awaiting_approval: true })
+      linhas(
+        { type: 'action', id: 'c2', text: 'delete_files(...)' },
+        { type: 'approval', items: [{ path: 'a.iso' }] },
+        { type: 'done', awaiting_approval: true }
+      )
     );
     const { result } = renderHook(() => useChat());
     await act(() => result.current.send('apaga a.iso'));
@@ -71,7 +78,11 @@ describe('useChat', () => {
   ])('decidir (%s) retoma o agente pela rota de aprovação', async (aprovar, estado) => {
     const pedidos = backend(
       linhas({ type: 'approval', items: [{ path: 'a.iso' }] }, { type: 'done', awaiting_approval: true }),
-      linhas({ type: 'action', id: 'c2', text: 'delete_files(...)' }, { type: 'answer', text: 'Pronto.' }, { type: 'done', awaiting_approval: false })
+      linhas(
+        { type: 'action', id: 'c2', text: 'delete_files(...)' },
+        { type: 'answer', text: 'Pronto.' },
+        { type: 'done', awaiting_approval: false }
+      )
     );
     const { result } = renderHook(() => useChat());
     await act(() => result.current.send('apaga a.iso'));

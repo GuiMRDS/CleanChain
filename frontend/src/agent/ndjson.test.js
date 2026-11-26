@@ -18,7 +18,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('postNdjson', () => {
   it('entrega cada evento, mesmo partido entre pedaços da rede', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => resposta(['{"type":"act', 'ion","text":"a"}\n{"type":"answ', 'er","text":"oi"}\n'])));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => resposta(['{"type":"act', 'ion","text":"a"}\n{"type":"answ', 'er","text":"oi"}\n']))
+    );
     const eventos = [];
     await postNdjson('/api/chat', { message: 'x' }, (e) => eventos.push(e));
     expect(eventos).toEqual([
@@ -28,7 +31,10 @@ describe('postNdjson', () => {
   });
 
   it('entrega a última linha sem quebra no fim e ignora linhas vazias', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => resposta(['\n{"type":"ui","command":"focus_folder"}\n\n', '{"type":"done","awaiting_approval":false}'])));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => resposta(['\n{"type":"ui","command":"focus_folder"}\n\n', '{"type":"done","awaiting_approval":false}']))
+    );
     const eventos = [];
     await postNdjson('/api/chat', {}, (e) => eventos.push(e));
     expect(eventos.map((e) => e.type)).toEqual(['ui', 'done']);
@@ -45,15 +51,24 @@ describe('postNdjson', () => {
   });
 
   it('erro HTTP vira mensagem clara', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => resposta([''], { status: 401 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => resposta([''], { status: 401 }))
+    );
     await expect(postNdjson('/api/chat', {}, () => {})).rejects.toThrow('erro 401');
   });
 
   it('backend fora do ar vira mensagem clara; cancelamento continua sendo cancelamento', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Promise.reject(new TypeError('Failed to fetch')))
+    );
     await expect(postNdjson('/api/chat', {}, () => {})).rejects.toThrow('Não consegui conectar ao backend');
     const abort = Object.assign(new Error('aborted'), { name: 'AbortError' });
-    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(abort)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Promise.reject(abort))
+    );
     await expect(postNdjson('/api/chat', {}, () => {})).rejects.toBe(abort);
   });
 });

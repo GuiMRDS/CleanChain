@@ -54,13 +54,16 @@ function exigirOrigem(event: IpcMainInvokeEvent, origemApp: () => string | undef
 }
 
 export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Dependencias): void {
-  const so = (aceita: Quem[], fn: (event: IpcMainInvokeEvent, arg: unknown) => unknown) =>
-    (event: IpcMainInvokeEvent, arg: unknown) => {
+  const so =
+    (aceita: Quem[], fn: (event: IpcMainInvokeEvent, arg: unknown) => unknown) => (event: IpcMainInvokeEvent, arg: unknown) => {
       exigirOrigem(event, origemApp, aceita);
       return fn(event, arg);
     };
 
-  ipcMain.handle(CANAIS.chaveStatus, so(['app'], () => ia.status()));
+  ipcMain.handle(
+    CANAIS.chaveStatus,
+    so(['app'], () => ia.status())
+  );
 
   ipcMain.handle(
     CANAIS.chaveSalvar,
@@ -112,15 +115,36 @@ export function registrarIpc({ origemApp, reiniciarBackend, portaBackend }: Depe
     })
   );
 
-  ipcMain.handle(CANAIS.versao, so(['app', 'tela'], () => app.getVersion()));
-  ipcMain.handle(CANAIS.abrirLogs, so(['app', 'tela'], () => shell.openPath(pastaLogs()).then(() => undefined)));
-  ipcMain.handle(CANAIS.reiniciarServico, so(['app', 'tela'], () => reiniciarBackend()));
-  ipcMain.handle(CANAIS.atualizacao, so(['app'], () => estadoAtualizacao()));
-  ipcMain.handle(CANAIS.verificarAtualizacoes, so(['app'], () => verificarAgora()));
-  ipcMain.handle(CANAIS.instalarAtualizacao, so(['app'], () => instalarAgora()));
+  ipcMain.handle(
+    CANAIS.versao,
+    so(['app', 'tela'], () => app.getVersion())
+  );
+  ipcMain.handle(
+    CANAIS.abrirLogs,
+    so(['app', 'tela'], () => shell.openPath(pastaLogs()).then(() => undefined))
+  );
+  ipcMain.handle(
+    CANAIS.reiniciarServico,
+    so(['app', 'tela'], () => reiniciarBackend())
+  );
+  ipcMain.handle(
+    CANAIS.atualizacao,
+    so(['app'], () => estadoAtualizacao())
+  );
+  ipcMain.handle(
+    CANAIS.verificarAtualizacoes,
+    so(['app'], () => verificarAgora())
+  );
+  ipcMain.handle(
+    CANAIS.instalarAtualizacao,
+    so(['app'], () => instalarAgora())
+  );
 
   // Integração MCP: só a interface do app liga, desliga e copia a configuração.
-  ipcMain.handle(CANAIS.mcpStatus, so(['app'], () => mcp.status()));
+  ipcMain.handle(
+    CANAIS.mcpStatus,
+    so(['app'], () => mcp.status())
+  );
   ipcMain.handle(
     CANAIS.mcpDefinir,
     so(['app'], (_event, arg) => {

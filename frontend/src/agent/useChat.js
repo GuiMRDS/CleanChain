@@ -36,7 +36,10 @@ export function useChat({ onUi, getUiState } = {}) {
       if (event.type === 'answer') {
         patchAgent(agentId, (m) => ({ ...m, status: 'answering', text: m.text + event.text }));
       } else if (event.type === 'done') {
-        patchAgent(agentId, (m) => ({ ...m, status: m.status === 'error' ? 'error' : event.awaiting_approval ? 'waiting' : 'done' }));
+        patchAgent(agentId, (m) => ({
+          ...m,
+          status: m.status === 'error' ? 'error' : event.awaiting_approval ? 'waiting' : 'done',
+        }));
         if (event.awaiting_approval) setPendingApproval(agentId);
       } else if (event.type === 'ui') {
         hooksRef.current.onUi?.(event);

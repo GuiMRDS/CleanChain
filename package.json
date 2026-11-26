@@ -1,0 +1,17 @@
+{
+  "name": "cleanchain-repositorio",
+  "private": true,
+  "description": "Ferramentas do repositório (formatação e pre-commit). O app está em frontend/, desktop/ e backend/.",
+  "scripts": {
+    "format": "prettier --write \"frontend/**/*.{js,jsx,css,html,json}\" \"desktop/**/*.{ts,mjs,js,html,css,json}\"",
+    "format:check": "prettier --check \"frontend/**/*.{js,jsx,css,html,json}\" \"desktop/**/*.{ts,mjs,js,html,css,json}\"",
+    "lint": "npm --prefix frontend run lint && npm --prefix desktop run lint",
+    "prepare": "husky"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.2",
+    "prettier": "^3.10.1"
+  }
+}

@@ -49,8 +49,7 @@ export default function PropostaMcp({ proposta, ultima, restantes, decidindo, on
         {!pendente && p.estado === 'erro' && <p className="start-scan__error">{p.erro}</p>}
       </div>
       <p className="proposta-mcp__nota">
-        Um programa conectado ao CleanChain pelo MCP sugeriu esta limpeza. Ele não consegue apagar nada: só você
-        decide, aqui.
+        Um programa conectado ao CleanChain pelo MCP sugeriu esta limpeza. Ele não consegue apagar nada: só você decide, aqui.
       </p>
       {!pendente && (
         <button type="button" className="link-btn" onClick={onFechar}>

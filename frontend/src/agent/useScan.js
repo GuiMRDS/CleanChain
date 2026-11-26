@@ -12,7 +12,9 @@ export function useScan() {
   const [root, setRoot] = useState(null);
   const abortRef = useRef(null);
   const resultRef = useRef(null);
-  resultRef.current = result;
+  useEffect(() => {
+    resultRef.current = result; // refs change after render, not during it
+  }, [result]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 

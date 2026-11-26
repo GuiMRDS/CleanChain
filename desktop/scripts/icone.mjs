@@ -68,7 +68,15 @@ app.whenReady().then(async () => {
   // .ico com vários tamanhos: o Windows usa na barra de tarefas quando o app roda pelo código
   // (setAppDetails em desktop/main/plataforma.ts); no app instalado o builder gera o dele.
   const ico = path.join(repo, 'desktop', 'build', 'icon.ico');
-  fs.writeFileSync(ico, arquivoIco([16, 24, 32, 48, 64, 128, 256].map((lado) => ({ lado, png: img.resize({ width: lado, height: lado, quality: 'best' }).toPNG() }))));
+  fs.writeFileSync(
+    ico,
+    arquivoIco(
+      [16, 24, 32, 48, 64, 128, 256].map((lado) => ({
+        lado,
+        png: img.resize({ width: lado, height: lado, quality: 'best' }).toPNG(),
+      }))
+    )
+  );
   console.log(`ícone .ico → ${path.relative(repo, ico)}`);
   app.quit();
 });

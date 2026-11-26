@@ -5,9 +5,24 @@ import './ScanCard.css';
 function opportunities(insights) {
   if (!insights) return [];
   const list = [
-    { id: 'caches', label: 'Caches', bytes: insights.reclaimable_total, ask: 'Quais caches e temporários eu posso limpar com segurança?' },
-    { id: 'dups', label: 'Duplicados', bytes: insights.duplicates?.wasted_total ?? 0, ask: 'Me mostre os arquivos duplicados que posso apagar.' },
-    { id: 'old', label: 'Esquecidos', bytes: insights.old_files?.total_bytes ?? 0, ask: 'Quais arquivos grandes estão esquecidos há mais de um ano?' },
+    {
+      id: 'caches',
+      label: 'Caches',
+      bytes: insights.reclaimable_total,
+      ask: 'Quais caches e temporários eu posso limpar com segurança?',
+    },
+    {
+      id: 'dups',
+      label: 'Duplicados',
+      bytes: insights.duplicates?.wasted_total ?? 0,
+      ask: 'Me mostre os arquivos duplicados que posso apagar.',
+    },
+    {
+      id: 'old',
+      label: 'Esquecidos',
+      bytes: insights.old_files?.total_bytes ?? 0,
+      ask: 'Quais arquivos grandes estão esquecidos há mais de um ano?',
+    },
   ];
   return list.filter((o) => o.bytes > 0);
 }
@@ -48,7 +63,12 @@ export default function ScanCard({ scan, onRescan, onAsk }) {
 
       <div className="scan-card__bars" role="img" aria-label="Tamanho das maiores pastas">
         {folders.map((c, i) => (
-          <i key={c.name} className={i === 0 ? 'is-blue' : undefined} style={{ '--h': `${Math.max(6, (c.bytes / maxFolder) * 100)}%`, '--d': `${i * 40}ms` }} title={`${c.name} · ${bytesLabel(c.bytes)}`} />
+          <i
+            key={c.name}
+            className={i === 0 ? 'is-blue' : undefined}
+            style={{ '--h': `${Math.max(6, (c.bytes / maxFolder) * 100)}%`, '--d': `${i * 40}ms` }}
+            title={`${c.name} · ${bytesLabel(c.bytes)}`}
+          />
         ))}
       </div>
 
@@ -60,7 +80,12 @@ export default function ScanCard({ scan, onRescan, onAsk }) {
           <ul className="scan-card__chips">
             {ops.map((o) => (
               <li key={o.id}>
-                <button type="button" className="chip chip--action" onClick={() => onAsk?.(o.ask)} title={`Perguntar ao agente: ${o.ask}`}>
+                <button
+                  type="button"
+                  className="chip chip--action"
+                  onClick={() => onAsk?.(o.ask)}
+                  title={`Perguntar ao agente: ${o.ask}`}
+                >
                   {o.label} <strong>{bytesLabel(o.bytes)}</strong> <span aria-hidden="true">→</span>
                 </button>
               </li>

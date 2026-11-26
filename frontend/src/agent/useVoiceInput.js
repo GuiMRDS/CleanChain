@@ -19,18 +19,23 @@ export function useVoiceInput(onText) {
   const discardRef = useRef(false);
   const cleanupRef = useRef(() => {});
   const onTextRef = useRef(onText);
-  onTextRef.current = onText;
+  useEffect(() => {
+    onTextRef.current = onText; // refs change after render, not during it
+  }, [onText]);
 
   const cleanup = () => {
     cleanupRef.current();
     cleanupRef.current = () => {};
   };
 
-  useEffect(() => () => {
-    discardRef.current = true;
-    recRef.current?.state === 'recording' && recRef.current.stop();
-    cleanup();
-  }, []);
+  useEffect(
+    () => () => {
+      discardRef.current = true;
+      recRef.current?.state === 'recording' && recRef.current.stop();
+      cleanup();
+    },
+    []
+  );
 
   const transcribe = async (blob) => {
     setStatus('transcribing');

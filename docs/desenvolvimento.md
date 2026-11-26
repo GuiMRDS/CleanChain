@@ -99,6 +99,13 @@ flowchart LR
 - Python 3.12+ e [uv](https://docs.astral.sh/uv/)
 - Uma chave da **Groq** (grátis) ou da **OpenAI**, ou uma IA local (**Ollama** ou **LM Studio**)
 
+### 0. Ferramentas do repositório
+
+Na raiz, `npm install` instala o Prettier e ativa o **pre-commit** (Husky + lint-staged): a cada
+commit, o ESLint corrige o que dá e o Prettier formata **só os arquivos do commit**; se sobrar
+erro de lint, o commit é barrado. O CI confere o mesmo (`npm run format:check` e `npm run lint`
+em cada pacote).
+
 ### 1. Modelo de IA
 
 No modo navegador (desenvolvimento), crie um `.env` na raiz do projeto (ou em `backend/.env`). No app

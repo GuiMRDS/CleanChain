@@ -1,6 +1,14 @@
 // IA local (Ollama / LM Studio): regras puras de desktop/main/ia-local.ts (não abre o app).
 import { expect, test } from '@playwright/test';
-import { modelosDoLmStudio, modelosDoOllama, ollamaConversa, ollamaUsaFerramentas, urlLocal, validarLocal, validarPorta } from '../main/ia-local';
+import {
+  modelosDoLmStudio,
+  modelosDoOllama,
+  ollamaConversa,
+  ollamaUsaFerramentas,
+  urlLocal,
+  validarLocal,
+  validarPorta,
+} from '../main/ia-local';
 
 test('valida provedor, modelo e porta da IA local', () => {
   expect(validarLocal('ollama', ' qwen3:8b ', 11434)).toEqual({ provedor: 'ollama', modelo: 'qwen3:8b', porta: 11434 });
@@ -41,5 +49,7 @@ test('lê os modelos do LM Studio e ignora os de embeddings', () => {
     { nome: 'gemma-3-1b', ferramentas: false },
   ]);
   // /v1/models (versões antigas): só nomes.
-  expect(modelosDoLmStudio({ data: [{ id: 'mistral-7b' }, { id: 'nomic-embed-text' }] })).toEqual([{ nome: 'mistral-7b', ferramentas: null }]);
+  expect(modelosDoLmStudio({ data: [{ id: 'mistral-7b' }, { id: 'nomic-embed-text' }] })).toEqual([
+    { nome: 'mistral-7b', ferramentas: null },
+  ]);
 });

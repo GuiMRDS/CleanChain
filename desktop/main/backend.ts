@@ -12,7 +12,15 @@ const logBackend = log.scope('backend');
 const ESPERA_SAUDE_MS = 45_000;
 const TENTATIVAS = 3;
 // Variáveis herdadas que nunca devem chegar ao backend: a chave vem só do safeStorage.
-const HERDADAS_PROIBIDAS = ['GROQ_API_KEY', 'OPENAI_API_KEY', 'LLM_PROVIDER', 'LOCAL_LLM_URL', 'LOCAL_LLM_MODEL', 'ELECTRON_RUN_AS_NODE', 'NODE_OPTIONS'];
+const HERDADAS_PROIBIDAS = [
+  'GROQ_API_KEY',
+  'OPENAI_API_KEY',
+  'LLM_PROVIDER',
+  'LOCAL_LLM_URL',
+  'LOCAL_LLM_MODEL',
+  'ELECTRON_RUN_AS_NODE',
+  'NODE_OPTIONS',
+];
 
 export interface Conexao {
   porta: number;
@@ -97,7 +105,9 @@ export class Backend extends EventEmitter {
     this.proc = proc;
     // A chave e os tokens nunca vão para o log, nem dentro de um erro repetido pelo backend.
     // Só o que é segredo (chaves e tokens): o modelo local e o endereço dele podem aparecer no log.
-    const segredosDoEnv = Object.entries(envChave).filter(([nome]) => /KEY|TOKEN/.test(nome)).map(([, valor]) => valor);
+    const segredosDoEnv = Object.entries(envChave)
+      .filter(([nome]) => /KEY|TOKEN/.test(nome))
+      .map(([, valor]) => valor);
     const ocultar = criarOcultador([...segredosDoEnv, token]);
     const repassar = (nivel: 'info' | 'warn') => (dados: Buffer) => {
       for (const linha of dados.toString('utf8').split(/\r?\n/)) {

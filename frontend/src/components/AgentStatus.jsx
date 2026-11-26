@@ -18,7 +18,11 @@ export default function AgentStatus({ scan, thinking, currentTool, awaitingAppro
       extra: `${formatCount(scan.progress?.files ?? 0)} arq.`,
     };
   } else if (scan.phase === 'done') {
-    state = { kind: 'idle', label: 'agente ativo · scan concluído ·', detail: `${bytesLabel(scan.result.total_bytes)} analisados` };
+    state = {
+      kind: 'idle',
+      label: 'agente ativo · scan concluído ·',
+      detail: `${bytesLabel(scan.result.total_bytes)} analisados`,
+    };
   } else if (scan.phase === 'error') {
     state = { kind: 'error', label: 'scan interrompido ·', detail: 'tente de novo' };
   } else {

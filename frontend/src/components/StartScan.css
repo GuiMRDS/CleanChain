@@ -19,10 +19,19 @@
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.orb:not(:disabled):hover { transform: scale(1.035); }
-.orb:not(:disabled):active { transform: scale(0.98); }
-.orb:disabled { cursor: progress; }
-.orb:focus-visible { outline-offset: 6px; outline-color: var(--blue); }
+.orb:not(:disabled):hover {
+  transform: scale(1.035);
+}
+.orb:not(:disabled):active {
+  transform: scale(0.98);
+}
+.orb:disabled {
+  cursor: progress;
+}
+.orb:focus-visible {
+  outline-offset: 6px;
+  outline-color: var(--blue);
+}
 
 /* Soft breathing glow behind everything */
 .orb__halo {
@@ -69,16 +78,17 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  background:
-    radial-gradient(circle at 30% 25%, #fff, rgba(255, 255, 255, 0.82) 60%),
-    var(--bg);
+  background: radial-gradient(circle at 30% 25%, #fff, rgba(255, 255, 255, 0.82) 60%), var(--bg);
   box-shadow:
     inset 0 -8px 18px rgba(0, 112, 243, 0.1),
     0 10px 28px -10px rgba(0, 80, 200, 0.45);
   color: var(--ink);
 }
 
-.orb__icon { color: var(--blue); margin-bottom: 2px; }
+.orb__icon {
+  color: var(--blue);
+  margin-bottom: 2px;
+}
 
 .orb__core strong {
   font-size: 17px;
@@ -99,8 +109,12 @@
 }
 
 /* Scanning: ring spins fast, halo pulses */
-.start-scan.is-scanning .orb__ring { animation-duration: 1.1s; }
-.start-scan.is-scanning .orb__halo { animation-duration: 1.2s; }
+.start-scan.is-scanning .orb__ring {
+  animation-duration: 1.1s;
+}
+.start-scan.is-scanning .orb__halo {
+  animation-duration: 1.2s;
+}
 
 /* ---------- info side ---------- */
 .start-scan__info {
@@ -110,7 +124,9 @@
   min-width: 0;
 }
 
-.start-scan__info .panel-head { margin: 0; }
+.start-scan__info .panel-head {
+  margin: 0;
+}
 
 .start-scan__title {
   margin: 4px 0 0;
@@ -180,7 +196,10 @@
   text-align: left;
 }
 
-.start-scan__path b { color: var(--blue); font-weight: 500; }
+.start-scan__path b {
+  color: var(--blue);
+  font-weight: 500;
+}
 
 /* Indeterminate progress shimmer */
 .start-scan__track {
@@ -201,20 +220,40 @@
   animation: track-sweep 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
-@keyframes orb-spin { to { transform: rotate(360deg); } }
+@keyframes orb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 @keyframes orb-breathe {
-  0%, 100% { opacity: 0.65; transform: scale(0.96); }
-  50% { opacity: 1; transform: scale(1.04); }
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
 }
 
 @keyframes track-sweep {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(250%); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb__ring, .orb__halo, .orb::after, .start-scan__track > div { animation: none; }
+  .orb__ring,
+  .orb__halo,
+  .orb::after,
+  .start-scan__track > div {
+    animation: none;
+  }
 }
 
 /* ---------- scan target picker ---------- */
@@ -235,15 +274,23 @@
   border: 1px solid var(--line-soft);
   background: rgba(255, 255, 255, 0.55);
   text-align: left;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
 }
 
-.target:hover { border-color: rgba(0, 112, 243, 0.35); background: rgba(255, 255, 255, 0.85); }
+.target:hover {
+  border-color: rgba(0, 112, 243, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+}
 
 .target.is-selected {
   border-color: var(--blue);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1), 0 8px 20px -14px rgba(0, 80, 200, 0.6);
+  box-shadow:
+    0 0 0 3px rgba(0, 112, 243, 0.1),
+    0 8px 20px -14px rgba(0, 80, 200, 0.6);
 }
 
 .target__badge {
@@ -303,7 +350,9 @@
   background: var(--ink-2);
 }
 
-.target__meter > span.is-full { background: var(--pink); }
+.target__meter > span.is-full {
+  background: var(--pink);
+}
 
 .target__meta {
   font-family: var(--mono);
@@ -312,7 +361,11 @@
   white-space: nowrap;
 }
 
-.target__body > .target__meta:only-of-type { grid-column: 1 / -1; overflow: hidden; text-overflow: ellipsis; }
+.target__body > .target__meta:only-of-type {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* Real progress when the total is known (whole disk). */
 .start-scan__track.is-determinate > div {

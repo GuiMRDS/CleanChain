@@ -17,7 +17,8 @@ import { fileURLToPath } from 'node:url';
 const desktop = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const raiz = path.resolve(desktop, '..');
 const [saida = path.join(os.tmpdir(), 'cleanchain-demo-quadros')] = process.argv.slice(2);
-const HOME = process.env.CLEANCHAIN_DEMO_HOME || (process.platform === 'win32' ? 'D:\\Demo\\ana' : path.join(os.tmpdir(), 'demo', 'ana'));
+const HOME =
+  process.env.CLEANCHAIN_DEMO_HOME || (process.platform === 'win32' ? 'D:\\Demo\\ana' : path.join(os.tmpdir(), 'demo', 'ana'));
 const MB = 1024 * 1024;
 const ANTIGO = new Date('2023-03-14T10:00:00');
 
@@ -87,7 +88,11 @@ let gravando = false;
 let velocidade = 1;
 let cena = '';
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
-const marcar = (nome, v = 1) => { cena = nome; velocidade = v; console.log(`cena: ${nome}`); };
+const marcar = (nome, v = 1) => {
+  cena = nome;
+  velocidade = v;
+  console.log(`cena: ${nome}`);
+};
 
 try {
   let page = await app.firstWindow();
@@ -168,7 +173,10 @@ try {
     await esperar(400);
     await caixa.press('Enter');
     marcar('agente', 2);
-    await page.waitForFunction(() => !document.querySelector('.agent-status.is-thinking'), null, { timeout: 120_000, polling: 300 });
+    await page.waitForFunction(() => !document.querySelector('.agent-status.is-thinking'), null, {
+      timeout: 120_000,
+      polling: 300,
+    });
   };
 
   await perguntar('Onde foi meu espaço? Abre a maior pasta no mapa.');
@@ -182,7 +190,11 @@ try {
   await esperar(3500);
   await aprovar.click();
   marcar('aprovado', 2);
-  await page.waitForFunction(() => !document.querySelector('.agent-status.is-thinking') && !document.querySelector('.approval__go'), null, { timeout: 120_000, polling: 300 });
+  await page.waitForFunction(
+    () => !document.querySelector('.agent-status.is-thinking') && !document.querySelector('.approval__go'),
+    null,
+    { timeout: 120_000, polling: 300 }
+  );
   marcar('liberado');
   await esperar(3500);
 
@@ -192,7 +204,10 @@ try {
   const resp = await fetch(`http://127.0.0.1:${rt.porta}/api/mcp/propostas`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${rt.token}`, 'X-MCP-Client': 'Claude Code', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ paths: [path.join(HOME, 'Downloads', 'ubuntu-24.04-desktop-amd64.iso')], reason: 'Imagem de instalação de 2023, já usada: ~296 MB.' }),
+    body: JSON.stringify({
+      paths: [path.join(HOME, 'Downloads', 'ubuntu-24.04-desktop-amd64.iso')],
+      reason: 'Imagem de instalação de 2023, já usada: ~296 MB.',
+    }),
   });
   if (!resp.ok) throw new Error(`proposta MCP: ${resp.status} ${await resp.text()}`);
   await page.getByText('Proposta via MCP: Claude Code').waitFor({ timeout: 30_000 });

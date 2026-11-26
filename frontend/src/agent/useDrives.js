@@ -16,7 +16,12 @@ export function useDrives() {
       fetch('/api/drives', { signal: controller.signal })
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`erro ${r.status}`))))
         .then((body) =>
-          setState({ drives: body.drives ?? [], home: body.home ?? null, status: 'ok', plataforma: body.plataforma ?? plataformaInicial })
+          setState({
+            drives: body.drives ?? [],
+            home: body.home ?? null,
+            status: 'ok',
+            plataforma: body.plataforma ?? plataformaInicial,
+          })
         )
         .catch((err) => {
           if (err.name === 'AbortError') return;

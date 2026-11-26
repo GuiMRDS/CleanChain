@@ -13,10 +13,14 @@ html.is-desktop {
   -webkit-app-region: drag;
 }
 
-html.is-desktop .brand { -webkit-app-region: drag; }
+html.is-desktop .brand {
+  -webkit-app-region: drag;
+}
 
 /* macOS: red/yellow/green buttons on the left (no overlay on the right). */
-html.is-desktop.is-mac .brand { left: 92px; }
+html.is-desktop.is-mac .brand {
+  left: 92px;
+}
 
 html.is-desktop .agent-status {
   right: calc(var(--window-controls) + 62px);
@@ -42,20 +46,30 @@ html.is-desktop .agent-status {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 10px 30px -18px rgba(0, 145, 255, 0.45), 0 0 0 1px var(--line-soft);
+  box-shadow:
+    0 10px 30px -18px rgba(0, 145, 255, 0.45),
+    0 0 0 1px var(--line-soft);
   backdrop-filter: blur(14px) saturate(150%);
   color: var(--ink-2);
-  transition: color 0.2s, box-shadow 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
 }
 
 .desktop-menu__chip:hover,
 .desktop-menu__chip.is-open {
   color: var(--blue);
   background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 10px 30px -14px rgba(0, 145, 255, 0.6), 0 0 0 1px rgba(0, 112, 243, 0.35);
+  box-shadow:
+    0 10px 30px -14px rgba(0, 145, 255, 0.6),
+    0 0 0 1px rgba(0, 112, 243, 0.35);
 }
 
-.desktop-menu__chip:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.desktop-menu__chip:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
 
 .desktop-menu__dot {
   position: absolute;
@@ -83,7 +97,9 @@ html.is-desktop .agent-status {
   animation: fade-in 0.18s ease both;
 }
 
-.desktop-menu__panel .panel-head { margin: 0 4px 6px; }
+.desktop-menu__panel .panel-head {
+  margin: 0 4px 6px;
+}
 
 .desktop-menu__item {
   display: grid;
@@ -94,7 +110,9 @@ html.is-desktop .agent-status {
   border-radius: 6px;
   border: 1px solid transparent;
   text-align: left;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .desktop-menu__item:hover:not(:disabled) {
@@ -102,7 +120,9 @@ html.is-desktop .agent-status {
   border-color: rgba(0, 112, 243, 0.25);
 }
 
-.desktop-menu__item:disabled { cursor: default; }
+.desktop-menu__item:disabled {
+  cursor: default;
+}
 
 .desktop-menu__item.is-highlight {
   border-color: rgba(0, 112, 243, 0.35);
@@ -145,7 +165,9 @@ html.is-desktop .agent-status {
   color: var(--muted);
 }
 
-.desktop-menu__text small.is-warn { color: #a3005f; }
+.desktop-menu__text small.is-warn {
+  color: #a3005f;
+}
 
 .desktop-menu__note {
   margin: 6px 4px 0;

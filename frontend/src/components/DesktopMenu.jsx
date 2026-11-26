@@ -60,7 +60,16 @@ export default function DesktopMenu({ desktop }) {
         aria-expanded={aberto}
         onClick={() => setAberto((v) => !v)}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          aria-hidden="true"
+        >
           <path d="M4 7h10M18 7h2M4 17h2M10 17h10" />
           <circle cx="16" cy="7" r="2" />
           <circle cx="8" cy="17" r="2" />
@@ -76,7 +85,9 @@ export default function DesktopMenu({ desktop }) {
           </p>
 
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirConfig)}>
-            <span className="desktop-menu__icon" aria-hidden="true">⚿</span>
+            <span className="desktop-menu__icon" aria-hidden="true">
+              ⚿
+            </span>
             <span className="desktop-menu__text">
               <strong>Modelo de IA</strong>
               <small className={desktop.precisaChave ? 'is-warn' : undefined}>
@@ -92,7 +103,9 @@ export default function DesktopMenu({ desktop }) {
             onClick={pronta ? desktop.instalarAtualizacao : desktop.verificarAtualizacoes}
             disabled={atualizacao?.estado === 'verificando' || atualizacao?.estado === 'indisponivel'}
           >
-            <span className="desktop-menu__icon" aria-hidden="true">↻</span>
+            <span className="desktop-menu__icon" aria-hidden="true">
+              ↻
+            </span>
             <span className="desktop-menu__text">
               <strong>{pronta ? rotuloAtualizar : 'Atualizações'}</strong>
               <small>{textoAtualizacao(atualizacao)}</small>
@@ -100,7 +113,9 @@ export default function DesktopMenu({ desktop }) {
           </button>
 
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirMcp)}>
-            <span className="desktop-menu__icon" aria-hidden="true">⇄</span>
+            <span className="desktop-menu__icon" aria-hidden="true">
+              ⇄
+            </span>
             <span className="desktop-menu__text">
               <strong>Integração MCP</strong>
               <small>{desktop.mcp?.ativo ? 'ligada · Claude, Cursor e outros' : 'desligada · conectar outros assistentes'}</small>
@@ -108,7 +123,9 @@ export default function DesktopMenu({ desktop }) {
           </button>
 
           <button type="button" role="menuitem" className="desktop-menu__item" onClick={acao(desktop.abrirLogs)}>
-            <span className="desktop-menu__icon" aria-hidden="true">▤</span>
+            <span className="desktop-menu__icon" aria-hidden="true">
+              ▤
+            </span>
             <span className="desktop-menu__text">
               <strong>Pasta de logs</strong>
               <small>para diagnosticar problemas</small>
