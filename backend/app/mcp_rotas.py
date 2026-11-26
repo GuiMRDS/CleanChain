@@ -1,4 +1,4 @@
-"""Rotas /api/mcp/*: o que o executável cleanchain-mcp (a ponte MCP) pode chamar.
+"""Rotas /api/mcp/*: o que a ponte MCP (cleanchain-backend --mcp) pode chamar.
 
 Autenticação SÓ pelo token MCP (Authorization: Bearer <token>), separado do cookie da
 interface. A integração só responde quando está ligada no app: o Electron grava runtime.json
@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field
 from app import config
 from app.files import MAX_DELETE_ITEMS
 from app.propostas import PropostaRecusada, propostas
+from app.sessao import PREFIXO_MCP
 
-PREFIXO = "/api/mcp/"
 CABECALHO_CLIENTE = "X-MCP-Client"
 
 
@@ -46,7 +46,9 @@ def exigir_token_mcp(authorization: str = Header(default="")) -> None:
         raise HTTPException(status_code=401, detail="Token MCP inválido.")
 
 
-rotas = APIRouter(prefix="/api/mcp", dependencies=[Depends(exigir_token_mcp)], tags=["mcp"])
+# O mesmo prefixo que a sessão isenta do cookie (uma fonte só: se divergissem, uma rota ficaria
+# sem proteção ou sem acesso).
+rotas = APIRouter(prefix=PREFIXO_MCP.rstrip("/"), dependencies=[Depends(exigir_token_mcp)], tags=["mcp"])
 
 
 def _json(texto: str) -> dict:

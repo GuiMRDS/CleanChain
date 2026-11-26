@@ -9,7 +9,7 @@ limpeza com aprovação e uma chamada vinda de outro assistente via MCP.
 1. **Prepare uma pasta de exemplo** para a limpeza não mexer em nada seu: dentro de
    `Downloads`, crie `demo-cleanchain/` com 2 ou 3 arquivos grandes e descartáveis (por exemplo,
    copie um instalador antigo e renomeie para `instalador-antigo-2023.exe`).
-2. **Chave do modelo configurada** (menu do app › Modelo de IA). Use a Groq: responde mais
+2. **Modelo de IA configurado** (menu do app › Modelo de IA). Use a Groq: responde mais
    rápido no vídeo.
 3. **Integração MCP ligada** (menu do app › Integração MCP) e o **Claude Desktop** (ou outro
    cliente) já configurado com o botão "Copiar configuração" e reiniciado.
@@ -41,7 +41,7 @@ node tests/gravar-demo.mjs <pasta-de-quadros>
 uv run --no-project --with pillow --with numpy python tests/montar-gif.py <pasta-de-quadros> ../docs/images/demo.gif
 ```
 
-A cena do MCP faz o mesmo pedido que o `cleanchain-mcp` faz, identificado como "Claude Code".
+A cena do MCP faz o mesmo pedido que a ponte MCP faz, identificado como "Claude Code".
 A limpeza aprovada manda arquivos gerados para a Lixeira do sistema.
 
 ## Dicas
@@ -50,5 +50,5 @@ A limpeza aprovada manda arquivos gerados para a Lixeira do sistema.
   resposta aparecendo em tempo real).
 - Use a mesma pasta `demo-cleanchain` em todas as tomadas e restaure os arquivos da Lixeira
   entre uma tomada e outra.
-- Para o GIF do README, exporte as cenas 0:12–1:02 em 12 fps e largura de 1200 px; salve como
-  `docs/images/demo.gif`.
+- Para o GIF do README, prefira o caminho automático acima: ele acelera as esperas e grava só
+  os pixels que mudam (cerca de 10 MB).

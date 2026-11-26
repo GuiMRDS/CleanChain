@@ -305,8 +305,8 @@ aqui = a mudança quebrou uma regra: reveja a mudança, não o teste.
 - **Linux:** sem GNOME Keyring/KWallet o `safeStorage` cai em `basic_text` (equivale a texto
   puro): o app recusa salvar a chave. O AppImage não abre no Ubuntu 24.04+ sem perfil
   AppArmor (o `.deb` instala um); no CI a fumaça roda com `xvfb-run` e o sysctl do AppArmor.
-- **Capturas de janela** (`tests/captura-janela.mjs`, `captura-estados.mjs`) copiam a TELA:
-  qualquer janela na frente aparece. Para o conteúdo do app, use `tests/captura.mjs`.
+- **Capturas:** use `tests/captura.mjs` (conteúdo do app, perfil vazio) ou `tests/gravar-demo.mjs`
+  (o GIF, com pasta de usuário fictícia). Nunca capture a tela inteira: outras janelas aparecem.
 
 ## Estilo
 

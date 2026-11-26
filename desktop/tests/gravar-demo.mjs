@@ -7,7 +7,7 @@
 // - O agente usa a chave do .env (GROQ_API_KEY/OPENAI_API_KEY), salva no cofre só deste perfil
 //   temporário e nunca impressa.
 // - A limpeza aprovada no vídeo manda arquivos GERADOS para a Lixeira do sistema.
-// - A cena do MCP faz o mesmo pedido HTTP que o cleanchain-mcp faz, identificado como "Claude Code".
+// - A cena do MCP faz o mesmo pedido HTTP que a ponte MCP faz, identificado como "Claude Code".
 import { _electron as electron } from '@playwright/test';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -186,7 +186,7 @@ try {
   marcar('liberado');
   await esperar(3500);
 
-  // MCP: o mesmo pedido que o cleanchain-mcp faz (token do runtime.json, nome do cliente).
+  // MCP: o mesmo pedido que a ponte MCP faz (token do runtime.json, nome do cliente).
   marcar('mcp');
   const rt = JSON.parse(fs.readFileSync(path.join(perfil, 'runtime.json'), 'utf8'));
   const resp = await fetch(`http://127.0.0.1:${rt.porta}/api/mcp/propostas`, {
