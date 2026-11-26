@@ -28,7 +28,18 @@ dependencies = [
 dev = [
     "pyinstaller>=6.22.3",
     "pytest>=9.2.0",
+    "ruff>=0.17.6",
 ]
+
+[tool.ruff]
+line-length = 130
+extend-exclude = ["build", "dist", "data"]
+
+[tool.ruff.lint]
+# pyflakes (erros e nomes não usados) + bugbear (bugs comuns). Sem regras de estilo.
+select = ["E4", "E7", "E9", "F", "B"]
+# File(...)/Depends(...) como valor padrão é o jeito oficial do FastAPI.
+ignore = ["B008"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -132,7 +132,7 @@ def test_proposta_valida_fica_pendente_e_avisa_o_app(mcp, capfd):
     r = _propor(mcp, [str(f)]).json()
     assert r["ok"] and r["estado"] == "pendente" and r["itens"] == 1 and r["total_bytes"] == 2048
     assert 0 < r["expira_em_s"] <= 30 * 60
-    linha = [l for l in capfd.readouterr().out.splitlines() if l.startswith("CLEANCHAIN_EVENTO ")]
+    linha = [lin for lin in capfd.readouterr().out.splitlines() if lin.startswith("CLEANCHAIN_EVENTO ")]
     evento = json.loads(linha[-1].split(" ", 1)[1])
     assert evento == {"tipo": "proposta_mcp", "id": r["id"], "cliente": "Cliente de Teste", "itens": 1}
 

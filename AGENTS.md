@@ -57,6 +57,7 @@ uv sync
 uv run uvicorn app.server:app --reload --port 8000   # API (modo navegador: só para desenvolver a interface)
 uv run python chat.py                                # agente no terminal
 uv run python -m pytest                              # testes (rode antes de commitar)
+uv run ruff check .                                  # lint do Python (pyflakes + bugbear; também no pre-commit e no CI)
 uv run python -m app.tools.disk_scan "C:\\pasta"     # scan sem LLM
 uv run python -m evals.agente                        # avaliação do agente com modelo REAL (gasta cota)
 
